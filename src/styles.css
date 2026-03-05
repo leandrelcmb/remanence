@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/* Base nocturne Rémanence */
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+  background: #000;
+  color: white;
+}
