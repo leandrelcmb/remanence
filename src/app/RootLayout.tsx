@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Colors } from "../core/theme/colors";
 import { Halo } from "../core/theme/halo";
 

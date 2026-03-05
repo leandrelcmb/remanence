@@ -1,4 +1,5 @@
-import { CSSProperties, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface HaloProps {
   color?: string;
