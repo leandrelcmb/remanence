@@ -20,7 +20,7 @@ export function RoundButton({
 
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       disabled={disabled}
       style={{
         width: "100%",

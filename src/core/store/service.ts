@@ -11,6 +11,7 @@ import {
   listArtistsByFestival,
   addSetEntry,
   listSetEntriesByFestivalSorted,
+  getArtistById,
 } from "./repo";
 
 function normalizeName(s: string) {
@@ -126,4 +127,43 @@ export async function createSetEntry(params: {
 
 export async function getFestivalEntries(festivalId: UUID) {
   return listSetEntriesByFestivalSorted(festivalId);
+}
+
+export type JournalItem = {
+  id: string;
+  startTime: string;
+  stageName: string;
+  energy: number;
+  focus: "mental" | "emotion" | "body";
+  colorHex: string;
+  feelingText: string;
+  learningText: string;
+  artistName: string;
+  style?: string;
+};
+
+export async function listJournalItems(festivalId: string): Promise<JournalItem[]> {
+  const entries = await listSetEntriesByFestivalSorted(festivalId);
+
+  const items = await Promise.all(
+    entries.map(async (e) => {
+      const artist = await getArtistById(e.artistId);
+
+      return {
+        id: e.id,
+        startTime: e.startTime,
+        stageName: e.stageName,
+        energy: e.energy,
+        focus: e.focus,
+        colorHex: e.colorHex,
+        feelingText: e.feelingText,
+        learningText: e.learningText,
+        artistName: artist?.name ?? "Artiste inconnu",
+        style: artist?.style,
+      } satisfies JournalItem;
+    })
+  );
+
+  items.sort((a, b) => (a.startTime < b.startTime ? 1 : -1));
+  return items;
 }

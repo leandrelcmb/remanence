@@ -97,3 +97,8 @@ export async function listSetEntriesByArtist(artistId: UUID): Promise<SetEntry[]
   const db = await getDB();
   return db.getAllFromIndex("setEntries", "by-artistId", artistId);
 }
+
+export async function getArtistById(artistId: UUID) {
+  const db = await getDB();
+  return db.get("artists", artistId);
+}

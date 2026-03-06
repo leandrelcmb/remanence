@@ -1,16 +1,23 @@
 export type FlowScreen =
   | "landing"
+  | "setInfo"
   | "energy"
   | "focus"
   | "color"
   | "text"
   | "capture"
-  | "done";
+  | "done"
+  | "journal";
 
 export type Draft = {
-  energy: number; // 1..10
+  artistName: string;
+  stageName: string;
+  style: string;
+
+  energy: number;
   focus: "mental" | "emotion" | "body";
   colorHex: string;
+
   feelingText: string;
   learningText: string;
 };

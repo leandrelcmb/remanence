@@ -1,82 +1,113 @@
 import { useEffect, useMemo, useState } from "react";
 import { RootLayout } from "./RootLayout";
-import { ensureBootstrap, createSetEntry } from "../core/store/service";
+import { ensureBootstrap, createSetEntry, listJournalItems } from "../core/store/service";
 import type { FlowScreen, Draft } from "./flow/types";
+import type { JournalItem } from "../core/store/service";
 import { softHaptic } from "./flow/haptics";
 import { EnergyDots, energyColorFor } from "./ui/EnergyDots";
 import { RoundButton } from "./ui/RoundButton";
+import { ARTISTS } from "./data/artists";
 
-// Palette “RGB” sombre mais expressive (pas flashy)
+// Palette couleurs
 const RGB_COLORS = [
-  "#FF3B30", // 
-  "#FF9500", // 
-  "#FFD60A", // 
-  "#34C759", // 
-  "#00C7BE", //
-  "#0A84FF", //
-  "#5E5CE6", //
-  "#BF5AF2", // 
-  "#FF2D55", // 
-  "#FFFFFF", // 
+  "#FF3B30",
+  "#FF9500",
+  "#FFD60A",
+  "#34C759",
+  "#00C7BE",
+  "#0A84FF",
+  "#5E5CE6",
+  "#BF5AF2",
+  "#FF2D55",
+  "#FFFFFF",
+];
+
+const STAGES = [
+  { name: "Main Stage", emoji: "🌞" },
+  { name: "Dragon Nest", emoji: "🐉" },
+  { name: "Chill Out Dome", emoji: "🌙" },
+  { name: "Pumpui", emoji: "🪐" },
 ];
 
 export default function App() {
-  const [screen, setScreen] = useState<FlowScreen>("landing");
+  const [screen, setScreen] = useState<FlowScreen | "journal">("landing");
   const [status, setStatus] = useState("Boot…");
   const [festivalId, setFestivalId] = useState<string>("");
 
+  const [journal, setJournal] = useState<JournalItem[]>([]);
+
   const [draft, setDraft] = useState<Draft>({
+    artistName: "",
+    stageName: "",
+    style: "",
     energy: 7,
     focus: "body",
-    // On initialise la couleur d’après l’énergie pour lisibilité immédiate
     colorHex: energyColorFor(7),
     feelingText: "",
     learningText: "",
   });
 
+  const artistSuggestions = useMemo(() => {
+    const value = draft.artistName.trim().toLowerCase();
+    if (!value) return [];
+
+    return ARTISTS
+      .filter((a) => a.toLowerCase().includes(value))
+      .filter((a) => a.toLowerCase() !== value)
+      .slice(0, 5);
+  }, [draft.artistName]);
+
+  const haloOpacity = useMemo(() => {
+    if (screen === "energy") return 0.12 + draft.energy * 0.02;
+    if (screen === "color") return 0.28;
+    if (screen === "done") return 0.22;
+    if (screen === "journal") return 0.12;
+    return 0.16;
+  }, [screen, draft.energy]);
+
+  const haloScale = useMemo(() => {
+    if (screen === "landing") return 1.1;
+
+    if (screen === "energy") {
+      return 1 + (draft.energy / 10) * 0.5;
+    }
+
+    if (screen === "color") return 1.35;
+    if (screen === "done") return 1.25;
+    if (screen === "journal") return 1.08;
+
+    return 1.15;
+  }, [screen, draft.energy]);
+
+  const haloCenterY = useMemo(() => {
+    if (draft.focus === "mental") return 35;
+    if (draft.focus === "emotion") return 50;
+    return 65;
+  }, [draft.focus]);
+
+  const canContinueSetInfo = draft.artistName.trim().length > 0;
+
   useEffect(() => {
     (async () => {
       const { festival } = await ensureBootstrap();
+
       setFestivalId(festival.id);
+
+      const items = await listJournalItems(festival.id);
+      setJournal(items);
+
       setStatus(`Prêt (Festival: ${festival.name})`);
     })().catch((e) => setStatus(`Erreur: ${String(e)}`));
   }, []);
-
-const haloOpacity = useMemo(() => {
-  if (screen === "energy") return 0.12 + draft.energy * 0.02; // ~0.32 max
-  if (screen === "color") return 0.28;
-  if (screen === "done") return 0.22;
-  return 0.16;
-}, [screen, draft.energy]);
-
-const haloScale = useMemo(() => {
-  if (screen === "landing") return 1.1;
-
-  // règle officielle Rémanence : +50% max
-  if (screen === "energy") {
-    return 1 + (draft.energy / 10) * 0.5; // 1 → 1.5
-  }
-
-  if (screen === "color") return 1.35;
-  if (screen === "done") return 1.25;
-
-  return 1.15;
-}, [screen, draft.energy]);
-
-const haloCenterY = useMemo(() => {
-  if (draft.focus === "mental") return 35;
-  if (draft.focus === "emotion") return 50;
-  return 65; // body
-}, [draft.focus]);
 
   async function finish() {
     if (!festivalId) return;
 
     await createSetEntry({
       festivalId,
-      artistName: "Unknown Artist", // Bloc 4 on fera la vraie saisie
-      style: "unknown",
-      stageName: "Unknown Stage",
+      artistName: draft.artistName,
+      style: draft.style,
+      stageName: draft.stageName,
       energy: draft.energy,
       focus: draft.focus,
       colorHex: draft.colorHex,
@@ -84,39 +115,192 @@ const haloCenterY = useMemo(() => {
       learningText: draft.learningText,
     });
 
+    const items = await listJournalItems(festivalId);
+    setJournal(items);
+
     setScreen("done");
   }
 
   return (
-<RootLayout
-  haloColor={draft.colorHex}
-  haloOpacity={haloOpacity}
-  haloScale={haloScale}
-  haloCenterY={haloCenterY}
->
-  {/* Container mobile centré, mais plein écran en sensation */}
-  <div style={{ padding: 50, maxWidth: 460, margin: "0 auto" }}>
-    <div style={{ marginBottom: 25 }}>
-      <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
-        Pour des souvenirs uniques ✩ ♬ ₊.🎧⋆☾⋆⁺₊✧
-      </h1>
-      <p style={{ opacity: 0.6, marginTop: 8, fontSize: 13 }}>{status}</p>
-    </div>
+    <RootLayout
+      haloColor={draft.colorHex}
+      haloOpacity={haloOpacity}
+      haloScale={haloScale}
+      haloCenterY={haloCenterY}
+    >
+      <div style={{ padding: 50, maxWidth: 460, margin: "0 auto" }}>
+        <div style={{ marginBottom: 25 }}>
+          <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
+            Pour des souvenirs uniques ✩ ♬ ₊.🎧⋆☾⋆⁺₊✧
+          </h1>
+          <p style={{ opacity: 0.6, marginTop: 8, fontSize: 13 }}>{status}</p>
+        </div>
 
         {/* LANDING */}
         {screen === "landing" && (
           <div style={{ display: "grid", gap: 60, minHeight: "70dvh", alignContent: "center" }}>
             <p style={{ opacity: 0.86, fontSize: 24, margin: 0, textAlign: "center" }}>
-              🧘 “Quel es mon état d'âme?”
+              🧘 “Ancre l'instant”
             </p>
 
-            <RoundButton variant="primary" onClick={() => setScreen("energy")}>
-              Entrer en rémanence 🌱
+            <div style={{ display: "grid", gap: 12 }}>
+              <RoundButton variant="primary" onClick={() => setScreen("setInfo")}>
+                Entrer en rémanence 🌱
+              </RoundButton>
+
+              <RoundButton variant="secondary" onClick={() => setScreen("journal")}>
+                Mes vibrations 💓
+              </RoundButton>
+            </div>
+          </div>
+        )}
+
+        {/* SET INFO */}
+        {screen === "setInfo" && (
+          <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
+            <p style={{ opacity: 0.86, fontSize: 20, margin: 0, textAlign: "center" }}>
+              🎧 Quel set viens-tu de vivre ?
+            </p>
+
+            <input
+              value={draft.artistName}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, artistName: e.target.value }))
+              }
+              placeholder="Artiste (ex : Ott)"
+              style={{
+                width: "100%",
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                padding: 14,
+                color: "white",
+                outline: "none",
+              }}
+            />
+
+            {artistSuggestions.length > 0 && (
+              <div
+                style={{
+                  marginTop: 8,
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  overflow: "hidden",
+                }}
+              >
+                {artistSuggestions.map((artist) => (
+                  <div
+                    key={artist}
+                    onClick={() =>
+                      setDraft((d) => ({
+                        ...d,
+                        artistName: artist,
+                      }))
+                    }
+                    style={{
+                      padding: "10px 14px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    {artist}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <p style={{ opacity: 0.6, fontSize: 12 }}>
+              Si tu ne sais pas : demande autour de toi. Le nom est le sceau du souvenir ✨
+            </p>
+
+            {/* STAGES DROPDOWN UNIQUEMENT */}
+            <div style={{ display: "grid", gap: 8 }}>
+              <p style={{ opacity: 0.72, fontSize: 13, margin: 0 }}>
+                📍 Choisis une scène (optionnel)
+              </p>
+
+              <div
+                style={{
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  overflow: "hidden",
+                }}
+              >
+                {STAGES.map((stage) => {
+                  const active = draft.stageName === stage.name;
+
+                  return (
+                    <div
+                      key={stage.name}
+                      onClick={() =>
+                        setDraft((d) => ({
+                          ...d,
+                          stageName: d.stageName === stage.name ? "" : stage.name,
+                        }))
+                      }
+                      style={{
+                        padding: "12px 14px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        background: active ? "rgba(255,255,255,0.12)" : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>
+                        {stage.emoji} {stage.name}
+                      </span>
+
+                      {active ? (
+                        <span style={{ opacity: 0.8, fontSize: 12 }}>✓ sélectionnée</span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p style={{ opacity: 0.55, fontSize: 12, margin: 0 }}>
+                Reclique sur la scène choisie pour la retirer.
+              </p>
+            </div>
+
+            <input
+              value={draft.style}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, style: e.target.value }))
+              }
+              placeholder="Style (ex : psytrance / ambient)"
+              style={{
+                width: "100%",
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                padding: 14,
+                color: "white",
+                outline: "none",
+              }}
+            />
+
+            <RoundButton
+              variant="primary"
+              disabled={!canContinueSetInfo}
+              onClick={() => {
+                if (!canContinueSetInfo) {
+                  softHaptic();
+                  return;
+                }
+                setScreen("energy");
+              }}
+            >
+              Continuer 🌙
             </RoundButton>
           </div>
         )}
 
-        {/* ENERGY (10 DOTS) */}
+        {/* ENERGY */}
         {screen === "energy" && (
           <div style={{ display: "grid", gap: 20, minHeight: "70dvh", alignContent: "center" }}>
             <p style={{ opacity: 0.86, fontSize: 18, margin: 0, textAlign: "center" }}>
@@ -129,61 +313,53 @@ const haloCenterY = useMemo(() => {
                 setDraft((d) => ({
                   ...d,
                   energy: n,
-                  // Halo suit l’énergie -> contraste fort
                   colorHex: energyColorFor(n),
                 }))
               }
             />
 
-            <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-              <div style={{ flex: 1 }}>
-                <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
-                  ↪️Retour
-                </RoundButton>
-              </div>
-              <div style={{ flex: 1 }}>
-                <RoundButton variant="primary" onClick={() => setScreen("focus")}>
-                  Je valide 🖖
-                </RoundButton>
-              </div>
-            </div>
+            <RoundButton variant="primary" onClick={() => setScreen("focus")}>
+              Je valide 🖖
+            </RoundButton>
           </div>
         )}
 
         {/* FOCUS */}
         {screen === "focus" && (
-          <div style={{ display: "grid", gap: 150, minHeight: "70dvh", alignContent: "center" }}>
-            <p style={{ opacity: 0.86, fontSize: 18, margin: 0, textAlign: "center" }}>
+          <div style={{ display: "grid", gap: 120, minHeight: "70dvh", alignContent: "center" }}>
+            <p style={{ opacity: 0.86, fontSize: 20, margin: 0, textAlign: "center" }}>
               🎭 Où cela s’est joué ?
             </p>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              {([
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+              {[
                 ["mental", "🧠", "Mental"],
                 ["emotion", "❤️", "Émotions"],
                 ["body", "🕺", "Corps"],
-              ] as const).map(([key, emoji, label]) => {
+              ].map(([key, emoji, label]) => {
                 const active = draft.focus === key;
+
                 return (
                   <button
                     key={key}
-                    onClick={() => {
-                      softHaptic();
-                      setDraft((d) => ({ ...d, focus: key }));
-                    }}
+                    onClick={() =>
+                      setDraft((d) => ({ ...d, focus: key as Draft["focus"] }))
+                    }
                     style={{
-                      borderRadius: 25,
-                      padding: "18px 25px",
+                      borderRadius: 22,
+                      padding: "20px",
                       border: active
-                        ? "1px solid rgba(255,255,255,0.35)"
-                        : "1px solid rgba(255,255,255,0.12)",
-                      background: active ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)",
+                        ? "1px solid rgba(255,255,255,0.4)"
+                        : "1px solid rgba(255,255,255,0.15)",
+                      background: active
+                        ? "rgba(255,255,255,0.15)"
+                        : "rgba(255,255,255,0.05)",
                       color: "white",
                       cursor: "pointer",
                     }}
                   >
-                    <div style={{ fontSize: 24 }}>{emoji}</div>
-                    <div style={{ fontSize: 13, opacity: 0.85, marginTop: 8 }}>{label}</div>
+                    <div style={{ fontSize: 26 }}>{emoji}</div>
+                    <div style={{ marginTop: 8, fontSize: 13 }}>{label}</div>
                   </button>
                 );
               })}
@@ -192,19 +368,19 @@ const haloCenterY = useMemo(() => {
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <RoundButton variant="secondary" onClick={() => setScreen("energy")}>
-                  ↪️Retour
+                  ↪️ Retour
                 </RoundButton>
               </div>
               <div style={{ flex: 1 }}>
                 <RoundButton variant="primary" onClick={() => setScreen("color")}>
-                  Je valide 🖖
+                  Continuer ✨
                 </RoundButton>
               </div>
             </div>
           </div>
         )}
 
-        {/* COLOR (RGB palette) */}
+        {/* COLOR */}
         {screen === "color" && (
           <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
             <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
@@ -239,7 +415,7 @@ const haloCenterY = useMemo(() => {
             <div style={{ display: "flex", gap: 22 }}>
               <div style={{ flex: 1 }}>
                 <RoundButton variant="secondary" onClick={() => setScreen("focus")}>
-                  ↪️Retour
+                  ↪️ Retour
                 </RoundButton>
               </div>
               <div style={{ flex: 1 }}>
@@ -251,7 +427,7 @@ const haloCenterY = useMemo(() => {
           </div>
         )}
 
-        {/* TEXT (more spacing) */}
+        {/* TEXT */}
         {screen === "text" && (
           <div style={{ display: "grid", gap: 45, minHeight: "70dvh", alignContent: "center" }}>
             <div style={{ display: "grid", gap: 10 }}>
@@ -299,7 +475,7 @@ const haloCenterY = useMemo(() => {
             <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
               <div style={{ flex: 1 }}>
                 <RoundButton variant="secondary" onClick={() => setScreen("color")}>
-                  ↪️Retour
+                  ↪️ Retour
                 </RoundButton>
               </div>
               <div style={{ flex: 1 }}>
@@ -328,7 +504,7 @@ const haloCenterY = useMemo(() => {
                 fontSize: 13,
               }}
             >
-              V1 : on fera l’upload photo au Bloc 4/5. Pour l’instant, on valide la trace.
+              V1 : on fera l’upload photo plus tard. Pour l’instant, on valide la trace.
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
@@ -339,7 +515,7 @@ const haloCenterY = useMemo(() => {
               </div>
               <div style={{ flex: 1 }}>
                 <RoundButton variant="primary" onClick={finish}>
-                  Ancrer 💌  
+                  Ancrer 💌
                 </RoundButton>
               </div>
             </div>
@@ -353,26 +529,127 @@ const haloCenterY = useMemo(() => {
               “Ta trace est ancrée 🎁”
             </p>
 
-            <div
-              style={{
-                borderRadius: 20,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                padding: 8,
-                opacity: 0.8,
-                fontSize: 22,
-                textAlign: "center",
-              }}
-            >
-              À la prochaine (づ * _*)づ♡.
-            </div>
-
             <RoundButton variant="primary" onClick={() => setScreen("landing")}>
               Se reconnecter à l'instant 🍀
             </RoundButton>
           </div>
         )}
+
+        {/* JOURNAL */}
+        {screen === "journal" && (
+          <div style={{ display: "grid", gap: 22, minHeight: "70dvh" }}>
+            <div style={{ display: "grid", gap: 12 }}>
+              <h2 style={{ margin: 0, fontWeight: 650 }}>
+                📓 Carnet de rémanence
+              </h2>
+
+              <div style={{ display: "grid", gap: 12 }}>
+                <RoundButton variant="primary" onClick={() => setScreen("setInfo")}>
+                  Nouvelle vibration 💓
+                </RoundButton>
+
+                <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
+                  Home ॐ
+                </RoundButton>
+              </div>
+            </div>
+
+            {journal.length === 0 && (
+              <p style={{ opacity: 0.6 }}>
+                Aucun souvenir enregistré pour le moment.
+              </p>
+            )}
+
+            {journal.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  borderRadius: 18,
+                  padding: 16,
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  display: "grid",
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                  <div style={{ display: "grid", gap: 4 }}>
+                    <strong style={{ fontSize: 20 }}>{item.artistName}</strong>
+
+                    <div style={{ opacity: 0.65, fontSize: 15 }}>
+                      {formatTime(item.startTime)} · {item.stageName || "Scène inconnue"}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 14,
+                      padding: "5px 8px",
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.07)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {focusEmoji(item.focus)} ⚡ {item.energy}/10
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 999,
+                      background: item.colorHex,
+                      boxShadow: `0 0 18px ${item.colorHex}88`,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{ opacity: 0.7, fontSize: 13 }}>
+                    {item.style?.trim() ? item.style : "Style non renseigné"}
+                  </div>
+                </div>
+
+                {item.feelingText?.trim() && (
+                  <div
+                    style={{
+                      opacity: 0.88,
+                      lineHeight: 1.45,
+                      fontSize: 14,
+                      padding: "10px 12px",
+                      borderRadius: 14,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    “{item.feelingText.trim()}”
+                  </div>
+                )}
+
+                {item.learningText?.trim() && (
+                  <div style={{ opacity: 0.62, fontSize: 13, lineHeight: 1.4 }}>
+                    🧙🏼 {item.learningText.trim()}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </RootLayout>
   );
+}
+
+function formatTime(iso: string) {
+  const d = new Date(iso);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function focusEmoji(focus: "mental" | "emotion" | "body") {
+  if (focus === "mental") return "🧠";
+  if (focus === "emotion") return "❤️";
+  return "🕺";
 }
