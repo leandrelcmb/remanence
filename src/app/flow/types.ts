@@ -7,7 +7,9 @@ export type FlowScreen =
   | "text"
   | "capture"
   | "done"
-  | "journal";
+  | "journal"
+  | "detail"
+  | "constellation";
 
 export type Draft = {
   artistName: string;

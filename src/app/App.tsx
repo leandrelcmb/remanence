@@ -8,7 +8,6 @@ import { EnergyDots, energyColorFor } from "./ui/EnergyDots";
 import { RoundButton } from "./ui/RoundButton";
 import { ARTISTS } from "./data/artists";
 
-// Palette couleurs
 const RGB_COLORS = [
   "#FF3B30",
   "#FF9500",
@@ -26,23 +25,29 @@ const STAGES = [
   { name: "Main Stage", emoji: "🌞" },
   { name: "Dragon Nest", emoji: "🐉" },
   { name: "Chill Out Dome", emoji: "🌙" },
-  { name: "Pumpui", emoji: "🪐" },
+  { name: "Pumpui", emoji: "🎪" },
 ];
 
+type ExtraScreen = "detail" | "constellation";
+type DetailBackTarget = "journal" | "constellation";
+
 export default function App() {
-  const [screen, setScreen] = useState<FlowScreen | "journal">("landing");
+  const [screen, setScreen] = useState<FlowScreen | ExtraScreen>("landing");
+  const [detailBackTarget, setDetailBackTarget] = useState<DetailBackTarget>("journal");
+
   const [status, setStatus] = useState("Boot…");
   const [festivalId, setFestivalId] = useState<string>("");
 
   const [journal, setJournal] = useState<JournalItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<JournalItem | null>(null);
 
   const [draft, setDraft] = useState<Draft>({
     artistName: "",
     stageName: "",
     style: "",
-    energy: 7,
+    energy: 5,
     focus: "body",
-    colorHex: energyColorFor(7),
+    colorHex: energyColorFor(5),
     feelingText: "",
     learningText: "",
   });
@@ -57,13 +62,27 @@ export default function App() {
       .slice(0, 5);
   }, [draft.artistName]);
 
+  const constellationBounds = useMemo(() => {
+    if (journal.length === 0) return null;
+
+    const times = journal.map((item) => new Date(item.startTime).getTime());
+    return {
+      min: Math.min(...times),
+      max: Math.max(...times),
+    };
+  }, [journal]);
+
   const haloOpacity = useMemo(() => {
     if (screen === "energy") return 0.12 + draft.energy * 0.02;
     if (screen === "color") return 0.28;
     if (screen === "done") return 0.22;
     if (screen === "journal") return 0.12;
+    if (screen === "constellation") return 0.1;
+    if (screen === "detail" && selectedItem) {
+      return 0.16 + selectedItem.energy * 0.015;
+    }
     return 0.16;
-  }, [screen, draft.energy]);
+  }, [screen, draft.energy, selectedItem]);
 
   const haloScale = useMemo(() => {
     if (screen === "landing") return 1.1;
@@ -75,15 +94,30 @@ export default function App() {
     if (screen === "color") return 1.35;
     if (screen === "done") return 1.25;
     if (screen === "journal") return 1.08;
+    if (screen === "constellation") return 1.04;
+    if (screen === "detail" && selectedItem) {
+      return 1 + (selectedItem.energy / 10) * 0.35;
+    }
 
     return 1.15;
-  }, [screen, draft.energy]);
+  }, [screen, draft.energy, selectedItem]);
 
   const haloCenterY = useMemo(() => {
+    if (screen === "detail" && selectedItem) {
+      if (selectedItem.focus === "mental") return 35;
+      if (selectedItem.focus === "emotion") return 50;
+      return 65;
+    }
+
     if (draft.focus === "mental") return 35;
     if (draft.focus === "emotion") return 50;
     return 65;
-  }, [draft.focus]);
+  }, [screen, draft.focus, selectedItem]);
+
+  const haloColor = useMemo(() => {
+    if (screen === "detail" && selectedItem) return selectedItem.colorHex;
+    return draft.colorHex;
+  }, [screen, draft.colorHex, selectedItem]);
 
   const canContinueSetInfo = draft.artistName.trim().length > 0;
 
@@ -123,7 +157,7 @@ export default function App() {
 
   return (
     <RootLayout
-      haloColor={draft.colorHex}
+      haloColor={haloColor}
       haloOpacity={haloOpacity}
       haloScale={haloScale}
       haloCenterY={haloCenterY}
@@ -150,6 +184,10 @@ export default function App() {
 
               <RoundButton variant="secondary" onClick={() => setScreen("journal")}>
                 Mes vibrations 💓
+              </RoundButton>
+
+              <RoundButton variant="secondary" onClick={() => setScreen("constellation")}>
+                Constellation ✨
               </RoundButton>
             </div>
           </div>
@@ -217,7 +255,7 @@ export default function App() {
             {/* STAGES DROPDOWN UNIQUEMENT */}
             <div style={{ display: "grid", gap: 8 }}>
               <p style={{ opacity: 0.72, fontSize: 13, margin: 0 }}>
-                📍 Choisis une scène (optionnel)
+                📍 Choisis une scène
               </p>
 
               <div
@@ -261,10 +299,6 @@ export default function App() {
                   );
                 })}
               </div>
-
-              <p style={{ opacity: 0.55, fontSize: 12, margin: 0 }}>
-                Reclique sur la scène choisie pour la retirer.
-              </p>
             </div>
 
             <input
@@ -295,7 +329,7 @@ export default function App() {
                 setScreen("energy");
               }}
             >
-              Continuer 🌙
+              Valider ✔️
             </RoundButton>
           </div>
         )}
@@ -563,6 +597,11 @@ export default function App() {
             {journal.map((item) => (
               <div
                 key={item.id}
+                onClick={() => {
+                  setSelectedItem(item);
+                  setDetailBackTarget("journal");
+                  setScreen("detail");
+                }}
                 style={{
                   borderRadius: 18,
                   padding: 16,
@@ -570,6 +609,7 @@ export default function App() {
                   border: "1px solid rgba(255,255,255,0.1)",
                   display: "grid",
                   gap: 10,
+                  cursor: "pointer",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
@@ -634,6 +674,163 @@ export default function App() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* CONSTELLATION */}
+        {screen === "constellation" && (
+          <div style={{ display: "grid", gap: 20, minHeight: "70dvh" }}>
+            <h2 style={{ margin: 0 }}>
+              ✨ Ta constellation personnalisée
+            </h2>
+
+            <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
+              Home ॐ
+            </RoundButton>
+
+            <div
+              style={{
+                position: "relative",
+                height: 500,
+                borderRadius: 20,
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundImage:
+                  "linear-gradient(rgba(7,0,20,0.55), rgba(7,0,20,0.78)), url('/images/space-bg.jpg')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                backgroundColor: "rgba(255,255,255,0.03)",
+              }}
+            >
+              {journal.length === 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "grid",
+                    placeItems: "center",
+                    opacity: 0.6,
+                    textAlign: "center",
+                    padding: 20,
+                  }}
+                >
+                  Ta constellation apparaîtra ici après tes premiers souvenirs ✨
+                </div>
+              )}
+
+              {journal.map((item, index) => {
+                const x = 8 + ((item.energy - 1) / 9) * 84;
+
+                const time = new Date(item.startTime).getTime();
+
+                let y = 50;
+                if (constellationBounds && constellationBounds.max !== constellationBounds.min) {
+                  const ratio =
+                    (time - constellationBounds.min) /
+                    (constellationBounds.max - constellationBounds.min);
+
+                  y = 92 - ratio * 84;
+                }
+
+                const wobbleX = ((index % 3) - 1) * 2.2;
+                const wobbleY = ((index % 4) - 1.5) * 1.8;
+                const starSize = 16 + item.energy * 1.2;
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setDetailBackTarget("constellation");
+                      setScreen("detail");
+                    }}
+                    style={{
+                      position: "absolute",
+                      left: `${x + wobbleX}%`,
+                      top: `${y + wobbleY}%`,
+                      transform: "translate(-50%, -50%)",
+                      color: item.colorHex,
+                      fontSize: starSize,
+                      lineHeight: 1,
+                      textShadow: `0 0 10px ${item.colorHex}, 0 0 22px ${item.colorHex}`,
+                      cursor: "pointer",
+                      userSelect: "none",
+                    }}
+                    title={`${item.artistName} · ${formatTime(item.startTime)}`}
+                  >
+                    ✦
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ opacity: 0.62, fontSize: 12, lineHeight: 1.5 }}>
+              Gauche → Droite : intensité · Bas → Haut : timeline Ozora
+            </div>
+          </div>
+        )}
+
+        {/* DETAIL */}
+        {screen === "detail" && selectedItem && (
+          <div style={{ display: "grid", gap: 30, minHeight: "70dvh", alignContent: "center" }}>
+            <div style={{ display: "grid", gap: 6, textAlign: "center" }}>
+              <h2 style={{ margin: 0, fontWeight: 600 }}>
+                {selectedItem.artistName}
+              </h2>
+
+              <div style={{ opacity: 0.6 }}>
+                {formatTime(selectedItem.startTime)} · {selectedItem.stageName || "Scène inconnue"}
+              </div>
+            </div>
+
+            <div
+              style={{
+                borderRadius: 20,
+                padding: 18,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                display: "grid",
+                gap: 16,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{focusEmoji(selectedItem.focus)}</span>
+                <span>⚡ {selectedItem.energy}/10</span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 999,
+                    background: selectedItem.colorHex,
+                    boxShadow: `0 0 18px ${selectedItem.colorHex}`,
+                  }}
+                />
+                <span>{selectedItem.style?.trim() ? selectedItem.style : "Style inconnu"}</span>
+              </div>
+
+              {selectedItem.feelingText?.trim() && (
+                <div style={{ opacity: 0.88, lineHeight: 1.5 }}>
+                  “{selectedItem.feelingText.trim()}”
+                </div>
+              )}
+
+              {selectedItem.learningText?.trim() && (
+                <div style={{ opacity: 0.62, lineHeight: 1.45 }}>
+                  🧙 {selectedItem.learningText.trim()}
+                </div>
+              )}
+            </div>
+
+            <RoundButton
+              variant="secondary"
+              onClick={() => setScreen(detailBackTarget)}
+            >
+              {detailBackTarget === "constellation" ? "Retour à la constellation ✨" : "Retour au carnet 📓"}
+            </RoundButton>
           </div>
         )}
       </div>
