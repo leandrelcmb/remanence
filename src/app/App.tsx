@@ -72,6 +72,64 @@ export default function App() {
     };
   }, [journal]);
 
+  const constellationStars = useMemo(() => {
+    return journal.map((item, index) => {
+      const x = 8 + ((item.energy - 1) / 9) * 84;
+
+      const time = new Date(item.startTime).getTime();
+
+      let y = 50;
+      if (constellationBounds && constellationBounds.max !== constellationBounds.min) {
+        const ratio =
+          (time - constellationBounds.min) /
+          (constellationBounds.max - constellationBounds.min);
+
+        y = 92 - ratio * 84;
+      }
+
+      const wobbleX = ((index % 3) - 1) * 2.2;
+      const wobbleY = ((index % 4) - 1.5) * 1.8;
+      const starSize = 16 + item.energy * 1.2;
+
+      return {
+        item,
+        x: x + wobbleX,
+        y: y + wobbleY,
+        starSize,
+      };
+    });
+  }, [journal, constellationBounds]);
+
+  const constellationLinks = useMemo(() => {
+    const links: Array<{
+      a: (typeof constellationStars)[number];
+      b: (typeof constellationStars)[number];
+      opacity: number;
+    }> = [];
+
+    for (let i = 0; i < constellationStars.length; i++) {
+      for (let j = i + 1; j < constellationStars.length; j++) {
+        const a = constellationStars[i];
+        const b = constellationStars[j];
+
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const maxDistance = 18;
+
+        if (distance < maxDistance) {
+          const ratio = 1 - distance / maxDistance;
+          const opacity = 0.04 + ratio * 0.22;
+
+          links.push({ a, b, opacity });
+        }
+      }
+    }
+
+    return links;
+  }, [constellationStars]);
+
   const haloOpacity = useMemo(() => {
     if (screen === "energy") return 0.12 + draft.energy * 0.02;
     if (screen === "color") return 0.28;
@@ -121,6 +179,23 @@ export default function App() {
 
   const canContinueSetInfo = draft.artistName.trim().length > 0;
 
+  const starAnimation = `
+    @keyframes starPulse {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.85;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.18);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.85;
+      }
+    }
+  `;
+
   useEffect(() => {
     (async () => {
       const { festival } = await ensureBootstrap();
@@ -162,6 +237,8 @@ export default function App() {
       haloScale={haloScale}
       haloCenterY={haloCenterY}
     >
+      <style>{starAnimation}</style>
+
       <div style={{ padding: 50, maxWidth: 460, margin: "0 auto" }}>
         <div style={{ marginBottom: 25 }}>
           <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
@@ -684,10 +761,6 @@ export default function App() {
               ✨ Ta constellation personnalisée
             </h2>
 
-            <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
-              Home ॐ
-            </RoundButton>
-
             <div
               style={{
                 position: "relative",
@@ -719,55 +792,64 @@ export default function App() {
                 </div>
               )}
 
-              {journal.map((item, index) => {
-                const x = 8 + ((item.energy - 1) / 9) * 84;
+              {/* LIAISONS */}
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  pointerEvents: "none",
+                }}
+              >
+                {constellationLinks.map((link, index) => (
+                  <line
+                    key={`${link.a.item.id}-${link.b.item.id}-${index}`}
+                    x1={link.a.x}
+                    y1={link.a.y}
+                    x2={link.b.x}
+                    y2={link.b.y}
+                    stroke={link.a.item.colorHex}
+                    strokeOpacity={link.opacity}
+                    strokeWidth="0.22"
+                  />
+                ))}
+              </svg>
 
-                const time = new Date(item.startTime).getTime();
-
-                let y = 50;
-                if (constellationBounds && constellationBounds.max !== constellationBounds.min) {
-                  const ratio =
-                    (time - constellationBounds.min) /
-                    (constellationBounds.max - constellationBounds.min);
-
-                  y = 92 - ratio * 84;
-                }
-
-                const wobbleX = ((index % 3) - 1) * 2.2;
-                const wobbleY = ((index % 4) - 1.5) * 1.8;
-                const starSize = 16 + item.energy * 1.2;
-
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => {
-                      setSelectedItem(item);
-                      setDetailBackTarget("constellation");
-                      setScreen("detail");
-                    }}
-                    style={{
-                      position: "absolute",
-                      left: `${x + wobbleX}%`,
-                      top: `${y + wobbleY}%`,
-                      transform: "translate(-50%, -50%)",
-                      color: item.colorHex,
-                      fontSize: starSize,
-                      lineHeight: 1,
-                      textShadow: `0 0 10px ${item.colorHex}, 0 0 22px ${item.colorHex}`,
-                      cursor: "pointer",
-                      userSelect: "none",
-                    }}
-                    title={`${item.artistName} · ${formatTime(item.startTime)}`}
-                  >
-                    ✦
-                  </div>
-                );
-              })}
+              {/* ÉTOILES */}
+              {constellationStars.map((star) => (
+                <div
+                  key={star.item.id}
+                  onClick={() => {
+                    setSelectedItem(star.item);
+                    setDetailBackTarget("constellation");
+                    setScreen("detail");
+                  }}
+                  style={{
+                    position: "absolute",
+                    left: `${star.x}%`,
+                    top: `${star.y}%`,
+                    transform: "translate(-50%, -50%)",
+                    color: star.item.colorHex,
+                    fontSize: star.starSize,
+                    lineHeight: 1,
+                    textShadow: `0 0 10px ${star.item.colorHex}, 0 0 22px ${star.item.colorHex}`,
+                    cursor: "pointer",
+                    userSelect: "none",
+                    animation: `starPulse ${2.6 - star.item.energy * 0.12}s ease-in-out infinite`,
+                  }}
+                  title={`${star.item.artistName} · ${formatTime(star.item.startTime)}`}
+                >
+                  ✦
+                </div>
+              ))}
             </div>
 
-            <div style={{ opacity: 0.62, fontSize: 12, lineHeight: 1.5 }}>
-              Gauche → Droite : intensité · Bas → Haut : timeline Ozora
-            </div>
+            <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
+              Home ॐ
+            </RoundButton>
           </div>
         )}
 
