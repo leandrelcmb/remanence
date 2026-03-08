@@ -37,7 +37,7 @@ export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal
             letterSpacing: "0.03em",
           }}
         >
-          ⚡ Vite fait
+          Trace éclair ⚡
         </button>
 
         <div style={{ height: 6 }} />

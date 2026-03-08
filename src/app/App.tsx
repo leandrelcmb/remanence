@@ -28,7 +28,7 @@ import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
 
 const FULL_FLOW_SCREENS: FlowScreen[]    = ["setInfo", "color", "energy", "focus", "text", "capture"];
-const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["setInfo", "color", "energy", "focus"];
+const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["setInfo", "color", "energy", "focus", "capture"];
 
 // Données préservées lors d'une édition (non modifiables)
 type EditingEntry = {
@@ -258,7 +258,7 @@ export default function App() {
             <FocusScreen
               focus={draft.focus}
               onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
-              onNext={() => expressMode ? finish() : navigate("text", "forward")}
+              onNext={() => expressMode ? navigate("capture", "forward") : navigate("text", "forward")}
               onBack={() => navigate("energy", "backward")}
             />
           )}
