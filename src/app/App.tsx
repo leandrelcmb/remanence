@@ -412,7 +412,7 @@ setScreen("done");
     setScreen("constellation");
   }}
 >
-  Constellation ✨
+  Constellations ✨
 </RoundButton>
             </div>
           </div>

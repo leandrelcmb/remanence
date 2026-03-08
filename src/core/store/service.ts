@@ -33,7 +33,7 @@ async function upsertArtistByName(params: {
     const updated: Artist = {
       ...existing,
       ...params,
-      name: existing.name, // garde le nom "humain"
+      name: existing.name,
     };
     await upsertArtist(updated);
     return updated;
@@ -54,8 +54,8 @@ async function upsertArtistByName(params: {
 }
 
 export async function ensureBootstrap() {
-  // UserProfile
   let user = await getUserProfile();
+
   if (!user) {
     user = {
       id: uuid(),
@@ -66,8 +66,8 @@ export async function ensureBootstrap() {
     await putUserProfile(user);
   }
 
-  // Festival actif
   let festivalId = await getActiveFestivalId();
+
   if (!festivalId) {
     const fest: Festival = {
       id: uuid(),
@@ -77,6 +77,7 @@ export async function ensureBootstrap() {
       endDate: new Date("2026-08-04").toISOString(),
       createdAt: nowISO(),
     };
+
     await addFestival(fest);
     await setActiveFestivalId(fest.id);
     festivalId = fest.id;
@@ -101,7 +102,6 @@ export async function createSetEntry(params: {
   photo?: string;
   startTime?: string;
 }): Promise<SetEntry> {
-
   const artist = await upsertArtistByName({
     festivalId: params.festivalId,
     name: params.artistName,
@@ -125,7 +125,6 @@ export async function createSetEntry(params: {
   };
 
   await addSetEntry(entry);
-
   return entry;
 }
 
@@ -161,7 +160,7 @@ export async function listJournalItems(festivalId: string): Promise<JournalItem[
         energy: e.energy,
         focus: e.focus,
         colorHex: e.colorHex,
-	photo: (e as any).photo,
+        photo: e.photo,
         feelingText: e.feelingText,
         learningText: e.learningText,
         artistName: artist?.name ?? "Artiste inconnu",

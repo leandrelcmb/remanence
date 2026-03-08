@@ -22,25 +22,20 @@ export interface Artist {
   firstSeenAt: string; // ISO
 }
 
-export interface SetEntry {
+export type SetEntry = {
   id: UUID;
   festivalId: UUID;
   artistId: UUID;
-
   stageName: string;
-  startTime: string; // ISO
-  endTime?: string;  // ISO
-  createdAt: string; // ISO
-
-  energy: number; // 1..10
+  startTime: string;
+  createdAt: string;
+  energy: number;
   focus: FocusType;
-  colorHex: string; // #RRGGBB
-
+  colorHex: string;
   feelingText: string;
   learningText: string;
-
-  photoFileName?: string; // V1: optionnel (on fera Blob plus tard)
-}
+  photo?: string;
+};
 
 export interface UserProfile {
   id: UUID;
