@@ -211,10 +211,10 @@ export function ConstellationScreen({
   }, [stars]);
 
   return (
-    <div style={{ display: "grid", gap: 20, minHeight: "100dvh", alignContent: "start" }}>
+    <div style={{ display: "grid", gap: 65, minHeight: "100dvh", alignContent: "start" }}>
       <style>{CSS}</style>
 
-      <h2 style={{ margin: 0 }}>✨ Ta constellation personnalisée</h2>
+      <h2 style={{ margin: 2 }}>✨ Constellation personnalisée ✨</h2>
 
       <div
         ref={containerRef}

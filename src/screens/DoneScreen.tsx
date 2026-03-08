@@ -21,13 +21,13 @@ export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
   const accentColor = lastSavedColor ?? "white";
 
   return (
-    <div style={{ display: "grid", gap: 28, minHeight: "70dvh", alignContent: "center" }}>
+    <div style={{ display: "grid", gap: 100, minHeight: "85dvh", alignContent: "center" }}>
 
       {/* Titre */}
       <p
         style={{
           opacity: 0.92,
-          fontSize: 32,
+          fontSize: 35,
           margin: 0,
           textAlign: "center",
           color: accentColor,

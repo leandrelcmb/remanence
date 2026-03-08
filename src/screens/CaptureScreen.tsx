@@ -11,8 +11,8 @@ type Props = {
 
 export function CaptureScreen({ photo, onPhoto, onClearPhoto, onFinish, onBack }: Props) {
   return (
-    <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
-      <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
+    <div style={{ display: "grid", gap: 80, minHeight: "85dvh", alignContent: "center" }}>
+      <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
         Capture du moment 🔐
       </p>
 
@@ -27,7 +27,7 @@ export function CaptureScreen({ photo, onPhoto, onClearPhoto, onFinish, onBack }
             cursor: "pointer",
           }}
         >
-          <p style={{ fontSize: 45, margin: 0, textAlign: "center" }}>📸</p>
+          <p style={{ fontSize: 50, margin: 0, textAlign: "center" }}>📸</p>
           <input
             type="file"
             accept="image/*"
@@ -58,7 +58,7 @@ export function CaptureScreen({ photo, onPhoto, onClearPhoto, onFinish, onBack }
       <div style={{ display: "flex", gap: 10 }}>
         <div style={{ flex: 1 }}>
           <RoundButton variant="secondary" onClick={onBack}>
-            ↪️ Retour
+            Retour
           </RoundButton>
         </div>
         <div style={{ flex: 1 }}>

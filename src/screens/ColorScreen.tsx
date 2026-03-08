@@ -23,8 +23,8 @@ type Props = {
 
 export function ColorScreen({ selectedColor, onSelect, onNext, onBack }: Props) {
   return (
-    <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
-      <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
+    <div style={{ display: "grid", gap: 45, minHeight: "90dvh", alignContent: "center" }}>
+      <p style={{ opacity: 0.86, fontSize: 35, margin: 0, textAlign: "center" }}>
         🌈 Couleur instinctive 🦄
       </p>
 

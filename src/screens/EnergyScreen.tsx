@@ -11,7 +11,7 @@ type Props = {
 
 export function EnergyScreen({ draft, onChangeDraft, onNext, onBack }: Props) {
   return (
-    <div style={{ display: "grid", gap: 20, minHeight: "70dvh", alignContent: "center" }}>
+    <div style={{ display: "grid", gap: 50, minHeight: "75dvh", alignContent: "center" }}>
       <p style={{ opacity: 0.86, fontSize: 18, margin: 0, textAlign: "center" }}>
         ⚡ Intensité
       </p>

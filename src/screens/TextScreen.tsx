@@ -17,13 +17,13 @@ const textareaStyle: React.CSSProperties = {
   padding: 14,
   color: "white",
   outline: "none",
-  minHeight: 120,
+  minHeight: 150,
   resize: "vertical",
 };
 
 export function TextScreen({ feelingText, learningText, onChangeDraft, onNext, onBack }: Props) {
   return (
-    <div style={{ display: "grid", gap: 45, minHeight: "70dvh", alignContent: "center" }}>
+    <div style={{ display: "grid", gap: 45, minHeight: "85dvh", alignContent: "center" }}>
       <div style={{ display: "grid", gap: 10 }}>
         <p style={{ opacity: 0.86, fontSize: 20, margin: 0 }}>Ce que j'ai ressenti ☮</p>
         <textarea

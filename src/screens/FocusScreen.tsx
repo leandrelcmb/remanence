@@ -16,8 +16,8 @@ const FOCUSES: [Draft["focus"], string, string][] = [
 
 export function FocusScreen({ focus, onSelect, onNext, onBack }: Props) {
   return (
-    <div style={{ display: "grid", gap: 120, minHeight: "70dvh", alignContent: "center" }}>
-      <p style={{ opacity: 0.86, fontSize: 20, margin: 0, textAlign: "center" }}>
+    <div style={{ display: "grid", gap: 120, minHeight: "85dvh", alignContent: "center" }}>
+      <p style={{ opacity: 0.86, fontSize: 23, margin: 0, textAlign: "center" }}>
         🎭 Où cela s'est joué ?
       </p>
 
@@ -41,8 +41,8 @@ export function FocusScreen({ focus, onSelect, onNext, onBack }: Props) {
                 cursor: "pointer",
               }}
             >
-              <div style={{ fontSize: 26 }}>{emoji}</div>
-              <div style={{ marginTop: 8, fontSize: 13 }}>{label}</div>
+              <div style={{ fontSize: 30 }}>{emoji}</div>
+              <div style={{ marginTop: 15, fontSize: 15 }}>{label}</div>
             </button>
           );
         })}

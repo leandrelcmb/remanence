@@ -202,8 +202,8 @@ export default function App() {
         {/* Header : uniquement sur la landing */}
         {screen === "landing" && (
           <div style={{ marginBottom: 25 }}>
-            <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
-              Pour des souvenirs uniques ✩ ♬ ₊.🎧⋆☾⋆⁺₊✧
+            <h1 style={{ fontSize: 20, fontWeight: 300, margin: 0 }}>
+              Pour des souvenirs uniques ♫⋆｡♪ ₊˚♬ ﾟ.
             </h1>
           </div>
         )}

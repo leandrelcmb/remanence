@@ -24,7 +24,7 @@ function JournalCard({ item, onClick }: { item: JournalItem; onClick: () => void
         background: "rgba(255,255,255,0.05)",
         border: "1px solid rgba(255,255,255,0.1)",
         display: "grid",
-        gap: 10,
+        gap: 15,
         cursor: "pointer",
       }}
     >
@@ -45,7 +45,7 @@ function JournalCard({ item, onClick }: { item: JournalItem; onClick: () => void
 
         <div
           style={{
-            fontSize: 14,
+            fontSize: 15,
             padding: "5px 8px",
             borderRadius: 999,
             background: "rgba(255,255,255,0.07)",
@@ -90,7 +90,7 @@ function JournalCard({ item, onClick }: { item: JournalItem; onClick: () => void
       )}
 
       {item.learningText?.trim() && (
-        <div style={{ opacity: 0.62, fontSize: 13, lineHeight: 1.4 }}>
+        <div style={{ opacity: 0.62, fontSize: 15, lineHeight: 1.4 }}>
           🧙🏼 {item.learningText.trim()}
         </div>
       )}
@@ -114,12 +114,12 @@ export function JournalScreen({ journal, latestJournalColor, userName, onNewEntr
       />
 
       <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 22, minHeight: "70dvh" }}>
-        <div style={{ display: "grid", gap: 12 }}>
-          <h2 style={{ margin: 0, fontWeight: 650 }}>
+        <div style={{ display: "grid", gap: 45 }}>
+          <h2 style={{ margin: 0, fontWeight: 650, fontSize: 20 }}>
             📓 Carnet de Rémanence{userName ? ` de ${userName}` : ""}
           </h2>
 
-          <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "grid", gap: 15 }}>
             <RoundButton variant="primary" onClick={onNewEntry}>
               Nouvelle vibration 💓
             </RoundButton>
