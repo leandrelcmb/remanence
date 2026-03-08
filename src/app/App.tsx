@@ -28,7 +28,7 @@ import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
 
 const FULL_FLOW_SCREENS: FlowScreen[]    = ["setInfo", "color", "energy", "focus", "text", "capture"];
-const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["setInfo", "color", "energy", "focus", "capture"];
+const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["capture", "setInfo", "color", "energy", "focus"];
 
 // Données préservées lors d'une édition (non modifiables)
 type EditingEntry = {
@@ -48,7 +48,7 @@ export default function App() {
   // null = mode création, objet = mode édition
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
 
-  // true = parcours raccourci (setInfo → color → energy → focus → sauvegarde)
+  // true = parcours raccourci (capture → setInfo → color → energy → focus → done)
   const [expressMode, setExpressMode] = useState(false);
 
   const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
@@ -72,7 +72,7 @@ export default function App() {
     setSelectedItem(null);
     setEditingEntry(null);
     setExpressMode(express);
-    navigate("setInfo", "forward");
+    navigate(express ? "capture" : "setInfo", "forward");
   }
 
   function openDetail(item: JournalItem, from: "journal" | "constellation") {
@@ -232,7 +232,7 @@ export default function App() {
               artistSuggestions={artistSuggestions}
               onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
               onNext={() => navigate("color", "forward")}
-              onBack={() => navigate("landing", "backward")}
+              onBack={() => expressMode ? navigate("capture", "backward") : navigate("landing", "backward")}
             />
           )}
 
@@ -258,7 +258,7 @@ export default function App() {
             <FocusScreen
               focus={draft.focus}
               onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
-              onNext={() => expressMode ? navigate("capture", "forward") : navigate("text", "forward")}
+              onNext={() => expressMode ? finish() : navigate("text", "forward")}
               onBack={() => navigate("energy", "backward")}
             />
           )}
@@ -278,8 +278,8 @@ export default function App() {
               photo={draft.photo}
               onPhoto={handlePhoto}
               onClearPhoto={() => setDraft((d) => ({ ...d, photo: undefined }))}
-              onFinish={finish}
-              onBack={() => navigate("text", "backward")}
+              onFinish={expressMode ? () => navigate("setInfo", "forward") : finish}
+              onBack={() => expressMode ? navigate("landing", "backward") : navigate("text", "backward")}
             />
           )}
 
