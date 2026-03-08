@@ -26,12 +26,12 @@ export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal
         <button
           onClick={onExpressStart}
           style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.2)",
             borderRadius: 999,
             padding: "10px 24px",
             fontSize: 14,
-            color: "rgba(255,255,255,0.55)",
+            color: "rgba(255,255,255,0.9)",
             cursor: "pointer",
             fontFamily: "inherit",
             letterSpacing: "0.03em",

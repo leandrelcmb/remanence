@@ -27,7 +27,7 @@ import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
 
-const FULL_FLOW_SCREENS: FlowScreen[]    = ["setInfo", "color", "energy", "focus", "text", "capture"];
+const FULL_FLOW_SCREENS: FlowScreen[]    = ["capture", "setInfo", "color", "energy", "focus", "text"];
 const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["capture", "setInfo", "color", "energy", "focus"];
 
 // Données préservées lors d'une édition (non modifiables)
@@ -52,7 +52,7 @@ export default function App() {
   const [expressMode, setExpressMode] = useState(false);
 
   const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
-  const { booting, profileReady, saveProfile, user, status, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
+  const { booting, profileReady, saveProfile, user, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
   const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
     screen,
     draft,
@@ -72,7 +72,7 @@ export default function App() {
     setSelectedItem(null);
     setEditingEntry(null);
     setExpressMode(express);
-    navigate(express ? "capture" : "setInfo", "forward");
+    navigate("capture", "forward");
   }
 
   function openDetail(item: JournalItem, from: "journal" | "constellation") {
@@ -178,7 +178,7 @@ export default function App() {
   if (!profileReady) {
     return (
       <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
-        <div style={{ position: "relative", zIndex: 1, padding: 50, maxWidth: 460, margin: "0 auto" }}>
+        <div style={{ position: "relative", zIndex: 1, padding: "40px 20px", maxWidth: 460, margin: "0 auto" }}>
           <ScreenTransition screenKey="onboarding" direction="neutral">
             <OnboardingScreen onSave={saveProfile} />
           </ScreenTransition>
@@ -197,7 +197,7 @@ export default function App() {
       haloScale={haloScale}
       haloCenterY={haloCenterY}
     >
-      <div style={{ position: "relative", zIndex: 1, padding: 50, maxWidth: 460, margin: "0 auto" }}>
+      <div style={{ position: "relative", zIndex: 1, padding: "40px 20px", maxWidth: 460, margin: "0 auto" }}>
 
         {/* Header : uniquement sur la landing */}
         {screen === "landing" && (
@@ -205,7 +205,6 @@ export default function App() {
             <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
               Pour des souvenirs uniques ✩ ♬ ₊.🎧⋆☾⋆⁺₊✧
             </h1>
-            <p style={{ opacity: 0.6, marginTop: 8, fontSize: 13 }}>{status}</p>
           </div>
         )}
 
@@ -232,7 +231,7 @@ export default function App() {
               artistSuggestions={artistSuggestions}
               onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
               onNext={() => navigate("color", "forward")}
-              onBack={() => expressMode ? navigate("capture", "backward") : navigate("landing", "backward")}
+              onBack={() => navigate("capture", "backward")}
             />
           )}
 
@@ -268,7 +267,7 @@ export default function App() {
               feelingText={draft.feelingText}
               learningText={draft.learningText}
               onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-              onNext={() => navigate("capture", "forward")}
+              onNext={finish}
               onBack={() => navigate("focus", "backward")}
             />
           )}
@@ -278,8 +277,8 @@ export default function App() {
               photo={draft.photo}
               onPhoto={handlePhoto}
               onClearPhoto={() => setDraft((d) => ({ ...d, photo: undefined }))}
-              onFinish={expressMode ? () => navigate("setInfo", "forward") : finish}
-              onBack={() => expressMode ? navigate("landing", "backward") : navigate("text", "backward")}
+              onFinish={() => navigate("setInfo", "forward")}
+              onBack={() => navigate("landing", "backward")}
             />
           )}
 

@@ -211,7 +211,7 @@ export function ConstellationScreen({
   }, [stars]);
 
   return (
-    <div style={{ display: "grid", gap: 20, minHeight: "70dvh" }}>
+    <div style={{ display: "grid", gap: 20, minHeight: "100dvh", alignContent: "start" }}>
       <style>{CSS}</style>
 
       <h2 style={{ margin: 0 }}>✨ Ta constellation personnalisée</h2>
@@ -224,7 +224,7 @@ export function ConstellationScreen({
         onTouchCancel={handleTouchEnd}
         style={{
           position: "relative",
-          height: 500,
+          height: "min(600px, calc(100dvh - 220px))",
           borderRadius: 20,
           overflow: "hidden",
           border: "1px solid rgba(255,255,255,0.08)",
