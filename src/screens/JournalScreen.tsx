@@ -6,6 +6,7 @@ import { formatTime, focusEmoji } from "./utils";
 type Props = {
   journal: JournalItem[];
   latestJournalColor: string;
+  userName: string;
   onNewEntry: () => void;
   onSelectItem: (item: JournalItem) => void;
   onHome: () => void;
@@ -97,7 +98,7 @@ function JournalCard({ item, onClick }: { item: JournalItem; onClick: () => void
   );
 }
 
-export function JournalScreen({ journal, latestJournalColor, onNewEntry, onSelectItem, onHome }: Props) {
+export function JournalScreen({ journal, latestJournalColor, userName, onNewEntry, onSelectItem, onHome }: Props) {
   return (
     <>
       {/* Overlay coloré lié au dernier set */}
@@ -114,7 +115,9 @@ export function JournalScreen({ journal, latestJournalColor, onNewEntry, onSelec
 
       <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 22, minHeight: "70dvh" }}>
         <div style={{ display: "grid", gap: 12 }}>
-          <h2 style={{ margin: 0, fontWeight: 650 }}>📓 Carnet de rémanence</h2>
+          <h2 style={{ margin: 0, fontWeight: 650 }}>
+            📓 Carnet de Rémanence{userName ? ` de ${userName}` : ""}
+          </h2>
 
           <div style={{ display: "grid", gap: 12 }}>
             <RoundButton variant="primary" onClick={onNewEntry}>

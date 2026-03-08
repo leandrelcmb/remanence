@@ -17,11 +17,16 @@ import { FocusScreen } from "../screens/FocusScreen";
 import { TextScreen } from "../screens/TextScreen";
 import { CaptureScreen } from "../screens/CaptureScreen";
 import { DoneScreen } from "../screens/DoneScreen";
+import type { LastSavedEntry } from "../screens/DoneScreen";
 import { JournalScreen } from "../screens/JournalScreen";
 import { DetailScreen } from "../screens/DetailScreen";
 import { ConstellationScreen } from "../screens/ConstellationScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
+import { FlowProgress } from "./ui/FlowProgress";
+
+// Écrans qui font partie du flux de capture
+const FLOW_SCREENS: FlowScreen[] = ["setInfo", "color", "energy", "focus", "text", "capture"];
 
 // Données préservées lors d'une édition (non modifiables)
 type EditingEntry = {
@@ -35,12 +40,13 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState<JournalItem | null>(null);
   const [detailBackTarget, setDetailBackTarget] = useState<"journal" | "constellation">("journal");
   const [lastSavedColor, setLastSavedColor] = useState<string | null>(null);
+  const [lastSavedEntry, setLastSavedEntry] = useState<LastSavedEntry | null>(null);
 
   // null = mode création, objet = mode édition
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
 
   const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
-  const { booting, profileReady, saveProfile, status, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
+  const { booting, profileReady, saveProfile, user, status, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
   const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
     screen,
     draft,
@@ -116,8 +122,16 @@ export default function App() {
       resetDraft();
       setScreen("journal");
     } else {
-      // Mode création : nouvelle entrée
+      // Mode création : on capture les infos du draft AVANT de le réinitialiser
       const savedColor = energyTint(draft.colorHex, draft.energy);
+      const savedEntry: LastSavedEntry = {
+        artistName: draft.artistName,
+        stageName: draft.stageName,
+        energy: draft.energy,
+        colorHex: draft.colorHex,
+        focus: draft.focus,
+        photo: draft.photo,
+      };
 
       await createSetEntry({
         festivalId,
@@ -134,6 +148,7 @@ export default function App() {
 
       await refreshJournal(festivalId);
       setLastSavedColor(savedColor);
+      setLastSavedEntry(savedEntry);
       resetDraft();
       setScreen("done");
     }
@@ -159,6 +174,8 @@ export default function App() {
     );
   }
 
+  const isFlowScreen = FLOW_SCREENS.includes(screen);
+
   return (
     <RootLayout
       haloColor={haloColor}
@@ -167,12 +184,19 @@ export default function App() {
       haloCenterY={haloCenterY}
     >
       <div style={{ position: "relative", zIndex: 1, padding: 50, maxWidth: 460, margin: "0 auto" }}>
-        <div style={{ marginBottom: 25 }}>
-          <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
-            Pour des souvenirs uniques ✩ ♬ ₊.🎧⋆☾⋆⁺₊✧
-          </h1>
-          <p style={{ opacity: 0.6, marginTop: 8, fontSize: 13 }}>{status}</p>
-        </div>
+
+        {/* Header : uniquement sur la landing */}
+        {screen === "landing" && (
+          <div style={{ marginBottom: 25 }}>
+            <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
+              Pour des souvenirs uniques ✩ ♬ ₊.🎧⋆☾⋆⁺₊✧
+            </h1>
+            <p style={{ opacity: 0.6, marginTop: 8, fontSize: 13 }}>{status}</p>
+          </div>
+        )}
+
+        {/* Indicateur de progression dans le flux de capture */}
+        {isFlowScreen && <FlowProgress screen={screen} />}
 
         {screen === "landing" && (
           <LandingScreen
@@ -244,6 +268,7 @@ export default function App() {
         {screen === "done" && (
           <DoneScreen
             lastSavedColor={lastSavedColor}
+            lastSavedEntry={lastSavedEntry}
             onHome={() => setScreen("landing")}
           />
         )}
@@ -252,6 +277,7 @@ export default function App() {
           <JournalScreen
             journal={journal}
             latestJournalColor={latestJournalColor}
+            userName={user?.displayName ?? ""}
             onNewEntry={startNewRemanence}
             onSelectItem={(item) => openDetail(item, "journal")}
             onHome={() => setScreen("landing")}
