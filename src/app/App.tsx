@@ -1,10 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type TouchEvent as ReactTouchEvent,
+} from "react";
 import { RootLayout } from "./RootLayout";
 import { ensureBootstrap, createSetEntry, listJournalItems } from "../core/store/service";
 import type { FlowScreen, Draft } from "./flow/types";
 import type { JournalItem } from "../core/store/service";
 import { softHaptic } from "./flow/haptics";
-import { EnergyDots, energyColorFor } from "./ui/EnergyDots";
+import { EnergyDots, energyTint } from "./ui/EnergyDots";
 import { RoundButton } from "./ui/RoundButton";
 import { ARTISTS } from "./data/artists";
 
@@ -31,6 +38,20 @@ const STAGES = [
 type ExtraScreen = "detail" | "constellation";
 type DetailBackTarget = "journal" | "constellation";
 
+function createEmptyDraft(): Draft {
+  return {
+    artistName: "",
+    stageName: "",
+    style: "",
+    energy: 5,
+    focus: "body",
+    colorHex: "#5E5CE6",
+    feelingText: "",
+    learningText: "",
+    photo: undefined,
+  };
+}
+
 export default function App() {
   const [screen, setScreen] = useState<FlowScreen | ExtraScreen>("landing");
   const [detailBackTarget, setDetailBackTarget] = useState<DetailBackTarget>("journal");
@@ -41,16 +62,12 @@ export default function App() {
   const [journal, setJournal] = useState<JournalItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<JournalItem | null>(null);
 
-  const [draft, setDraft] = useState<Draft>({
-    artistName: "",
-    stageName: "",
-    style: "",
-    energy: 5,
-    focus: "body",
-    colorHex: energyColorFor(5),
-    feelingText: "",
-    learningText: "",
-  });
+const [lastSavedColor, setLastSavedColor] = useState<string | null>(null);
+
+const [constellationZoom, setConstellationZoom] = useState(1);
+const pinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
+
+  const [draft, setDraft] = useState<Draft>(createEmptyDraft());
 
   const artistSuggestions = useMemo(() => {
     const value = draft.artistName.trim().toLowerCase();
@@ -61,6 +78,75 @@ export default function App() {
       .filter((a) => a.toLowerCase() !== value)
       .slice(0, 5);
   }, [draft.artistName]);
+
+  function resetDraft() {
+    setDraft(createEmptyDraft());
+  }
+
+  function startNewRemanence() {
+    resetDraft();
+    setSelectedItem(null);
+    setScreen("setInfo");
+  }
+
+  function handlePhoto(e: ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    setDraft((d) => ({
+      ...d,
+      photo: reader.result as string,
+    }));
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function handleConstellationTouchStart(e: ReactTouchEvent<HTMLDivElement>) {
+  if (e.touches.length !== 2) return;
+
+  pinchStartRef.current = {
+    distance: getTouchDistance(e.touches),
+    zoom: constellationZoom,
+  };
+}
+
+function handleConstellationTouchMove(e: ReactTouchEvent<HTMLDivElement>) {
+  if (e.touches.length !== 2 || !pinchStartRef.current) return;
+
+  e.preventDefault();
+
+  const currentDistance = getTouchDistance(e.touches);
+  if (!currentDistance) return;
+
+  const nextZoom =
+    pinchStartRef.current.zoom *
+    (currentDistance / pinchStartRef.current.distance);
+
+  setConstellationZoom(clamp(nextZoom, 1, 3));
+}
+
+function handleConstellationTouchEnd() {
+  pinchStartRef.current = null;
+}
+
+  const displayDraftColor = useMemo(() => {
+    return energyTint(draft.colorHex, draft.energy);
+  }, [draft.colorHex, draft.energy]);
+
+const latestJournalColor = useMemo(() => {
+  if (journal.length === 0) return displayDraftColor;
+
+  const latest = [...journal].sort(
+    (a, b) =>
+      new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+  )[0];
+
+  return energyTint(latest.colorHex, latest.energy);
+}, [journal, displayDraftColor]);
 
   const constellationBounds = useMemo(() => {
     if (journal.length === 0) return null;
@@ -74,6 +160,7 @@ export default function App() {
 
   const constellationStars = useMemo(() => {
     return journal.map((item, index) => {
+      const displayColor = energyTint(item.colorHex, item.energy);
       const x = 8 + ((item.energy - 1) / 9) * 84;
 
       const time = new Date(item.startTime).getTime();
@@ -89,13 +176,16 @@ export default function App() {
 
       const wobbleX = ((index % 3) - 1) * 2.2;
       const wobbleY = ((index % 4) - 1.5) * 1.8;
-      const starSize = 16 + item.energy * 1.2;
+      const starSize = 16 + item.energy * 1.35;
+      const glowSize = 18 + item.energy * 2.8;
 
       return {
         item,
+        displayColor,
         x: x + wobbleX,
         y: y + wobbleY,
         starSize,
+        glowSize,
       };
     });
   }, [journal, constellationBounds]);
@@ -105,6 +195,7 @@ export default function App() {
       a: (typeof constellationStars)[number];
       b: (typeof constellationStars)[number];
       opacity: number;
+      duration: number;
     }> = [];
 
     for (let i = 0; i < constellationStars.length; i++) {
@@ -120,9 +211,10 @@ export default function App() {
 
         if (distance < maxDistance) {
           const ratio = 1 - distance / maxDistance;
-          const opacity = 0.04 + ratio * 0.22;
+          const opacity = 0.03 + ratio * 0.24;
+          const duration = 3.4 + ((i + j) % 4) * 0.7;
 
-          links.push({ a, b, opacity });
+          links.push({ a, b, opacity, duration });
         }
       }
     }
@@ -173,25 +265,52 @@ export default function App() {
   }, [screen, draft.focus, selectedItem]);
 
   const haloColor = useMemo(() => {
-    if (screen === "detail" && selectedItem) return selectedItem.colorHex;
-    return draft.colorHex;
-  }, [screen, draft.colorHex, selectedItem]);
+  if (screen === "detail" && selectedItem) {
+    return energyTint(selectedItem.colorHex, selectedItem.energy);
+  }
+
+  if (screen === "done" && lastSavedColor) {
+    return lastSavedColor;
+  }
+
+  if (
+    screen === "landing" ||
+    screen === "journal" ||
+    screen === "constellation"
+  ) {
+    return latestJournalColor;
+  }
+
+  return displayDraftColor;
+}, [screen, selectedItem, displayDraftColor, latestJournalColor, lastSavedColor]);
 
   const canContinueSetInfo = draft.artistName.trim().length > 0;
 
-  const starAnimation = `
+  const constellationCss = `
     @keyframes starPulse {
       0% {
         transform: translate(-50%, -50%) scale(1);
-        opacity: 0.85;
+        opacity: 0.82;
       }
       50% {
-        transform: translate(-50%, -50%) scale(1.18);
+        transform: translate(-50%, -50%) scale(1.16);
         opacity: 1;
       }
       100% {
         transform: translate(-50%, -50%) scale(1);
-        opacity: 0.85;
+        opacity: 0.82;
+      }
+    }
+
+    @keyframes linkBreath {
+      0% {
+        opacity: 0.45;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.45;
       }
     }
   `;
@@ -209,7 +328,7 @@ export default function App() {
     })().catch((e) => setStatus(`Erreur: ${String(e)}`));
   }, []);
 
-  async function finish() {
+    async function finish() {
     if (!festivalId) return;
 
     await createSetEntry({
@@ -222,12 +341,15 @@ export default function App() {
       colorHex: draft.colorHex,
       feelingText: draft.feelingText,
       learningText: draft.learningText,
+      photo: draft.photo,
     });
 
     const items = await listJournalItems(festivalId);
-    setJournal(items);
+setJournal(items);
 
-    setScreen("done");
+setLastSavedColor(energyTint(draft.colorHex, draft.energy));
+resetDraft();
+setScreen("done");
   }
 
   return (
@@ -237,9 +359,30 @@ export default function App() {
       haloScale={haloScale}
       haloCenterY={haloCenterY}
     >
-      <style>{starAnimation}</style>
+      <style>{constellationCss}</style>
 
-      <div style={{ padding: 50, maxWidth: 460, margin: "0 auto" }}>
+{screen === "journal" && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: latestJournalColor,
+      opacity: 0.12,
+      pointerEvents: "none",
+      zIndex: 0,
+    }}
+  />
+)}
+
+<div
+  style={{
+    position: "relative",
+    zIndex: 1,
+    padding: 50,
+    maxWidth: 460,
+    margin: "0 auto",
+  }}
+>
         <div style={{ marginBottom: 25 }}>
           <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
             Pour des souvenirs uniques ✩ ♬ ₊.🎧⋆☾⋆⁺₊✧
@@ -247,30 +390,34 @@ export default function App() {
           <p style={{ opacity: 0.6, marginTop: 8, fontSize: 13 }}>{status}</p>
         </div>
 
-        {/* LANDING */}
         {screen === "landing" && (
           <div style={{ display: "grid", gap: 60, minHeight: "70dvh", alignContent: "center" }}>
-            <p style={{ opacity: 0.86, fontSize: 24, margin: 0, textAlign: "center" }}>
+            <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
               🧘 “Ancre l'instant”
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
-              <RoundButton variant="primary" onClick={() => setScreen("setInfo")}>
+              <RoundButton variant="primary" onClick={startNewRemanence}>
                 Entrer en rémanence 🌱
               </RoundButton>
 
               <RoundButton variant="secondary" onClick={() => setScreen("journal")}>
-                Mes vibrations 💓
+                Vibrations 💓
               </RoundButton>
 
-              <RoundButton variant="secondary" onClick={() => setScreen("constellation")}>
-                Constellation ✨
-              </RoundButton>
+              <RoundButton
+  variant="secondary"
+  onClick={() => {
+    setConstellationZoom(1);
+    setScreen("constellation");
+  }}
+>
+  Constellation ✨
+</RoundButton>
             </div>
           </div>
         )}
 
-        {/* SET INFO */}
         {screen === "setInfo" && (
           <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
             <p style={{ opacity: 0.86, fontSize: 20, margin: 0, textAlign: "center" }}>
@@ -282,7 +429,7 @@ export default function App() {
               onChange={(e) =>
                 setDraft((d) => ({ ...d, artistName: e.target.value }))
               }
-              placeholder="Artiste (ex : Ott)"
+              placeholder="Artiste (ex : Astrix)"
               style={{
                 width: "100%",
                 borderRadius: 18,
@@ -329,7 +476,6 @@ export default function App() {
               Si tu ne sais pas : demande autour de toi. Le nom est le sceau du souvenir ✨
             </p>
 
-            {/* STAGES DROPDOWN UNIQUEMENT */}
             <div style={{ display: "grid", gap: 8 }}>
               <p style={{ opacity: 0.72, fontSize: 13, margin: 0 }}>
                 📍 Choisis une scène
@@ -403,7 +549,7 @@ export default function App() {
                   softHaptic();
                   return;
                 }
-                setScreen("energy");
+                setScreen("color");
               }}
             >
               Valider ✔️
@@ -411,7 +557,53 @@ export default function App() {
           </div>
         )}
 
-        {/* ENERGY */}
+        {/* COLOR */}
+{screen === "color" && (
+  <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
+    <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
+      🌈 Couleur instinctive 🦄
+    </p>
+
+    <div style={{ display: "flex", gap: 23, flexWrap: "wrap", justifyContent: "center" }}>
+      {RGB_COLORS.map((c) => {
+        const active = draft.colorHex === c;
+        return (
+          <button
+            key={c}
+            onClick={() => {
+              softHaptic();
+              setDraft((d) => ({ ...d, colorHex: c }));
+            }}
+            aria-label={c}
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 999,
+              border: active ? "2px solid rgba(255,255,255,0.7)" : "1px solid rgba(255,255,255,0.14)",
+              background: c,
+              cursor: "pointer",
+              boxShadow: active ? `0 0 26px ${c}66` : "none",
+            }}
+          />
+        );
+      })}
+    </div>
+
+    <div style={{ display: "flex", gap: 22 }}>
+      <div style={{ flex: 1 }}>
+        <RoundButton variant="secondary" onClick={() => setScreen("setInfo")}>
+          ↪️ Retour
+        </RoundButton>
+      </div>
+      <div style={{ flex: 1 }}>
+        <RoundButton variant="primary" onClick={() => setScreen("energy")}>
+          Je valide 🖖
+        </RoundButton>
+      </div>
+    </div>
+  </div>
+)}
+
         {screen === "energy" && (
           <div style={{ display: "grid", gap: 20, minHeight: "70dvh", alignContent: "center" }}>
             <p style={{ opacity: 0.86, fontSize: 18, margin: 0, textAlign: "center" }}>
@@ -420,22 +612,30 @@ export default function App() {
 
             <EnergyDots
               value={draft.energy}
+              color={draft.colorHex}
               onChange={(n) =>
                 setDraft((d) => ({
                   ...d,
                   energy: n,
-                  colorHex: energyColorFor(n),
                 }))
               }
             />
 
-            <RoundButton variant="primary" onClick={() => setScreen("focus")}>
-              Je valide 🖖
-            </RoundButton>
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="secondary" onClick={() => setScreen("color")}>
+                  ↪️ Retour
+                </RoundButton>
+              </div>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="primary" onClick={() => setScreen("focus")}>
+                  Je valide 🖖
+                </RoundButton>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* FOCUS */}
         {screen === "focus" && (
           <div style={{ display: "grid", gap: 120, minHeight: "70dvh", alignContent: "center" }}>
             <p style={{ opacity: 0.86, fontSize: 20, margin: 0, textAlign: "center" }}>
@@ -483,7 +683,7 @@ export default function App() {
                 </RoundButton>
               </div>
               <div style={{ flex: 1 }}>
-                <RoundButton variant="primary" onClick={() => setScreen("color")}>
+                <RoundButton variant="primary" onClick={() => setScreen("text")}>
                   Continuer ✨
                 </RoundButton>
               </div>
@@ -491,54 +691,6 @@ export default function App() {
           </div>
         )}
 
-        {/* COLOR */}
-        {screen === "color" && (
-          <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
-            <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
-              🌈 Couleur instinctive 🦄
-            </p>
-
-            <div style={{ display: "flex", gap: 23, flexWrap: "wrap", justifyContent: "center" }}>
-              {RGB_COLORS.map((c) => {
-                const active = draft.colorHex === c;
-                return (
-                  <button
-                    key={c}
-                    onClick={() => {
-                      softHaptic();
-                      setDraft((d) => ({ ...d, colorHex: c }));
-                    }}
-                    aria-label={c}
-                    style={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 999,
-                      border: active ? "2px solid rgba(255,255,255,0.7)" : "1px solid rgba(255,255,255,0.14)",
-                      background: c,
-                      cursor: "pointer",
-                      boxShadow: active ? `0 0 26px ${c}66` : "none",
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            <div style={{ display: "flex", gap: 22 }}>
-              <div style={{ flex: 1 }}>
-                <RoundButton variant="secondary" onClick={() => setScreen("focus")}>
-                  ↪️ Retour
-                </RoundButton>
-              </div>
-              <div style={{ flex: 1 }}>
-                <RoundButton variant="primary" onClick={() => setScreen("text")}>
-                  Je valide 🖖
-                </RoundButton>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TEXT */}
         {screen === "text" && (
           <div style={{ display: "grid", gap: 45, minHeight: "70dvh", alignContent: "center" }}>
             <div style={{ display: "grid", gap: 10 }}>
@@ -585,7 +737,7 @@ export default function App() {
 
             <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
               <div style={{ flex: 1 }}>
-                <RoundButton variant="secondary" onClick={() => setScreen("color")}>
+                <RoundButton variant="secondary" onClick={() => setScreen("focus")}>
                   ↪️ Retour
                 </RoundButton>
               </div>
@@ -598,25 +750,62 @@ export default function App() {
           </div>
         )}
 
-        {/* CAPTURE */}
         {screen === "capture" && (
           <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
-            <p style={{ opacity: 0.86, fontSize: 18, margin: 0, textAlign: "center" }}>
-              📷 Capture du moment 💝
+            <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
+              Capture du moment 📸
             </p>
 
-            <div
-              style={{
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                padding: 14,
-                opacity: 0.8,
-                fontSize: 13,
-              }}
-            >
-              V1 : on fera l’upload photo plus tard. Pour l’instant, on valide la trace.
-            </div>
+            {!draft.photo && (
+              <label
+                style={{
+                  padding: "80px",
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  textAlign: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <p style={{ fontSize: 45, margin: 0, textAlign: "center" }}>
+                  📤
+                </p>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhoto}
+                  style={{ display: "none" }}
+                />
+              </label>
+            )}
+
+            {draft.photo && (
+              <>
+                <img
+                  src={draft.photo}
+                  alt="Capture du moment"
+                  style={{
+                    width: "100%",
+                    borderRadius: 16,
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}
+                />
+
+                <RoundButton
+                  variant="secondary"
+                  onClick={() =>
+                    setDraft((d) => ({
+                      ...d,
+                      photo: undefined,
+                    }))
+                  }
+                >
+                  🔄
+                </RoundButton>
+              </>
+            )}
 
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{ flex: 1 }}>
@@ -624,6 +813,7 @@ export default function App() {
                   ↪️ Retour
                 </RoundButton>
               </div>
+
               <div style={{ flex: 1 }}>
                 <RoundButton variant="primary" onClick={finish}>
                   Ancrer 💌
@@ -633,128 +823,155 @@ export default function App() {
           </div>
         )}
 
-        {/* DONE */}
         {screen === "done" && (
-          <div style={{ display: "grid", gap: 100, minHeight: "70dvh", alignContent: "center" }}>
-            <p style={{ opacity: 0.92, fontSize: 20, margin: 0, textAlign: "center" }}>
-              “Ta trace est ancrée 🎁”
-            </p>
+  <div style={{ display: "grid", gap: 36, minHeight: "70dvh", alignContent: "center" }}>
+    <p
+      style={{
+        opacity: 0.92,
+        fontSize: 34,
+        margin: 0,
+        textAlign: "center",
+        color: lastSavedColor ?? "white",
+        textShadow: lastSavedColor ? `0 0 24px ${lastSavedColor}66` : "none",
+      }}
+    >
+      “Ta trace est ancrée 🎁”
+    </p>
 
-            <RoundButton variant="primary" onClick={() => setScreen("landing")}>
-              Se reconnecter à l'instant 🍀
-            </RoundButton>
-          </div>
-        )}
+    <div
+      style={{
+        borderRadius: 20,
+        padding: 18,
+        textAlign: "center",
+        background: lastSavedColor ? `${lastSavedColor}18` : "rgba(255,255,255,0.05)",
+        border: lastSavedColor
+          ? `1px solid ${lastSavedColor}44`
+          : "1px solid rgba(255,255,255,0.1)",
+        boxShadow: lastSavedColor ? `0 0 30px ${lastSavedColor}22` : "none",
+        color: "white",
+        opacity: 0.9,
+      }}
+    >
+      Le souvenir a rejoint ta constellation ✨
+    </div>
 
-        {/* JOURNAL */}
+    <RoundButton variant="primary" onClick={() => setScreen("landing")}>
+      Se reconnecter à l'instant 🍀
+    </RoundButton>
+  </div>
+)}
+
         {screen === "journal" && (
-          <div style={{ display: "grid", gap: 22, minHeight: "70dvh" }}>
-            <div style={{ display: "grid", gap: 12 }}>
-              <h2 style={{ margin: 0, fontWeight: 650 }}>
-                📓 Carnet de rémanence
-              </h2>
+  <div style={{ display: "grid", gap: 22, minHeight: "70dvh" }}>
+    <div style={{ display: "grid", gap: 12 }}>
+      <h2 style={{ margin: 0, fontWeight: 650 }}>
+        📓 Carnet de rémanence
+      </h2>
 
-              <div style={{ display: "grid", gap: 12 }}>
-                <RoundButton variant="primary" onClick={() => setScreen("setInfo")}>
-                  Nouvelle vibration 💓
-                </RoundButton>
+      <div style={{ display: "grid", gap: 12 }}>
+        <RoundButton variant="primary" onClick={startNewRemanence}>
+          Nouvelle vibration 💓
+        </RoundButton>
 
-                <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
-                  Home ॐ
-                </RoundButton>
+        <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
+          Home ॐ
+        </RoundButton>
+      </div>
+    </div>
+
+    {journal.length === 0 && (
+      <p style={{ opacity: 0.6 }}>
+        Aucun souvenir enregistré pour le moment.
+      </p>
+    )}
+
+    {journal.map((item) => {
+      const itemDisplayColor = energyTint(item.colorHex, item.energy);
+
+      return (
+        <div
+          key={item.id}
+          onClick={() => {
+            setSelectedItem(item);
+            setDetailBackTarget("journal");
+            setScreen("detail");
+          }}
+          style={{
+            borderRadius: 18,
+            padding: 16,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            display: "grid",
+            gap: 10,
+            cursor: "pointer",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "grid", gap: 4 }}>
+              <strong style={{ fontSize: 20 }}>{item.artistName}</strong>
+
+              <div style={{ opacity: 0.65, fontSize: 15 }}>
+                {formatTime(item.startTime)} · {item.stageName || "Scène inconnue"}
               </div>
             </div>
 
-            {journal.length === 0 && (
-              <p style={{ opacity: 0.6 }}>
-                Aucun souvenir enregistré pour le moment.
-              </p>
-            )}
-
-            {journal.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => {
-                  setSelectedItem(item);
-                  setDetailBackTarget("journal");
-                  setScreen("detail");
-                }}
-                style={{
-                  borderRadius: 18,
-                  padding: 16,
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  display: "grid",
-                  gap: 10,
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                  <div style={{ display: "grid", gap: 4 }}>
-                    <strong style={{ fontSize: 20 }}>{item.artistName}</strong>
-
-                    <div style={{ opacity: 0.65, fontSize: 15 }}>
-                      {formatTime(item.startTime)} · {item.stageName || "Scène inconnue"}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: 14,
-                      padding: "5px 8px",
-                      borderRadius: 999,
-                      background: "rgba(255,255,255,0.07)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {focusEmoji(item.focus)} ⚡ {item.energy}/10
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: 999,
-                      background: item.colorHex,
-                      boxShadow: `0 0 18px ${item.colorHex}88`,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <div style={{ opacity: 0.7, fontSize: 13 }}>
-                    {item.style?.trim() ? item.style : "Style non renseigné"}
-                  </div>
-                </div>
-
-                {item.feelingText?.trim() && (
-                  <div
-                    style={{
-                      opacity: 0.88,
-                      lineHeight: 1.45,
-                      fontSize: 14,
-                      padding: "10px 12px",
-                      borderRadius: 14,
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    “{item.feelingText.trim()}”
-                  </div>
-                )}
-
-                {item.learningText?.trim() && (
-                  <div style={{ opacity: 0.62, fontSize: 13, lineHeight: 1.4 }}>
-                    🧙🏼 {item.learningText.trim()}
-                  </div>
-                )}
-              </div>
-            ))}
+            <div
+              style={{
+                fontSize: 14,
+                padding: "5px 8px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {focusEmoji(item.focus)} ⚡ {item.energy}/10
+            </div>
           </div>
-        )}
 
-        {/* CONSTELLATION */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: 999,
+                background: itemDisplayColor,
+                boxShadow: `0 0 18px ${itemDisplayColor}88`,
+                flexShrink: 0,
+              }}
+            />
+            <div style={{ opacity: 0.7, fontSize: 13 }}>
+              {item.style?.trim() ? item.style : "Style non renseigné"}
+            </div>
+          </div>
+
+          {item.feelingText?.trim() && (
+            <div
+              style={{
+                opacity: 0.88,
+                lineHeight: 1.45,
+                fontSize: 14,
+                padding: "10px 12px",
+                borderRadius: 14,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              “{item.feelingText.trim()}”
+            </div>
+          )}
+
+          {item.learningText?.trim() && (
+            <div style={{ opacity: 0.62, fontSize: 13, lineHeight: 1.4 }}>
+              🧙🏼 {item.learningText.trim()}
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
+
         {screen === "constellation" && (
           <div style={{ display: "grid", gap: 20, minHeight: "70dvh" }}>
             <h2 style={{ margin: 0 }}>
@@ -762,20 +979,25 @@ export default function App() {
             </h2>
 
             <div
-              style={{
-                position: "relative",
-                height: 500,
-                borderRadius: 20,
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundImage:
-                  "linear-gradient(rgba(7,0,20,0.55), rgba(7,0,20,0.78)), url('/images/space-bg.jpg')",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                backgroundColor: "rgba(255,255,255,0.03)",
-              }}
-            >
+  onTouchStart={handleConstellationTouchStart}
+  onTouchMove={handleConstellationTouchMove}
+  onTouchEnd={handleConstellationTouchEnd}
+  onTouchCancel={handleConstellationTouchEnd}
+  style={{
+    position: "relative",
+    height: 500,
+    borderRadius: 20,
+    overflow: "hidden",
+    border: "1px solid rgba(255,255,255,0.08)",
+    backgroundImage:
+      "linear-gradient(rgba(7,0,20,0.55), rgba(7,0,20,0.78)), url('/images/space-bg.jpg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    touchAction: "none",
+  }}
+>
               {journal.length === 0 && (
                 <div
                   style={{
@@ -792,59 +1014,76 @@ export default function App() {
                 </div>
               )}
 
-              {/* LIAISONS */}
-              <svg
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  pointerEvents: "none",
-                }}
-              >
-                {constellationLinks.map((link, index) => (
-                  <line
-                    key={`${link.a.item.id}-${link.b.item.id}-${index}`}
-                    x1={link.a.x}
-                    y1={link.a.y}
-                    x2={link.b.x}
-                    y2={link.b.y}
-                    stroke={link.a.item.colorHex}
-                    strokeOpacity={link.opacity}
-                    strokeWidth="0.22"
-                  />
-                ))}
-              </svg>
+              <div
+  style={{
+    position: "absolute",
+    inset: 0,
+    transform: `scale(${constellationZoom})`,
+    transformOrigin: "center center",
+    transition: pinchStartRef.current ? "none" : "transform 0.18s ease-out",
+  }}
+>
+  <svg
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+    style={{
+      position: "absolute",
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      pointerEvents: "none",
+    }}
+  >
+    {constellationLinks.map((link, index) => (
+      <line
+        key={`${link.a.item.id}-${link.b.item.id}-${index}`}
+        x1={link.a.x}
+        y1={link.a.y}
+        x2={link.b.x}
+        y2={link.b.y}
+        stroke={link.a.displayColor}
+        strokeOpacity={link.opacity}
+        strokeWidth="0.22"
+        style={{
+          animation: `linkBreath ${link.duration}s ease-in-out infinite`,
+        }}
+      />
+    ))}
+  </svg>
 
-              {/* ÉTOILES */}
-              {constellationStars.map((star) => (
-                <div
-                  key={star.item.id}
-                  onClick={() => {
-                    setSelectedItem(star.item);
-                    setDetailBackTarget("constellation");
-                    setScreen("detail");
-                  }}
-                  style={{
-                    position: "absolute",
-                    left: `${star.x}%`,
-                    top: `${star.y}%`,
-                    transform: "translate(-50%, -50%)",
-                    color: star.item.colorHex,
-                    fontSize: star.starSize,
-                    lineHeight: 1,
-                    textShadow: `0 0 10px ${star.item.colorHex}, 0 0 22px ${star.item.colorHex}`,
-                    cursor: "pointer",
-                    userSelect: "none",
-                    animation: `starPulse ${2.6 - star.item.energy * 0.12}s ease-in-out infinite`,
-                  }}
-                  title={`${star.item.artistName} · ${formatTime(star.item.startTime)}`}
-                >
-                  ✦
-                </div>
-              ))}
+  {constellationStars.map((star) => (
+    <div
+      key={star.item.id}
+      onClick={() => {
+        setSelectedItem(star.item);
+        setDetailBackTarget("constellation");
+        setScreen("detail");
+      }}
+      style={{
+        position: "absolute",
+        left: `${star.x}%`,
+        top: `${star.y}%`,
+        transform: "translate(-50%, -50%)",
+        color: star.displayColor,
+        fontSize: star.starSize,
+        lineHeight: 1,
+        textShadow: `0 0 ${star.glowSize}px ${star.displayColor}, 0 0 ${
+          star.glowSize * 1.7
+        }px ${star.displayColor}`,
+        cursor: "pointer",
+        userSelect: "none",
+        animation: `starPulse ${2.6 - star.item.energy * 0.12}s ease-in-out infinite`,
+        filter: `drop-shadow(0 0 ${Math.max(
+          6,
+          star.item.energy * 1.4
+        )}px ${star.displayColor})`,
+      }}
+      title={`${star.item.artistName} · ${formatTime(star.item.startTime)}`}
+    >
+      ✦
+    </div>
+  ))}
+</div>
             </div>
 
             <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
@@ -853,7 +1092,6 @@ export default function App() {
           </div>
         )}
 
-        {/* DETAIL */}
         {screen === "detail" && selectedItem && (
           <div style={{ display: "grid", gap: 30, minHeight: "70dvh", alignContent: "center" }}>
             <div style={{ display: "grid", gap: 6, textAlign: "center" }}>
@@ -876,6 +1114,18 @@ export default function App() {
                 gap: 16,
               }}
             >
+              {selectedItem.photo && (
+                <img
+                  src={selectedItem.photo}
+                  alt="Souvenir du moment"
+                  style={{
+                    width: "100%",
+                    borderRadius: 14,
+                    marginBottom: 10,
+                  }}
+                />
+              )}
+
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span>{focusEmoji(selectedItem.focus)}</span>
                 <span>⚡ {selectedItem.energy}/10</span>
@@ -887,8 +1137,8 @@ export default function App() {
                     width: 18,
                     height: 18,
                     borderRadius: 999,
-                    background: selectedItem.colorHex,
-                    boxShadow: `0 0 18px ${selectedItem.colorHex}`,
+                    background: energyTint(selectedItem.colorHex, selectedItem.energy),
+                    boxShadow: `0 0 18px ${energyTint(selectedItem.colorHex, selectedItem.energy)}`,
                   }}
                 />
                 <span>{selectedItem.style?.trim() ? selectedItem.style : "Style inconnu"}</span>
@@ -918,6 +1168,19 @@ export default function App() {
       </div>
     </RootLayout>
   );
+}
+ 
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function getTouchDistance(touches: ReactTouchEvent<HTMLDivElement>["touches"]) {
+  if (touches.length < 2) return 0;
+
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+
+  return Math.sqrt(dx * dx + dy * dy);
 }
 
 function formatTime(iso: string) {

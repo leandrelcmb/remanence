@@ -1,79 +1,157 @@
 import { softHaptic } from "../flow/haptics";
 
 type Props = {
-  value: number; // 1..5
+  value: number;
+  color: string;
   onChange: (n: number) => void;
 };
 
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
 
-const ENERGY_COLORS: string[] = [
-  "#0F0614", // 1 orange sombre
-  "#2B1037", // 2 orange 
-  "#461B5A", // 3 jaune clair
-  "#672885", // 4 jaune
-  "#7D30A1", // 5 jaune-vert
-  "#993BC4", // 1 orange sombre
-  "#AB5ECF", // 2 orange 
-  "#BE81D9", // 3 jaune clair
-  "#E2C8EF", // 4 jaune
-  "#F5EBF9", // 5 jaune-vert
-];
+export function energyTint(color: string, energy: number) {
+  const safeEnergy = clamp(energy, 1, 10);
+  const factor = safeEnergy / 10;
 
-export function EnergyDots({ value, onChange }: Props) {
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+
+  const newR = Math.min(255, Math.floor(r + (255 - r) * factor * 0.35));
+  const newG = Math.min(255, Math.floor(g + (255 - g) * factor * 0.35));
+  const newB = Math.min(255, Math.floor(b + (255 - b) * factor * 0.35));
+
+  return `rgb(${newR}, ${newG}, ${newB})`;
+}
+
+export function energyColorFor(energy: number) {
+  return energyTint("#5E5CE6", energy);
+}
+
+export function EnergyDots({ value, color, onChange }: Props) {
+  const tint = energyTint(color, value);
+
+  const sliderCss = `
+    .remanence-range {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      outline: none;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255,255,255,0.12) 0%,
+          ${tint} 100%
+        );
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        0 0 28px ${tint}22;
+    }
+
+    .remanence-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.85);
+      background: ${tint};
+      box-shadow:
+        0 0 0 6px ${tint}22,
+        0 0 24px ${tint}88;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .remanence-range::-webkit-slider-thumb:hover {
+      transform: scale(1.08);
+    }
+
+    .remanence-range::-moz-range-track {
+      height: 14px;
+      border-radius: 999px;
+      border: none;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255,255,255,0.12) 0%,
+          ${tint} 100%
+        );
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        0 0 28px ${tint}22;
+    }
+
+    .remanence-range::-moz-range-thumb {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.85);
+      background: ${tint};
+      box-shadow:
+        0 0 0 6px ${tint}22,
+        0 0 24px ${tint}88;
+      cursor: pointer;
+    }
+  `;
+
   return (
-    <div style={{ display: "grid", gap: 45, justifyItems: "center" }}>
-      {/* Valeur au centre */}
-      <div style={{ fontSize: 75, fontWeight: 350, lineHeight: 1.5 }}>
-        {value}
-      </div>
+    <div style={{ display: "grid", gap: 32, justifyItems: "center" }}>
+      <style>{sliderCss}</style>
 
-      {/* Pastilles */}
-      <div style={{ display: "flex", gap: 25, flexWrap: "wrap", justifyContent: "center" }}>
-        {Array.from({ length: 10 }).map((_, i) => {
-          const n = i + 1;
-          const active = n <= value;
-
-          return (
-            <button
-              key={n}
-              onClick={() => {
-                softHaptic();
-                onChange(n);
-              }}
-              aria-label={`Intensité ${n}`}
-              style={{
-                width: 45,
-                height: 45,
-                borderRadius: 999,
-                border: active ? "1px solid rgba(255,255,255,0.55)" : "1px solid rgba(255,255,255,0.12)",
-                background: active ? ENERGY_COLORS[i] : "rgba(255,255,255,0.10)",
-                boxShadow: active ? `0 0 22px ${ENERGY_COLORS[i]}55` : "none",
-                transform: active && n === value ? "scale(1.18)" : "scale(1)",
-                transition: "transform 120ms ease, box-shadow 180ms ease, background 180ms ease",
-                cursor: "pointer",
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/* Labels emojis */}
       <div
         style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          opacity: 1,
-          fontSize: 40,
-          padding: "0 6px",
-          maxWidth: 400,
+          display: "grid",
+          gap: 10,
+          justifyItems: "center",
         }}
       >
-        <span>🛌🏽</span>
-        <span>🏇🏽</span>
+        <div
+          style={{
+            width: 84,
+            height: 84,
+            borderRadius: 999,
+            background: tint,
+            boxShadow: `0 0 34px ${tint}88`,
+            border: "1px solid rgba(255,255,255,0.22)",
+          }}
+        />
+
+        <div style={{ fontSize: 56, fontWeight: 320, lineHeight: 1 }}>
+          {value}/10
+        </div>
+      </div>
+
+      <div style={{ width: "100%", maxWidth: 340, display: "grid", gap: 14 }}>
+        <input
+          className="remanence-range"
+          type="range"
+          min={1}
+          max={10}
+          value={value}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            softHaptic();
+            onChange(n);
+          }}
+        />
+
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 34,
+            opacity: 0.9,
+          }}
+        >
+          <span>🛌🏽</span>
+          <span>🏇🏽</span>
+        </div>
       </div>
     </div>
   );
 }
-
-export const energyColorFor = (energy: number) => ENERGY_COLORS[Math.max(1, Math.min(10, energy)) - 1];

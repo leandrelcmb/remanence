@@ -43,12 +43,13 @@ export const Halo = ({
   const style: CSSProperties = {
     position: "absolute",
     inset: 0,
-    background: `radial-gradient(circle at 50% ${centerY}%, ${hexToRGBA(
+    background: `radial-gradient(circle at 50% ${centerY}%, ${toRGBA(
       color,
       opacity
     )} 0%, rgba(0,0,0,0) 80%)`,
     transform: `scale(${breatheScale})`,
-    transition: "opacity 0.8s ease-in-out, transform 0.8s ease-in-out, background 0.8s ease-in-out",
+    transition:
+      "opacity 0.8s ease-in-out, transform 0.8s ease-in-out, background 0.8s ease-in-out",
     pointerEvents: "none",
     willChange: "transform, opacity, background",
   };
@@ -56,9 +57,52 @@ export const Halo = ({
   return <div style={style} />;
 };
 
+function toRGBA(color: string, opacity: number) {
+  const value = color.trim();
+
+  if (value.startsWith("#")) {
+    return hexToRGBA(value, opacity);
+  }
+
+  if (value.startsWith("rgb(") || value.startsWith("rgba(")) {
+    return rgbStringToRGBA(value, opacity);
+  }
+
+  return `rgba(26,15,46,${opacity})`;
+}
+
 function hexToRGBA(hex: string, opacity: number) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
+  const normalized = hex.replace("#", "");
+
+  if (normalized.length !== 6) {
+    return `rgba(26,15,46,${opacity})`;
+  }
+
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+
+  if ([r, g, b].some((n) => Number.isNaN(n))) {
+    return `rgba(26,15,46,${opacity})`;
+  }
+
+  return `rgba(${r},${g},${b},${opacity})`;
+}
+
+function rgbStringToRGBA(rgb: string, opacity: number) {
+  const match = rgb.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+
+  if (!match) {
+    return `rgba(26,15,46,${opacity})`;
+  }
+
+  const r = Number(match[1]);
+  const g = Number(match[2]);
+  const b = Number(match[3]);
+
+  if ([r, g, b].some((n) => Number.isNaN(n))) {
+    return `rgba(26,15,46,${opacity})`;
+  }
+
   return `rgba(${r},${g},${b},${opacity})`;
 }

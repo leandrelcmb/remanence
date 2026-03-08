@@ -98,6 +98,7 @@ export async function createSetEntry(params: {
   colorHex: string;
   feelingText: string;
   learningText: string;
+  photo?: string;
   startTime?: string;
 }): Promise<SetEntry> {
   const artist = await upsertArtistByName({
@@ -115,6 +116,7 @@ export async function createSetEntry(params: {
     startTime: params.startTime ?? nowISO(),
     createdAt: nowISO(),
     energy: clampInt(params.energy, 1, 10),
+    photo: params.photo,
     focus: params.focus,
     colorHex: params.colorHex,
     feelingText: params.feelingText ?? "",
@@ -140,6 +142,7 @@ export type JournalItem = {
   learningText: string;
   artistName: string;
   style?: string;
+  photo?: string;
 };
 
 export async function listJournalItems(festivalId: string): Promise<JournalItem[]> {
@@ -156,6 +159,7 @@ export async function listJournalItems(festivalId: string): Promise<JournalItem[
         energy: e.energy,
         focus: e.focus,
         colorHex: e.colorHex,
+	photo: (e as any).photo,
         feelingText: e.feelingText,
         learningText: e.learningText,
         artistName: artist?.name ?? "Artiste inconnu",

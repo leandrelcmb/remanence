@@ -22,4 +22,6 @@ export type Draft = {
 
   feelingText: string;
   learningText: string;
+
+  photo?: string;
 };
