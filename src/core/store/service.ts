@@ -12,6 +12,7 @@ import {
   addSetEntry,
   listSetEntriesByFestivalSorted,
   getArtistById,
+  deleteSetEntry,
 } from "./repo";
 
 function normalizeName(s: string) {
@@ -128,6 +129,51 @@ export async function createSetEntry(params: {
   return entry;
 }
 
+export async function updateJournalItem(params: {
+  id: string;
+  festivalId: string;
+  artistName: string;
+  style: string;
+  stageName: string;
+  energy: number;
+  focus: FocusType;
+  colorHex: string;
+  feelingText: string;
+  learningText: string;
+  photo?: string;
+  originalStartTime: string;
+  originalCreatedAt: string;
+}): Promise<void> {
+  const artist = await upsertArtistByName({
+    festivalId: params.festivalId,
+    name: params.artistName,
+    style: params.style,
+    stagePrimary: params.stageName,
+  });
+
+  const entry: SetEntry = {
+    id: params.id,
+    festivalId: params.festivalId,
+    artistId: artist.id,
+    stageName: params.stageName,
+    startTime: params.originalStartTime,
+    createdAt: params.originalCreatedAt,
+    energy: clampInt(params.energy, 1, 10),
+    focus: params.focus,
+    colorHex: params.colorHex,
+    feelingText: params.feelingText ?? "",
+    learningText: params.learningText ?? "",
+    photo: params.photo,
+  };
+
+  // db.put avec le même id = mise à jour en place
+  await addSetEntry(entry);
+}
+
+export async function deleteJournalItem(id: string): Promise<void> {
+  await deleteSetEntry(id);
+}
+
 export async function getFestivalEntries(festivalId: UUID) {
   return listSetEntriesByFestivalSorted(festivalId);
 }
@@ -135,6 +181,7 @@ export async function getFestivalEntries(festivalId: UUID) {
 export type JournalItem = {
   id: string;
   startTime: string;
+  createdAt: string;
   stageName: string;
   energy: number;
   focus: "mental" | "emotion" | "body";
@@ -156,6 +203,7 @@ export async function listJournalItems(festivalId: string): Promise<JournalItem[
       return {
         id: e.id,
         startTime: e.startTime,
+        createdAt: e.createdAt,
         stageName: e.stageName,
         energy: e.energy,
         focus: e.focus,

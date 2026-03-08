@@ -102,3 +102,8 @@ export async function getArtistById(artistId: UUID) {
   const db = await getDB();
   return db.get("artists", artistId);
 }
+
+export async function deleteSetEntry(id: UUID): Promise<void> {
+  const db = await getDB();
+  await db.delete("setEntries", id);
+}
