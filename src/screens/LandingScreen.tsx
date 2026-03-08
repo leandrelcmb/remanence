@@ -3,22 +3,44 @@ import { RoundButton } from "../app/ui/RoundButton";
 type Props = {
   festivalName: string;
   onStart: () => void;
+  onExpressStart: () => void;
   onJournal: () => void;
   onConstellation: () => void;
   onFestivalPicker: () => void;
 };
 
-export function LandingScreen({ festivalName, onStart, onJournal, onConstellation, onFestivalPicker }: Props) {
+export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal, onConstellation, onFestivalPicker }: Props) {
   return (
     <div style={{ display: "grid", gap: 60, minHeight: "70dvh", alignContent: "center" }}>
       <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
         🧘 "Ancre l'instant"
       </p>
 
-      <div style={{ display: "grid", gap: 12 }}>
+      <div style={{ display: "grid", gap: 10 }}>
+        {/* Parcours complet */}
         <RoundButton variant="primary" onClick={onStart}>
           Entrer en rémanence 🌱
         </RoundButton>
+
+        {/* Mode express */}
+        <button
+          onClick={onExpressStart}
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 999,
+            padding: "10px 24px",
+            fontSize: 14,
+            color: "rgba(255,255,255,0.55)",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            letterSpacing: "0.03em",
+          }}
+        >
+          ⚡ Vite fait
+        </button>
+
+        <div style={{ height: 6 }} />
 
         <RoundButton variant="secondary" onClick={onJournal}>
           Vibrations 💓

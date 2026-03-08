@@ -27,8 +27,8 @@ import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
 
-// Écrans qui font partie du flux de capture
-const FLOW_SCREENS: FlowScreen[] = ["setInfo", "color", "energy", "focus", "text", "capture"];
+const FULL_FLOW_SCREENS: FlowScreen[]    = ["setInfo", "color", "energy", "focus", "text", "capture"];
+const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["setInfo", "color", "energy", "focus"];
 
 // Données préservées lors d'une édition (non modifiables)
 type EditingEntry = {
@@ -48,6 +48,9 @@ export default function App() {
   // null = mode création, objet = mode édition
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
 
+  // true = parcours raccourci (setInfo → color → energy → focus → sauvegarde)
+  const [expressMode, setExpressMode] = useState(false);
+
   const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
   const { booting, profileReady, saveProfile, user, status, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
   const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
@@ -64,10 +67,11 @@ export default function App() {
     setScreen(target);
   }
 
-  function startNewRemanence() {
+  function startNewRemanence(express = false) {
     resetDraft();
     setSelectedItem(null);
     setEditingEntry(null);
+    setExpressMode(express);
     navigate("setInfo", "forward");
   }
 
@@ -183,7 +187,8 @@ export default function App() {
     );
   }
 
-  const isFlowScreen = FLOW_SCREENS.includes(screen);
+  const flowScreens = expressMode ? EXPRESS_FLOW_SCREENS : FULL_FLOW_SCREENS;
+  const isFlowScreen = flowScreens.includes(screen);
 
   return (
     <RootLayout
@@ -205,7 +210,7 @@ export default function App() {
         )}
 
         {/* Indicateur de progression dans le flux de capture */}
-        {isFlowScreen && <FlowProgress screen={screen} />}
+        {isFlowScreen && <FlowProgress screen={screen} express={expressMode} />}
 
         {/* ── Écran actif avec animation ── */}
         <ScreenTransition screenKey={screen} direction={animDir}>
@@ -213,7 +218,8 @@ export default function App() {
           {screen === "landing" && (
             <LandingScreen
               festivalName={festival?.name ?? ""}
-              onStart={startNewRemanence}
+              onStart={() => startNewRemanence(false)}
+              onExpressStart={() => startNewRemanence(true)}
               onJournal={() => navigate("journal", "forward")}
               onConstellation={() => navigate("constellation", "forward")}
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
@@ -252,7 +258,7 @@ export default function App() {
             <FocusScreen
               focus={draft.focus}
               onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
-              onNext={() => navigate("text", "forward")}
+              onNext={() => expressMode ? finish() : navigate("text", "forward")}
               onBack={() => navigate("energy", "backward")}
             />
           )}

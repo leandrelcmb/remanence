@@ -1,10 +1,11 @@
 import type { FlowScreen } from "../flow/types";
 
-// Étapes du parcours de capture dans l'ordre
-const FLOW_STEPS: FlowScreen[] = ["setInfo", "color", "energy", "focus", "text", "capture"];
+const FULL_STEPS: FlowScreen[]    = ["setInfo", "color", "energy", "focus", "text", "capture"];
+const EXPRESS_STEPS: FlowScreen[] = ["setInfo", "color", "energy", "focus"];
 
-export function FlowProgress({ screen }: { screen: FlowScreen }) {
-  const currentIdx = FLOW_STEPS.indexOf(screen);
+export function FlowProgress({ screen, express = false }: { screen: FlowScreen; express?: boolean }) {
+  const steps = express ? EXPRESS_STEPS : FULL_STEPS;
+  const currentIdx = steps.indexOf(screen);
   if (currentIdx === -1) return null;
 
   return (
@@ -17,7 +18,7 @@ export function FlowProgress({ screen }: { screen: FlowScreen }) {
         marginBottom: 28,
       }}
     >
-      {FLOW_STEPS.map((_, i) => {
+      {steps.map((_, i) => {
         const isCurrent = i === currentIdx;
         const isPast = i < currentIdx;
         return (
@@ -37,6 +38,13 @@ export function FlowProgress({ screen }: { screen: FlowScreen }) {
           />
         );
       })}
+
+      {/* Badge express discret */}
+      {express && (
+        <span style={{ fontSize: 11, opacity: 0.4, marginLeft: 6, letterSpacing: "0.06em" }}>
+          ⚡
+        </span>
+      )}
     </div>
   );
 }
