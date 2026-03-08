@@ -101,6 +101,7 @@ export async function createSetEntry(params: {
   photo?: string;
   startTime?: string;
 }): Promise<SetEntry> {
+
   const artist = await upsertArtistByName({
     festivalId: params.festivalId,
     name: params.artistName,
@@ -108,22 +109,23 @@ export async function createSetEntry(params: {
     stagePrimary: params.stageName,
   });
 
-  export type SetEntry = {
-  id: UUID;
-  festivalId: UUID;
-  artistId: UUID;
-  stageName: string;
-  startTime: string;
-  createdAt: string;
-  energy: number;
-  focus: FocusType;
-  colorHex: string;
-  feelingText: string;
-  learningText: string;
-  photo?: string;
-};
+  const entry: SetEntry = {
+    id: uuid(),
+    festivalId: params.festivalId,
+    artistId: artist.id,
+    stageName: params.stageName,
+    startTime: params.startTime ?? nowISO(),
+    createdAt: nowISO(),
+    energy: clampInt(params.energy, 1, 10),
+    focus: params.focus,
+    colorHex: params.colorHex,
+    feelingText: params.feelingText ?? "",
+    learningText: params.learningText ?? "",
+    photo: params.photo,
+  };
 
   await addSetEntry(entry);
+
   return entry;
 }
 
