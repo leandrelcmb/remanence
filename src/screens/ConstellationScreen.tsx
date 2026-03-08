@@ -1,8 +1,46 @@
-import { useRef, useState, useMemo, type TouchEvent as ReactTouchEvent } from "react";
+import { useRef, useState, useMemo, type ReactNode, type TouchEvent as ReactTouchEvent } from "react";
 import type { JournalItem } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
 import { RoundButton } from "../app/ui/RoundButton";
 import { formatTime } from "./utils";
+
+// ── Filtres ───────────────────────────────────────────────────────────────────
+
+const FOCUS_OPTIONS = [
+  { key: "mental",  emoji: "🧠", label: "Mental"   },
+  { key: "emotion", emoji: "💭", label: "Émotions" },
+  { key: "body",    emoji: "🫀", label: "Corps"    },
+];
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        borderRadius: 999,
+        padding: "5px 12px",
+        fontSize: 12,
+        background: active ? "rgba(160,120,255,0.28)" : "rgba(255,255,255,0.06)",
+        border: `1px solid ${active ? "rgba(160,120,255,0.55)" : "rgba(255,255,255,0.1)"}`,
+        color: "white",
+        cursor: "pointer",
+        fontFamily: "inherit",
+        letterSpacing: "0.02em",
+        transition: "all 0.18s ease",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
 
 type Props = {
   journal: JournalItem[];
@@ -56,6 +94,34 @@ export function ConstellationScreen({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPinching, setIsPinching] = useState(false);
+
+  // ── Filtres ──
+  const [activeFocus, setActiveFocus] = useState<string[]>([]);
+  const [activeStage, setActiveStage] = useState<string[]>([]);
+
+  function toggleFocus(key: string) {
+    setActiveFocus((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  }
+  function toggleStage(name: string) {
+    setActiveStage((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
+  }
+
+  const stages = useMemo(
+    () => [...new Set(journal.map((i) => i.stageName).filter(Boolean))],
+    [journal]
+  );
+
+  const filteredJournal = useMemo(() => {
+    return journal.filter((item) => {
+      const okFocus = activeFocus.length === 0 || activeFocus.includes(item.focus);
+      const okStage = activeStage.length === 0 || activeStage.includes(item.stageName);
+      return okFocus && okStage;
+    });
+  }, [journal, activeFocus, activeStage]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pinchRef = useRef<{
@@ -126,9 +192,9 @@ export function ConstellationScreen({
   const festEnd = festivalEnd ? new Date(festivalEnd).getTime() : null;
 
   const constellationBounds = useMemo(() => {
-    if (journal.length === 0) return null;
+    if (filteredJournal.length === 0) return null;
 
-    const times = journal.map((item) => new Date(item.startTime).getTime());
+    const times = filteredJournal.map((item) => new Date(item.startTime).getTime());
     const entriesMin = Math.min(...times);
     const entriesMax = Math.max(...times);
 
@@ -146,10 +212,10 @@ export function ConstellationScreen({
       min: entriesMin,
       max: Math.max(entriesMax, entriesMin + minSpan),
     };
-  }, [journal, festStart, festEnd]);
+  }, [filteredJournal, festStart, festEnd]);
 
   const stars = useMemo(() => {
-    return journal.map((item, index) => {
+    return filteredJournal.map((item, index) => {
       const displayColor = energyTint(item.colorHex, item.energy);
       const x = 8 + ((item.energy - 1) / 9) * 84;
 
@@ -179,7 +245,7 @@ export function ConstellationScreen({
         glowSize,
       };
     });
-  }, [journal, constellationBounds]);
+  }, [filteredJournal, constellationBounds]);
 
   const links = useMemo(() => {
     const result: Array<{
@@ -216,6 +282,41 @@ export function ConstellationScreen({
 
       <h2 style={{ margin: 2 }}>✨ Constellation personnalisée ✨</h2>
 
+      {/* ── Filtres ── */}
+      {journal.length > 0 && (
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {FOCUS_OPTIONS.map((f) => (
+              <FilterChip
+                key={f.key}
+                active={activeFocus.includes(f.key)}
+                onClick={() => toggleFocus(f.key)}
+              >
+                {f.emoji} {f.label}
+              </FilterChip>
+            ))}
+          </div>
+          {stages.length > 1 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {stages.map((s) => (
+                <FilterChip
+                  key={s}
+                  active={activeStage.includes(s)}
+                  onClick={() => toggleStage(s)}
+                >
+                  {s}
+                </FilterChip>
+              ))}
+            </div>
+          )}
+          {(activeFocus.length > 0 || activeStage.length > 0) && (
+            <div style={{ fontSize: 12, opacity: 0.5 }}>
+              {filteredJournal.length} étoile{filteredJournal.length !== 1 ? "s" : ""}
+            </div>
+          )}
+        </div>
+      )}
+
       <div
         ref={containerRef}
         onTouchStart={handleTouchStart}
@@ -237,7 +338,7 @@ export function ConstellationScreen({
           touchAction: "none",
         }}
       >
-        {journal.length === 0 && (
+        {filteredJournal.length === 0 && (
           <div
             style={{
               position: "absolute",
@@ -249,7 +350,9 @@ export function ConstellationScreen({
               padding: 20,
             }}
           >
-            Ta constellation apparaîtra ici après tes premiers souvenirs ✨
+            {journal.length === 0
+              ? "Ta constellation apparaîtra ici après tes premiers souvenirs ✨"
+              : "Aucune étoile ne correspond aux filtres sélectionnés."}
           </div>
         )}
 
