@@ -9,7 +9,8 @@ export type FlowScreen =
   | "done"
   | "journal"
   | "detail"
-  | "constellation";
+  | "constellation"
+  | "festivalPicker";
 
 export type Draft = {
   artistName: string;

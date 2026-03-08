@@ -21,6 +21,7 @@ import { JournalScreen } from "../screens/JournalScreen";
 import { DetailScreen } from "../screens/DetailScreen";
 import { ConstellationScreen } from "../screens/ConstellationScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
+import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
 
 // Données préservées lors d'une édition (non modifiables)
 type EditingEntry = {
@@ -39,7 +40,7 @@ export default function App() {
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
 
   const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
-  const { booting, profileReady, saveProfile, status, festivalId, festival, journal, refreshJournal } = useJournal();
+  const { booting, profileReady, saveProfile, status, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
   const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
     screen,
     draft,
@@ -175,9 +176,11 @@ export default function App() {
 
         {screen === "landing" && (
           <LandingScreen
+            festivalName={festival?.name ?? ""}
             onStart={startNewRemanence}
             onJournal={() => setScreen("journal")}
             onConstellation={() => setScreen("constellation")}
+            onFestivalPicker={() => setScreen("festivalPicker")}
           />
         )}
 
@@ -271,6 +274,16 @@ export default function App() {
             festivalStart={festival?.startDate ?? ""}
             festivalEnd={festival?.endDate ?? ""}
             onSelectStar={(item) => openDetail(item, "constellation")}
+            onBack={() => setScreen("landing")}
+          />
+        )}
+
+        {screen === "festivalPicker" && (
+          <FestivalPickerScreen
+            festivals={festivals}
+            activeFestivalId={festivalId}
+            onSwitch={(id) => { switchFestival(id); setScreen("landing"); }}
+            onCreate={createFestival}
             onBack={() => setScreen("landing")}
           />
         )}

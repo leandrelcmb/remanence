@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { ensureBootstrap, listJournalItems, createUserProfile } from "../core/store/service";
+import {
+  ensureBootstrap,
+  listJournalItems,
+  createUserProfile,
+  listFestivals,
+  addNewFestival,
+  switchActiveFestival,
+} from "../core/store/service";
 import type { JournalItem } from "../core/store/service";
 import type { Festival, UserProfile } from "../core/models/types";
 
@@ -11,6 +18,7 @@ export function useJournal() {
   const [status, setStatus] = useState("Boot…");
   const [festivalId, setFestivalId] = useState<string>("");
   const [festival, setFestival] = useState<Festival | null>(null);
+  const [festivals, setFestivals] = useState<Festival[]>([]);
   const [journal, setJournal] = useState<JournalItem[]>([]);
 
   useEffect(() => {
@@ -20,6 +28,9 @@ export function useJournal() {
         setFestivalId(fest.id);
         setFestival(fest);
 
+        const allFests = await listFestivals();
+        setFestivals(allFests);
+
         if (existingUser) {
           setUser(existingUser);
           const items = await listJournalItems(fest.id);
@@ -27,7 +38,6 @@ export function useJournal() {
           setStatus(`Prêt · ${fest.name}`);
           setProfileReady(true);
         }
-        // Si pas de profil → profileReady reste false → l'app affiche l'onboarding
       } catch (e) {
         setStatus(`Erreur: ${String(e)}`);
       } finally {
@@ -41,7 +51,7 @@ export function useJournal() {
     setJournal(items);
   }, []);
 
-  /** Appelé depuis OnboardingScreen après saisie du pseudo */
+  /** Onboarding : crée le profil après saisie du pseudo */
   async function saveProfile(displayName: string) {
     const newUser = await createUserProfile(displayName);
     setUser(newUser);
@@ -53,5 +63,44 @@ export function useJournal() {
     setProfileReady(true);
   }
 
-  return { booting, profileReady, user, status, festivalId, festival, journal, refreshJournal, saveProfile };
+  /** Crée un nouveau festival et l'ajoute à la liste */
+  async function createFestival(params: {
+    name: string;
+    startDate: string;
+    endDate: string;
+    location?: string;
+  }): Promise<Festival> {
+    const newFest = await addNewFestival(params);
+    const allFests = await listFestivals();
+    setFestivals(allFests);
+    return newFest;
+  }
+
+  /** Bascule vers un autre festival actif */
+  async function switchFestival(id: string) {
+    await switchActiveFestival(id);
+    setFestivalId(id);
+    const target = festivals.find((f) => f.id === id) ?? null;
+    setFestival(target);
+    if (target) {
+      const items = await listJournalItems(id);
+      setJournal(items);
+      setStatus(`Prêt · ${target.name}`);
+    }
+  }
+
+  return {
+    booting,
+    profileReady,
+    user,
+    status,
+    festivalId,
+    festival,
+    festivals,
+    journal,
+    refreshJournal,
+    saveProfile,
+    createFestival,
+    switchFestival,
+  };
 }

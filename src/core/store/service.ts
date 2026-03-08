@@ -2,6 +2,7 @@ import type { Artist, Festival, SetEntry, UserProfile, UUID, FocusType } from ".
 import { clampInt, nowISO, uuid } from "../models/utils";
 import {
   addFestival,
+  listFestivals,
   getActiveFestivalId,
   getFestival,
   getUserProfile,
@@ -97,6 +98,33 @@ export async function createUserProfile(displayName: string): Promise<UserProfil
   };
   await putUserProfile(profile);
   return profile;
+}
+
+/** Récupère la liste complète des festivals triés par date de création. */
+export { listFestivals };
+
+/** Crée un nouveau festival et le persiste. */
+export async function addNewFestival(params: {
+  name: string;
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string;   // "YYYY-MM-DD"
+  location?: string;
+}): Promise<Festival> {
+  const fest: Festival = {
+    id: uuid(),
+    name: params.name.trim(),
+    location: params.location?.trim() || undefined,
+    startDate: new Date(params.startDate).toISOString(),
+    endDate: new Date(params.endDate).toISOString(),
+    createdAt: nowISO(),
+  };
+  await addFestival(fest);
+  return fest;
+}
+
+/** Change le festival actif (met à jour la clé meta). */
+export async function switchActiveFestival(id: UUID): Promise<void> {
+  await setActiveFestivalId(id);
 }
 
 export async function createSetEntry(params: {
