@@ -24,6 +24,8 @@ import { ConstellationScreen } from "../screens/ConstellationScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
 import { FlowProgress } from "./ui/FlowProgress";
+import { ScreenTransition } from "./ui/ScreenTransition";
+import type { AnimDir } from "./ui/ScreenTransition";
 
 // Écrans qui font partie du flux de capture
 const FLOW_SCREENS: FlowScreen[] = ["setInfo", "color", "energy", "focus", "text", "capture"];
@@ -37,6 +39,7 @@ type EditingEntry = {
 
 export default function App() {
   const [screen, setScreen] = useState<FlowScreen>("landing");
+  const [animDir, setAnimDir] = useState<AnimDir>("neutral");
   const [selectedItem, setSelectedItem] = useState<JournalItem | null>(null);
   const [detailBackTarget, setDetailBackTarget] = useState<"journal" | "constellation">("journal");
   const [lastSavedColor, setLastSavedColor] = useState<string | null>(null);
@@ -55,20 +58,25 @@ export default function App() {
     lastSavedColor,
   });
 
+  /** Navigation avec direction d'animation */
+  function navigate(target: FlowScreen, dir: AnimDir = "neutral") {
+    setAnimDir(dir);
+    setScreen(target);
+  }
+
   function startNewRemanence() {
     resetDraft();
     setSelectedItem(null);
     setEditingEntry(null);
-    setScreen("setInfo");
+    navigate("setInfo", "forward");
   }
 
   function openDetail(item: JournalItem, from: "journal" | "constellation") {
     setSelectedItem(item);
     setDetailBackTarget(from);
-    setScreen("detail");
+    navigate("detail", "forward");
   }
 
-  // Pré-remplit le draft avec les données existantes et lance le flux d'édition
   function startEditing(item: JournalItem) {
     setDraft({
       artistName: item.artistName,
@@ -86,21 +94,20 @@ export default function App() {
       startTime: item.startTime,
       createdAt: item.createdAt,
     });
-    setScreen("setInfo");
+    navigate("setInfo", "forward");
   }
 
   async function handleDelete(item: JournalItem) {
     if (!festivalId) return;
     await deleteJournalItem(item.id);
     await refreshJournal(festivalId);
-    setScreen(detailBackTarget === "constellation" ? "constellation" : "journal");
+    navigate(detailBackTarget === "constellation" ? "constellation" : "journal", "backward");
   }
 
   async function finish() {
     if (!festivalId) return;
 
     if (editingEntry) {
-      // Mode édition : mise à jour de l'entrée existante
       await updateJournalItem({
         id: editingEntry.id,
         festivalId,
@@ -120,9 +127,9 @@ export default function App() {
       await refreshJournal(festivalId);
       setEditingEntry(null);
       resetDraft();
-      setScreen("journal");
+      navigate("journal", "forward");
     } else {
-      // Mode création : on capture les infos du draft AVANT de le réinitialiser
+      // On capture les infos AVANT de réinitialiser le draft
       const savedColor = energyTint(draft.colorHex, draft.energy);
       const savedEntry: LastSavedEntry = {
         artistName: draft.artistName,
@@ -150,11 +157,11 @@ export default function App() {
       setLastSavedColor(savedColor);
       setLastSavedEntry(savedEntry);
       resetDraft();
-      setScreen("done");
+      navigate("done", "forward");
     }
   }
 
-  // ── Pendant le boot initial : juste le halo, rien d'autre ──
+  // ── Pendant le boot initial : juste le halo ──
   if (booting) {
     return (
       <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
@@ -163,12 +170,14 @@ export default function App() {
     );
   }
 
-  // ── Première visite : onboarding (choix du pseudo) ──
+  // ── Première visite : onboarding ──
   if (!profileReady) {
     return (
       <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
         <div style={{ position: "relative", zIndex: 1, padding: 50, maxWidth: 460, margin: "0 auto" }}>
-          <OnboardingScreen onSave={saveProfile} />
+          <ScreenTransition screenKey="onboarding" direction="neutral">
+            <OnboardingScreen onSave={saveProfile} />
+          </ScreenTransition>
         </div>
       </RootLayout>
     );
@@ -198,121 +207,126 @@ export default function App() {
         {/* Indicateur de progression dans le flux de capture */}
         {isFlowScreen && <FlowProgress screen={screen} />}
 
-        {screen === "landing" && (
-          <LandingScreen
-            festivalName={festival?.name ?? ""}
-            onStart={startNewRemanence}
-            onJournal={() => setScreen("journal")}
-            onConstellation={() => setScreen("constellation")}
-            onFestivalPicker={() => setScreen("festivalPicker")}
-          />
-        )}
+        {/* ── Écran actif avec animation ── */}
+        <ScreenTransition screenKey={screen} direction={animDir}>
 
-        {screen === "setInfo" && (
-          <SetInfoScreen
-            draft={draft}
-            artistSuggestions={artistSuggestions}
-            onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-            onNext={() => setScreen("color")}
-            onBack={() => setScreen("landing")}
-          />
-        )}
+          {screen === "landing" && (
+            <LandingScreen
+              festivalName={festival?.name ?? ""}
+              onStart={startNewRemanence}
+              onJournal={() => navigate("journal", "forward")}
+              onConstellation={() => navigate("constellation", "forward")}
+              onFestivalPicker={() => navigate("festivalPicker", "forward")}
+            />
+          )}
 
-        {screen === "color" && (
-          <ColorScreen
-            selectedColor={draft.colorHex}
-            onSelect={(c) => setDraft((d) => ({ ...d, colorHex: c }))}
-            onNext={() => setScreen("energy")}
-            onBack={() => setScreen("setInfo")}
-          />
-        )}
+          {screen === "setInfo" && (
+            <SetInfoScreen
+              draft={draft}
+              artistSuggestions={artistSuggestions}
+              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+              onNext={() => navigate("color", "forward")}
+              onBack={() => navigate("landing", "backward")}
+            />
+          )}
 
-        {screen === "energy" && (
-          <EnergyScreen
-            draft={draft}
-            onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-            onNext={() => setScreen("focus")}
-            onBack={() => setScreen("color")}
-          />
-        )}
+          {screen === "color" && (
+            <ColorScreen
+              selectedColor={draft.colorHex}
+              onSelect={(c) => setDraft((d) => ({ ...d, colorHex: c }))}
+              onNext={() => navigate("energy", "forward")}
+              onBack={() => navigate("setInfo", "backward")}
+            />
+          )}
 
-        {screen === "focus" && (
-          <FocusScreen
-            focus={draft.focus}
-            onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
-            onNext={() => setScreen("text")}
-            onBack={() => setScreen("energy")}
-          />
-        )}
+          {screen === "energy" && (
+            <EnergyScreen
+              draft={draft}
+              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+              onNext={() => navigate("focus", "forward")}
+              onBack={() => navigate("color", "backward")}
+            />
+          )}
 
-        {screen === "text" && (
-          <TextScreen
-            feelingText={draft.feelingText}
-            learningText={draft.learningText}
-            onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-            onNext={() => setScreen("capture")}
-            onBack={() => setScreen("focus")}
-          />
-        )}
+          {screen === "focus" && (
+            <FocusScreen
+              focus={draft.focus}
+              onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
+              onNext={() => navigate("text", "forward")}
+              onBack={() => navigate("energy", "backward")}
+            />
+          )}
 
-        {screen === "capture" && (
-          <CaptureScreen
-            photo={draft.photo}
-            onPhoto={handlePhoto}
-            onClearPhoto={() => setDraft((d) => ({ ...d, photo: undefined }))}
-            onFinish={finish}
-            onBack={() => setScreen("text")}
-          />
-        )}
+          {screen === "text" && (
+            <TextScreen
+              feelingText={draft.feelingText}
+              learningText={draft.learningText}
+              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+              onNext={() => navigate("capture", "forward")}
+              onBack={() => navigate("focus", "backward")}
+            />
+          )}
 
-        {screen === "done" && (
-          <DoneScreen
-            lastSavedColor={lastSavedColor}
-            lastSavedEntry={lastSavedEntry}
-            onHome={() => setScreen("landing")}
-          />
-        )}
+          {screen === "capture" && (
+            <CaptureScreen
+              photo={draft.photo}
+              onPhoto={handlePhoto}
+              onClearPhoto={() => setDraft((d) => ({ ...d, photo: undefined }))}
+              onFinish={finish}
+              onBack={() => navigate("text", "backward")}
+            />
+          )}
 
-        {screen === "journal" && (
-          <JournalScreen
-            journal={journal}
-            latestJournalColor={latestJournalColor}
-            userName={user?.displayName ?? ""}
-            onNewEntry={startNewRemanence}
-            onSelectItem={(item) => openDetail(item, "journal")}
-            onHome={() => setScreen("landing")}
-          />
-        )}
+          {screen === "done" && (
+            <DoneScreen
+              lastSavedColor={lastSavedColor}
+              lastSavedEntry={lastSavedEntry}
+              onHome={() => navigate("landing", "neutral")}
+            />
+          )}
 
-        {screen === "detail" && selectedItem && (
-          <DetailScreen
-            item={selectedItem}
-            backTarget={detailBackTarget}
-            onBack={() => setScreen(detailBackTarget)}
-            onEdit={startEditing}
-            onDelete={handleDelete}
-          />
-        )}
+          {screen === "journal" && (
+            <JournalScreen
+              journal={journal}
+              latestJournalColor={latestJournalColor}
+              userName={user?.displayName ?? ""}
+              onNewEntry={startNewRemanence}
+              onSelectItem={(item) => openDetail(item, "journal")}
+              onHome={() => navigate("landing", "backward")}
+            />
+          )}
 
-        {screen === "constellation" && (
-          <ConstellationScreen
-            journal={journal}
-            festivalStart={festival?.startDate ?? ""}
-            festivalEnd={festival?.endDate ?? ""}
-            onSelectStar={(item) => openDetail(item, "constellation")}
-            onBack={() => setScreen("landing")}
-          />
-        )}
+          {screen === "detail" && selectedItem && (
+            <DetailScreen
+              item={selectedItem}
+              backTarget={detailBackTarget}
+              onBack={() => navigate(detailBackTarget, "backward")}
+              onEdit={startEditing}
+              onDelete={handleDelete}
+            />
+          )}
 
-        {screen === "festivalPicker" && (
-          <FestivalPickerScreen
-            festivals={festivals}
-            activeFestivalId={festivalId}
-            onSwitch={(id) => { switchFestival(id); setScreen("landing"); }}
-            onCreate={createFestival}
-            onBack={() => setScreen("landing")}
-          />
-        )}
+          {screen === "constellation" && (
+            <ConstellationScreen
+              journal={journal}
+              festivalStart={festival?.startDate ?? ""}
+              festivalEnd={festival?.endDate ?? ""}
+              onSelectStar={(item) => openDetail(item, "constellation")}
+              onBack={() => navigate("landing", "backward")}
+            />
+          )}
+
+          {screen === "festivalPicker" && (
+            <FestivalPickerScreen
+              festivals={festivals}
+              activeFestivalId={festivalId}
+              onSwitch={(id) => { switchFestival(id); navigate("landing", "backward"); }}
+              onCreate={createFestival}
+              onBack={() => navigate("landing", "backward")}
+            />
+          )}
+
+        </ScreenTransition>
       </div>
     </RootLayout>
   );
