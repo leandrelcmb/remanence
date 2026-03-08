@@ -13,7 +13,7 @@ export function CaptureScreen({ photo, onPhoto, onClearPhoto, onFinish, onBack }
   return (
     <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
       <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
-        Capture du moment 📸
+        Capture du moment 🔐
       </p>
 
       {!photo && (
@@ -27,7 +27,7 @@ export function CaptureScreen({ photo, onPhoto, onClearPhoto, onFinish, onBack }
             cursor: "pointer",
           }}
         >
-          <p style={{ fontSize: 45, margin: 0, textAlign: "center" }}>📤</p>
+          <p style={{ fontSize: 45, margin: 0, textAlign: "center" }}>📸</p>
           <input
             type="file"
             accept="image/*"
