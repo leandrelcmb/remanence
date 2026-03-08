@@ -419,6 +419,29 @@ export function ConstellationScreen({
               ✦
             </div>
           ))}
+
+          {/* Noms d'artistes — apparaissent à partir de zoom ≥ 2.0 */}
+          {zoom >= 2.0 && stars.map((star) => (
+            <div
+              key={`label-${star.item.id}`}
+              style={{
+                position: "absolute",
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                transform: `translate(-50%, calc(-50% - ${star.starSize / 2 + 10}px))`,
+                fontSize: 8,
+                color: star.displayColor,
+                opacity: Math.min(1, (zoom - 2.0) * 3),
+                whiteSpace: "nowrap",
+                textShadow: "0 0 8px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,1)",
+                pointerEvents: "none",
+                letterSpacing: "0.05em",
+                fontWeight: 600,
+              }}
+            >
+              {star.item.artistName}
+            </div>
+          ))}
         </div>
       </div>
 

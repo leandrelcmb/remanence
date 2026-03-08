@@ -299,6 +299,7 @@ export default function App() {
               onNewEntry={startNewRemanence}
               onSelectItem={(item) => openDetail(item, "journal")}
               onHome={() => navigate("landing", "backward")}
+              onSavePseudo={saveProfile}
             />
           )}
 

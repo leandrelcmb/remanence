@@ -13,6 +13,7 @@ type Props = {
   onNewEntry: () => void;
   onSelectItem: (item: JournalItem) => void;
   onHome: () => void;
+  onSavePseudo: (name: string) => void;
 };
 
 // ── Filtres ───────────────────────────────────────────────────────────────────
@@ -22,6 +23,12 @@ const FOCUS_OPTIONS = [
   { key: "emotion", emoji: "❤️", label: "Émotions" },
   { key: "body",    emoji: "🕺", label: "Corps"    },
 ];
+
+const FOCUS_EMOJIS: Record<string, string> = {
+  mental: "🧠",
+  emotion: "❤️",
+  body: "🕺",
+};
 
 function FilterChip({
   active,
@@ -50,6 +57,64 @@ function FilterChip({
     >
       {children}
     </button>
+  );
+}
+
+// ── Mini-stats ────────────────────────────────────────────────────────────────
+
+function MiniStats({ journal }: { journal: JournalItem[] }) {
+  if (journal.length === 0) return null;
+
+  const count = journal.length;
+  const avgEnergy = (journal.reduce((s, i) => s + i.energy, 0) / count).toFixed(1);
+
+  const stageCounts: Record<string, number> = {};
+  journal.forEach((i) => {
+    if (i.stageName) stageCounts[i.stageName] = (stageCounts[i.stageName] || 0) + 1;
+  });
+  const favStage = Object.entries(stageCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  const focusCounts: Record<string, number> = {};
+  journal.forEach((i) => {
+    if (i.focus) focusCounts[i.focus] = (focusCounts[i.focus] || 0) + 1;
+  });
+  const domFocus = Object.entries(focusCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  const stats = [
+    { value: `${count}`,        label: count === 1 ? "set" : "sets" },
+    { value: `${avgEnergy}/10`, label: "énergie moy." },
+    ...(favStage ? [{ value: favStage, label: "scène fav." }] : []),
+    ...(domFocus ? [{ value: `${FOCUS_EMOJIS[domFocus] ?? ""} ${domFocus}`, label: "focus" }] : []),
+  ];
+
+  return (
+    <div
+      style={{
+        padding: "10px 20px",
+        display: "flex",
+        gap: 20,
+        flexWrap: "wrap",
+        background: "rgba(255,255,255,0.03)",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
+      {stats.map(({ value, label }) => (
+        <div key={label} style={{ display: "grid", gap: 2 }}>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>{value}</div>
+          <div
+            style={{
+              fontSize: 10,
+              opacity: 0.4,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}
+          >
+            {label}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -151,9 +216,12 @@ export function JournalScreen({
   onNewEntry,
   onSelectItem,
   onHome,
+  onSavePseudo,
 }: Props) {
   const [activeFocus, setActiveFocus] = useState<string[]>([]);
   const [activeStage, setActiveStage] = useState<string[]>([]);
+  const [editingPseudo, setEditingPseudo] = useState(false);
+  const [pseudoDraft, setPseudoDraft] = useState(userName);
 
   function toggleFocus(key: string) {
     setActiveFocus((prev) =>
@@ -167,13 +235,17 @@ export function JournalScreen({
     );
   }
 
-  // Scènes disponibles dans le journal courant
+  function handleSavePseudo() {
+    const trimmed = pseudoDraft.trim();
+    if (trimmed) onSavePseudo(trimmed);
+    setEditingPseudo(false);
+  }
+
   const stages = useMemo(
     () => [...new Set(journal.map((i) => i.stageName).filter(Boolean))],
     [journal]
   );
 
-  // Journal filtré
   const filtered = useMemo(() => {
     return journal.filter((item) => {
       const okFocus = activeFocus.length === 0 || activeFocus.includes(item.focus);
@@ -203,16 +275,69 @@ export function JournalScreen({
           position: "relative",
           zIndex: 1,
           display: "grid",
-          gap: 16,
+          gap: 0,
           minHeight: "100dvh",
           paddingBottom: 40,
         }}
       >
         {/* ── En-tête ── */}
-        <div style={{ padding: "40px 20px 0", display: "grid", gap: 20 }}>
-          <h2 style={{ margin: 0, fontWeight: 650, fontSize: 20 }}>
-            📓 Carnet de Rémanence{userName ? ` de ${userName}` : ""}
-          </h2>
+        <div style={{ padding: "40px 20px 20px", display: "grid", gap: 20 }}>
+          {/* Titre avec édition du pseudo */}
+          {editingPseudo ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                value={pseudoDraft}
+                onChange={(e) => setPseudoDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSavePseudo(); if (e.key === "Escape") setEditingPseudo(false); }}
+                maxLength={32}
+                autoFocus
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(160,120,255,0.5)",
+                  borderRadius: 10,
+                  padding: "6px 12px",
+                  color: "white",
+                  fontSize: 16,
+                  fontFamily: "inherit",
+                  outline: "none",
+                  flex: 1,
+                }}
+              />
+              <button
+                onClick={handleSavePseudo}
+                style={{ background: "rgba(160,120,255,0.3)", border: "none", borderRadius: 8, padding: "6px 12px", color: "white", cursor: "pointer", fontFamily: "inherit" }}
+              >
+                ✓
+              </button>
+              <button
+                onClick={() => setEditingPseudo(false)}
+                style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "6px 10px", color: "white", cursor: "pointer", fontFamily: "inherit" }}
+              >
+                ✗
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <h2 style={{ margin: 0, fontWeight: 650, fontSize: 20, flex: 1 }}>
+                📓 Carnet de Rémanence{userName ? ` de ${userName}` : ""}
+              </h2>
+              <button
+                onClick={() => { setPseudoDraft(userName); setEditingPseudo(true); }}
+                title="Modifier le pseudo"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  opacity: 0.4,
+                  fontSize: 16,
+                  padding: 4,
+                  lineHeight: 1,
+                }}
+              >
+                ✏️
+              </button>
+            </div>
+          )}
 
           <div style={{ display: "grid", gap: 12 }}>
             <RoundButton variant="primary" onClick={onNewEntry}>
@@ -224,10 +349,12 @@ export function JournalScreen({
           </div>
         </div>
 
+        {/* ── Mini-stats ── */}
+        <MiniStats journal={journal} />
+
         {/* ── Filtres ── */}
         {journal.length > 0 && (
-          <div style={{ padding: "0 20px", display: "grid", gap: 8 }}>
-            {/* Focus */}
+          <div style={{ padding: "16px 20px", display: "grid", gap: 8 }}>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {FOCUS_OPTIONS.map((f) => (
                 <FilterChip
@@ -240,7 +367,6 @@ export function JournalScreen({
               ))}
             </div>
 
-            {/* Scènes (uniquement si plusieurs) */}
             {stages.length > 1 && (
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {stages.map((s) => (
@@ -255,7 +381,6 @@ export function JournalScreen({
               </div>
             )}
 
-            {/* Compteur quand filtré */}
             {isFiltered && (
               <div style={{ fontSize: 12, opacity: 0.5, paddingLeft: 2 }}>
                 {filtered.length} souvenir{filtered.length !== 1 ? "s" : ""}
@@ -277,7 +402,7 @@ export function JournalScreen({
           </p>
         )}
 
-        <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "grid", gap: 12, paddingTop: 4 }}>
           {filtered.map((item) => (
             <JournalCard
               key={item.id}
