@@ -77,10 +77,6 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete }: Pro
       {/* Actions */}
       {!confirmingDelete ? (
         <div style={{ display: "grid", gap: 10 }}>
-          <RoundButton variant="secondary" onClick={onBack}>
-            {backTarget === "constellation" ? "Retour à la constellation ✨" : "Retour au carnet 📓"}
-          </RoundButton>
-
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <RoundButton variant="secondary" onClick={() => onEdit(item)}>
@@ -93,6 +89,10 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete }: Pro
               </RoundButton>
             </div>
           </div>
+
+          <RoundButton variant="secondary" onClick={onBack}>
+            {backTarget === "constellation" ? "Retour à la constellation ✨" : "Retour au carnet 📓"}
+          </RoundButton>
         </div>
       ) : (
         <div
