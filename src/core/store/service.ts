@@ -1,7 +1,8 @@
-import type { Artist, Festival, SetEntry, UUID, FocusType } from "../models/types";
+import type { Artist, Festival, SetEntry, UserProfile, UUID, FocusType } from "../models/types";
 import { clampInt, nowISO, uuid } from "../models/utils";
 import {
   addFestival,
+  listFestivals,
   getActiveFestivalId,
   getFestival,
   getUserProfile,
@@ -12,6 +13,7 @@ import {
   addSetEntry,
   listSetEntriesByFestivalSorted,
   getArtistById,
+  deleteSetEntry,
 } from "./repo";
 
 function normalizeName(s: string) {
@@ -53,18 +55,13 @@ async function upsertArtistByName(params: {
   return created;
 }
 
-export async function ensureBootstrap() {
-  let user = await getUserProfile();
-
-  if (!user) {
-    user = {
-      id: uuid(),
-      displayName: "Moi",
-      deviceId: uuid(),
-      createdAt: nowISO(),
-    };
-    await putUserProfile(user);
-  }
+/**
+ * Bootstrap : initialise le festival par défaut si absent.
+ * Ne crée PAS de profil automatiquement — retourne null si l'utilisateur
+ * n'a pas encore choisi son pseudo (→ l'app affichera l'onboarding).
+ */
+export async function ensureBootstrap(): Promise<{ user: UserProfile | null; festival: Festival }> {
+  const user = await getUserProfile() ?? null;
 
   let festivalId = await getActiveFestivalId();
 
@@ -87,6 +84,47 @@ export async function ensureBootstrap() {
   if (!festival) throw new Error("Festival actif introuvable");
 
   return { user, festival };
+}
+
+/**
+ * Crée et persiste le profil utilisateur après l'onboarding.
+ */
+export async function createUserProfile(displayName: string): Promise<UserProfile> {
+  const profile: UserProfile = {
+    id: uuid(),
+    displayName: displayName.trim(),
+    deviceId: uuid(),
+    createdAt: nowISO(),
+  };
+  await putUserProfile(profile);
+  return profile;
+}
+
+/** Récupère la liste complète des festivals triés par date de création. */
+export { listFestivals };
+
+/** Crée un nouveau festival et le persiste. */
+export async function addNewFestival(params: {
+  name: string;
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string;   // "YYYY-MM-DD"
+  location?: string;
+}): Promise<Festival> {
+  const fest: Festival = {
+    id: uuid(),
+    name: params.name.trim(),
+    location: params.location?.trim() || undefined,
+    startDate: new Date(params.startDate).toISOString(),
+    endDate: new Date(params.endDate).toISOString(),
+    createdAt: nowISO(),
+  };
+  await addFestival(fest);
+  return fest;
+}
+
+/** Change le festival actif (met à jour la clé meta). */
+export async function switchActiveFestival(id: UUID): Promise<void> {
+  await setActiveFestivalId(id);
 }
 
 export async function createSetEntry(params: {
@@ -128,6 +166,51 @@ export async function createSetEntry(params: {
   return entry;
 }
 
+export async function updateJournalItem(params: {
+  id: string;
+  festivalId: string;
+  artistName: string;
+  style: string;
+  stageName: string;
+  energy: number;
+  focus: FocusType;
+  colorHex: string;
+  feelingText: string;
+  learningText: string;
+  photo?: string;
+  originalStartTime: string;
+  originalCreatedAt: string;
+}): Promise<void> {
+  const artist = await upsertArtistByName({
+    festivalId: params.festivalId,
+    name: params.artistName,
+    style: params.style,
+    stagePrimary: params.stageName,
+  });
+
+  const entry: SetEntry = {
+    id: params.id,
+    festivalId: params.festivalId,
+    artistId: artist.id,
+    stageName: params.stageName,
+    startTime: params.originalStartTime,
+    createdAt: params.originalCreatedAt,
+    energy: clampInt(params.energy, 1, 10),
+    focus: params.focus,
+    colorHex: params.colorHex,
+    feelingText: params.feelingText ?? "",
+    learningText: params.learningText ?? "",
+    photo: params.photo,
+  };
+
+  // db.put avec le même id = mise à jour en place
+  await addSetEntry(entry);
+}
+
+export async function deleteJournalItem(id: string): Promise<void> {
+  await deleteSetEntry(id);
+}
+
 export async function getFestivalEntries(festivalId: UUID) {
   return listSetEntriesByFestivalSorted(festivalId);
 }
@@ -135,6 +218,7 @@ export async function getFestivalEntries(festivalId: UUID) {
 export type JournalItem = {
   id: string;
   startTime: string;
+  createdAt: string;
   stageName: string;
   energy: number;
   focus: "mental" | "emotion" | "body";
@@ -156,6 +240,7 @@ export async function listJournalItems(festivalId: string): Promise<JournalItem[
       return {
         id: e.id,
         startTime: e.startTime,
+        createdAt: e.createdAt,
         stageName: e.stageName,
         energy: e.energy,
         focus: e.focus,
