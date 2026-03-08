@@ -20,6 +20,7 @@ import { DoneScreen } from "../screens/DoneScreen";
 import { JournalScreen } from "../screens/JournalScreen";
 import { DetailScreen } from "../screens/DetailScreen";
 import { ConstellationScreen } from "../screens/ConstellationScreen";
+import { OnboardingScreen } from "../screens/OnboardingScreen";
 
 // Données préservées lors d'une édition (non modifiables)
 type EditingEntry = {
@@ -38,7 +39,7 @@ export default function App() {
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
 
   const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
-  const { status, festivalId, festival, journal, refreshJournal } = useJournal();
+  const { booting, profileReady, saveProfile, status, festivalId, festival, journal, refreshJournal } = useJournal();
   const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
     screen,
     draft,
@@ -135,6 +136,26 @@ export default function App() {
       resetDraft();
       setScreen("done");
     }
+  }
+
+  // ── Pendant le boot initial : juste le halo, rien d'autre ──
+  if (booting) {
+    return (
+      <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
+        <div />
+      </RootLayout>
+    );
+  }
+
+  // ── Première visite : onboarding (choix du pseudo) ──
+  if (!profileReady) {
+    return (
+      <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
+        <div style={{ position: "relative", zIndex: 1, padding: 50, maxWidth: 460, margin: "0 auto" }}>
+          <OnboardingScreen onSave={saveProfile} />
+        </div>
+      </RootLayout>
+    );
   }
 
   return (

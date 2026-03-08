@@ -1,4 +1,4 @@
-import type { Artist, Festival, SetEntry, UUID, FocusType } from "../models/types";
+import type { Artist, Festival, SetEntry, UserProfile, UUID, FocusType } from "../models/types";
 import { clampInt, nowISO, uuid } from "../models/utils";
 import {
   addFestival,
@@ -54,18 +54,13 @@ async function upsertArtistByName(params: {
   return created;
 }
 
-export async function ensureBootstrap() {
-  let user = await getUserProfile();
-
-  if (!user) {
-    user = {
-      id: uuid(),
-      displayName: "Moi",
-      deviceId: uuid(),
-      createdAt: nowISO(),
-    };
-    await putUserProfile(user);
-  }
+/**
+ * Bootstrap : initialise le festival par défaut si absent.
+ * Ne crée PAS de profil automatiquement — retourne null si l'utilisateur
+ * n'a pas encore choisi son pseudo (→ l'app affichera l'onboarding).
+ */
+export async function ensureBootstrap(): Promise<{ user: UserProfile | null; festival: Festival }> {
+  const user = await getUserProfile() ?? null;
 
   let festivalId = await getActiveFestivalId();
 
@@ -88,6 +83,20 @@ export async function ensureBootstrap() {
   if (!festival) throw new Error("Festival actif introuvable");
 
   return { user, festival };
+}
+
+/**
+ * Crée et persiste le profil utilisateur après l'onboarding.
+ */
+export async function createUserProfile(displayName: string): Promise<UserProfile> {
+  const profile: UserProfile = {
+    id: uuid(),
+    displayName: displayName.trim(),
+    deviceId: uuid(),
+    createdAt: nowISO(),
+  };
+  await putUserProfile(profile);
+  return profile;
 }
 
 export async function createSetEntry(params: {
