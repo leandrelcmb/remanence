@@ -108,20 +108,20 @@ export async function createSetEntry(params: {
     stagePrimary: params.stageName,
   });
 
-  const entry: SetEntry = {
-    id: uuid(),
-    festivalId: params.festivalId,
-    artistId: artist.id,
-    stageName: params.stageName,
-    startTime: params.startTime ?? nowISO(),
-    createdAt: nowISO(),
-    energy: clampInt(params.energy, 1, 10),
-    photo: params.photo,
-    focus: params.focus,
-    colorHex: params.colorHex,
-    feelingText: params.feelingText ?? "",
-    learningText: params.learningText ?? "",
-  };
+  export type SetEntry = {
+  id: UUID;
+  festivalId: UUID;
+  artistId: UUID;
+  stageName: string;
+  startTime: string;
+  createdAt: string;
+  energy: number;
+  focus: FocusType;
+  colorHex: string;
+  feelingText: string;
+  learningText: string;
+  photo?: string;
+};
 
   await addSetEntry(entry);
   return entry;
