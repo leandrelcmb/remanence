@@ -19,8 +19,8 @@ type Props = {
 
 const FOCUS_OPTIONS = [
   { key: "mental",  emoji: "🧠", label: "Mental"   },
-  { key: "emotion", emoji: "💭", label: "Émotions" },
-  { key: "body",    emoji: "🫀", label: "Corps"    },
+  { key: "emotion", emoji: "❤️", label: "Émotions" },
+  { key: "body",    emoji: "🕺", label: "Corps"    },
 ];
 
 function FilterChip({
@@ -38,7 +38,7 @@ function FilterChip({
       style={{
         borderRadius: 999,
         padding: "5px 12px",
-        fontSize: 12,
+        fontSize: 15,
         background: active ? "rgba(160,120,255,0.28)" : "rgba(255,255,255,0.06)",
         border: `1px solid ${active ? "rgba(160,120,255,0.55)" : "rgba(255,255,255,0.1)"}`,
         color: "white",

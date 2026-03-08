@@ -8,8 +8,8 @@ import { formatTime } from "./utils";
 
 const FOCUS_OPTIONS = [
   { key: "mental",  emoji: "🧠", label: "Mental"   },
-  { key: "emotion", emoji: "💭", label: "Émotions" },
-  { key: "body",    emoji: "🫀", label: "Corps"    },
+  { key: "emotion", emoji: "❤️", label: "Émotions" },
+  { key: "body",    emoji: "🕺", label: "Corps"    },
 ];
 
 function FilterChip({
@@ -27,7 +27,7 @@ function FilterChip({
       style={{
         borderRadius: 999,
         padding: "5px 12px",
-        fontSize: 12,
+        fontSize: 15,
         background: active ? "rgba(160,120,255,0.28)" : "rgba(255,255,255,0.06)",
         border: `1px solid ${active ? "rgba(160,120,255,0.55)" : "rgba(255,255,255,0.1)"}`,
         color: "white",
@@ -277,7 +277,7 @@ export function ConstellationScreen({
   }, [stars]);
 
   return (
-    <div style={{ display: "grid", gap: 65, minHeight: "100dvh", alignContent: "start" }}>
+    <div style={{ display: "grid", gap: 20, minHeight: "100dvh", alignContent: "start" }}>
       <style>{CSS}</style>
 
       <h2 style={{ margin: 2 }}>✨ Constellation personnalisée ✨</h2>
