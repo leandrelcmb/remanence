@@ -178,7 +178,7 @@ export default function App() {
   if (!profileReady) {
     return (
       <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
-        <div style={{ position: "relative", zIndex: 1, padding: "40px 20px", maxWidth: 460, margin: "0 auto" }}>
+        <div style={{ position: "relative", zIndex: 1, padding: "40px 20px" }}>
           <ScreenTransition screenKey="onboarding" direction="neutral">
             <OnboardingScreen onSave={saveProfile} />
           </ScreenTransition>
@@ -197,7 +197,8 @@ export default function App() {
       haloScale={haloScale}
       haloCenterY={haloCenterY}
     >
-      <div style={{ position: "relative", zIndex: 1, padding: "40px 20px", maxWidth: 460, margin: "0 auto" }}>
+      {/* Journal : pleine largeur (pas de padding horizontal) */}
+      <div style={{ position: "relative", zIndex: 1, padding: screen === "journal" ? 0 : "40px 20px" }}>
 
         {/* Header : uniquement sur la landing */}
         {screen === "landing" && (
@@ -231,7 +232,7 @@ export default function App() {
               artistSuggestions={artistSuggestions}
               onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
               onNext={() => navigate("color", "forward")}
-              onBack={() => navigate("capture", "backward")}
+              onBack={() => editingEntry ? navigate("detail", "backward") : navigate("capture", "backward")}
             />
           )}
 
@@ -298,6 +299,7 @@ export default function App() {
               onNewEntry={startNewRemanence}
               onSelectItem={(item) => openDetail(item, "journal")}
               onHome={() => navigate("landing", "backward")}
+              onSavePseudo={saveProfile}
             />
           )}
 

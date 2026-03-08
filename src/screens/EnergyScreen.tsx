@@ -11,8 +11,8 @@ type Props = {
 
 export function EnergyScreen({ draft, onChangeDraft, onNext, onBack }: Props) {
   return (
-    <div style={{ display: "grid", gap: 50, minHeight: "75dvh", alignContent: "center" }}>
-      <p style={{ opacity: 0.86, fontSize: 18, margin: 0, textAlign: "center" }}>
+    <div style={{ display: "grid", gap: 50, minHeight: "80dvh", alignContent: "center" }}>
+      <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
         ⚡ Intensité
       </p>
 
@@ -22,7 +22,7 @@ export function EnergyScreen({ draft, onChangeDraft, onNext, onBack }: Props) {
         onChange={(n) => onChangeDraft({ energy: n })}
       />
 
-      <div style={{ display: "flex", gap: 12 }}>
+      <div style={{ display: "flex", gap: 30 }}>
         <div style={{ flex: 1 }}>
           <RoundButton variant="secondary" onClick={onBack}>
             ↪️ Retour

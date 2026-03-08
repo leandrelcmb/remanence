@@ -21,10 +21,10 @@ export function OnboardingScreen({ onSave }: Props) {
 
       {/* Titre */}
       <div>
-        <h1 style={{ fontSize: 36, fontWeight: 200, letterSpacing: "0.04em", margin: 0 }}>
+        <h1 style={{ fontSize: 45, fontWeight: 200, letterSpacing: "0.04em", margin: 0 }}>
           Rémanence
         </h1>
-        <p style={{ fontSize: 13, opacity: 0.45, marginTop: 6, letterSpacing: "0.08em" }}>
+        <p style={{ fontSize: 15, opacity: 0.45, marginTop: 6, letterSpacing: "0.08em" }}>
           CE QUI RESTE QUAND LA MUSIQUE S'ARRÊTE
         </p>
       </div>
@@ -39,21 +39,21 @@ export function OnboardingScreen({ onSave }: Props) {
           où le temps se dilate — et parfois, l'épuisement qui suit.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.7, opacity: 0.55, margin: 0 }}>
-          Rémanence est là pour en garder la trace. Dans ta langue, avec tes mots.
+          Rémanence est là pour en garder la trace. Dans ta langue, ta perception et avec tes mots.
         </p>
       </div>
 
       {/* Champ pseudo */}
       <div style={{ display: "grid", gap: 10 }}>
         <label style={{ fontSize: 12, opacity: 0.5, letterSpacing: "0.1em" }}>
-          COMMENT TU T'APPELLES ?
+          QUEL NOM ÉCRIRE SUR TON CARNET DE VOYAGE ?
         </label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          placeholder="ton prénom ou ton pseudo"
+          placeholder="Ton prénom ou pseudo"
           autoFocus
           maxLength={32}
           style={{
@@ -77,7 +77,7 @@ export function OnboardingScreen({ onSave }: Props) {
         onClick={handleSubmit}
         disabled={!name.trim() || saving}
       >
-        {saving ? "…" : "Entrer dans la rémanence →"}
+        {saving ? "…" : "Créer mon espace →"}
       </RoundButton>
 
     </div>
