@@ -8,6 +8,7 @@ import { CHASSE_TITLES } from "./ChasseScreen";
 type Props = {
   onBack: () => void;
   onChasse: (type: ChasseType) => void;
+  onIntrospection: () => void;
   onComingSoon: () => void;
 };
 
@@ -23,16 +24,22 @@ type GameCard = {
   emoji: string;
   title: string;
   sub: string;
+  active: "introspection";
+} | {
+  id: string;
+  emoji: string;
+  title: string;
+  sub: string;
   active: false;
 };
 
 const GAMES: GameCard[] = [
-  { id: "chromatic", emoji: "🎨", title: "Chasse Chromatique", sub: "Traque une couleur au festival",       active: true,  chasseType: "chromatic"    },
-  { id: "formes",    emoji: "🔷", title: "Chasse des Formes",   sub: "Capture des formes géométriques",    active: true,  chasseType: "formes"       },
-  { id: "perso",     emoji: "🧑", title: "Chasse des Persos",   sub: "Immortalise des archétypes du camp", active: true,  chasseType: "personnages"  },
-  { id: "soon1",     emoji: "⚡", title: "Blind Set",           sub: "Bientôt",                            active: false },
-  { id: "soon2",     emoji: "🃏", title: "Mémoire Sensorielle", sub: "Bientôt",                            active: false },
-  { id: "soon3",     emoji: "🎪", title: "Bingo Festival",      sub: "Bientôt",                            active: false },
+  { id: "chromatic",      emoji: "🎨", title: "Chasse Chromatique", sub: "Traque une couleur au festival",                              active: true,            chasseType: "chromatic"   },
+  { id: "formes",         emoji: "🔷", title: "Chasse des Formes",   sub: "Capture des formes géométriques",                            active: true,            chasseType: "formes"      },
+  { id: "perso",          emoji: "🧑", title: "Chasse des Persos",   sub: "Immortalise des archétypes du camp",                         active: true,            chasseType: "personnages" },
+  { id: "introspection",  emoji: "💭", title: "Introspection",       sub: "Des questions douces pour célébrer notre existence",         active: "introspection"                            },
+  { id: "soon2",          emoji: "🃏", title: "Mémoire Sensorielle", sub: "Bientôt",                                                    active: false                                      },
+  { id: "soon3",          emoji: "🎪", title: "Bingo Festival",      sub: "Bientôt",                                                    active: false                                      },
 ];
 
 function formatDate(iso: string): string {
@@ -40,7 +47,7 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-export function GamesScreen({ onBack, onChasse, onComingSoon }: Props) {
+export function GamesScreen({ onBack, onChasse, onIntrospection, onComingSoon }: Props) {
   const [history, setHistory] = useState<ChasseHistoryEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<ChasseHistoryEntry | null>(null);
 
@@ -99,9 +106,10 @@ export function GamesScreen({ onBack, onChasse, onComingSoon }: Props) {
           gap: 14,
         }}>
           {GAMES.map((game) => {
-            const handleClick = game.active
-              ? () => onChasse(game.chasseType)
-              : onComingSoon;
+            const handleClick =
+              game.active === true         ? () => onChasse(game.chasseType) :
+              game.active === "introspection" ? onIntrospection :
+              onComingSoon;
 
             return (
               <button
@@ -114,7 +122,7 @@ export function GamesScreen({ onBack, onChasse, onComingSoon }: Props) {
                   border: "1px solid rgba(255,255,255,0.10)",
                   padding: 16,
                   cursor: "pointer",
-                  opacity: game.active ? 1 : 0.45,
+                  opacity: game.active !== false ? 1 : 0.45,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "flex-start",
@@ -135,7 +143,7 @@ export function GamesScreen({ onBack, onChasse, onComingSoon }: Props) {
                   </div>
                 </div>
 
-                {!game.active && (
+                {game.active === false && (
                   <div style={{
                     position: "absolute", top: 10, right: 10,
                     background: "rgba(255,255,255,0.12)",

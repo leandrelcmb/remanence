@@ -27,6 +27,7 @@ import { ContactsScreen } from "../screens/ContactsScreen";
 import { RecapScreen } from "../screens/RecapScreen";
 import { GamesScreen } from "../screens/GamesScreen";
 import { ChasseScreen } from "../screens/ChasseScreen";
+import { IntrospectionScreen } from "../screens/IntrospectionScreen";
 import { ComingSoonScreen } from "../screens/ComingSoonScreen";
 import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
 import { getActiveChasse, clearActiveChasse } from "../core/store/repo";
@@ -423,8 +424,13 @@ export default function App() {
             <GamesScreen
               onBack={() => navigate("landing", "backward")}
               onChasse={(type) => { setChasseType(type); navigate("chasse", "forward"); }}
+              onIntrospection={() => navigate("introspection", "forward")}
               onComingSoon={() => navigate("comingSoon", "forward")}
             />
+          )}
+
+          {screen === "introspection" && (
+            <IntrospectionScreen onBack={() => navigate("games", "backward")} />
           )}
 
           {screen === "chasse" && (

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { RoundButton } from "../app/ui/RoundButton";
 import type { ChasseType } from "../core/models/chasseTypes";
 
@@ -34,6 +35,14 @@ export function LandingScreen({
   onConstellation, onFestivalPicker, onContacts, onGames,
   activeChasse, onResumeChasse,
 }: Props) {
+  // Timer live : se met à jour chaque seconde quand une session est active
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!activeChasse) return;
+    const id = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [activeChasse]);
+
   return (
     <div style={{ display: "grid", gap: 60, minHeight: "85dvh", alignContent: "center" }}>
       <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
