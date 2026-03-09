@@ -44,8 +44,9 @@ function FilterChip({
       onClick={onClick}
       style={{
         borderRadius: 999,
-        padding: "5px 12px",
-        fontSize: 15,
+        padding: "4px 10px",
+        fontSize: 12,
+        lineHeight: 1,
         background: active ? "rgba(160,120,255,0.28)" : "rgba(255,255,255,0.06)",
         border: `1px solid ${active ? "rgba(160,120,255,0.55)" : "rgba(255,255,255,0.1)"}`,
         color: "white",
@@ -90,7 +91,7 @@ function MiniStats({ journal }: { journal: JournalItem[] }) {
   return (
     <div
       style={{
-        padding: "10px 20px",
+        padding: "10px 12px",
         display: "flex",
         gap: 20,
         flexWrap: "wrap",
@@ -134,7 +135,7 @@ function JournalCard({ item, onClick }: { item: JournalItem; onClick: () => void
         display: "grid",
         gap: 15,
         cursor: "pointer",
-        margin: "0 16px",
+        margin: "0 12px",
       }}
     >
       <div
@@ -281,7 +282,7 @@ export function JournalScreen({
         }}
       >
         {/* ── En-tête ── */}
-        <div style={{ padding: "40px 20px 20px", display: "grid", gap: 20 }}>
+        <div style={{ padding: "40px 12px 20px", display: "grid", gap: 20 }}>
           {/* Titre avec édition du pseudo */}
           {editingPseudo ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -354,7 +355,7 @@ export function JournalScreen({
 
         {/* ── Filtres ── */}
         {journal.length > 0 && (
-          <div style={{ padding: "16px 20px", display: "grid", gap: 8 }}>
+          <div style={{ padding: "16px 12px", display: "grid", gap: 8 }}>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {FOCUS_OPTIONS.map((f) => (
                 <FilterChip
@@ -391,13 +392,13 @@ export function JournalScreen({
 
         {/* ── Liste des souvenirs ── */}
         {journal.length === 0 && (
-          <p style={{ opacity: 0.6, padding: "0 20px" }}>
+          <p style={{ opacity: 0.6, padding: "0 12px" }}>
             Aucun souvenir enregistré pour le moment.
           </p>
         )}
 
         {filtered.length === 0 && journal.length > 0 && (
-          <p style={{ opacity: 0.5, fontSize: 14, padding: "0 20px" }}>
+          <p style={{ opacity: 0.5, fontSize: 14, padding: "0 12px" }}>
             Aucun souvenir ne correspond aux filtres sélectionnés.
           </p>
         )}
