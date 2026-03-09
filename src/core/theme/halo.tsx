@@ -36,47 +36,62 @@ export const Halo = ({
 
   const breatheScale = useMemo(() => {
     if (!breathe) return scale;
-    const s = 1 + Math.sin((phase * Math.PI * 2) / 12) * 0.02;
+    const s = 1 + Math.sin((phase * Math.PI * 2) / 12) * 0.03;
     return scale * s;
   }, [phase, scale, breathe]);
 
-  const rgba = toRGBA(color, opacity);
-  const rgbaRing = toRGBA(color, opacity * 0.55);
-  const rgbaOuter = toRGBA(color, opacity * 0.28);
+  const rgba       = toRGBA(color, opacity);
+  const rgbaAmb    = toRGBA(color, opacity * 0.30); // couche ambiance très douce
+  const rgbaRing   = toRGBA(color, opacity * 0.75); // anneau interne — plus visible
+  const rgbaOuter  = toRGBA(color, opacity * 0.45); // anneau externe
 
-  // Gradient central principal (opacité augmentée)
+  // ── Couche ambiance : très large radial, toujours présente ──
+  const ambienceStyle: CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    background: `radial-gradient(ellipse 110% 60% at 50% ${centerY}%, ${rgbaAmb} 0%, transparent 100%)`,
+    pointerEvents: "none",
+    transition: "background 1.1s ease-in-out",
+    willChange: "background",
+  };
+
+  // ── Gradient central principal ──
   const mainStyle: CSSProperties = {
     position: "absolute",
     inset: 0,
-    background: `radial-gradient(circle at 50% ${centerY}%, ${rgba} 0%, rgba(0,0,0,0) 72%)`,
+    background: `radial-gradient(ellipse 80% 70% at 50% ${centerY}%, ${rgba} 0%, ${toRGBA(color, opacity * 0.35)} 45%, rgba(0,0,0,0) 82%)`,
     transform: `scale(${breatheScale})`,
-    transition: "opacity 0.8s ease-in-out, transform 0.8s ease-in-out, background 0.8s ease-in-out",
+    transition: "opacity 1.1s ease-in-out, transform 1.1s ease-in-out, background 1.1s ease-in-out",
     pointerEvents: "none",
     willChange: "transform, opacity, background",
   };
 
-  // Anneau néon 1 — rotation lente sens horaire
+  // ── Anneau néon 1 : large arc, rotation lente CW ──
+  const ring1Opacity = breathe ? 0.75 + Math.sin((phase * Math.PI * 2) / 15) * 0.18 : 0.75;
   const ring1Style: CSSProperties = {
     position: "absolute",
     inset: "-20%",
     borderRadius: "50%",
-    background: `conic-gradient(from 0deg, transparent 60%, ${rgbaRing} 75%, transparent 90%)`,
-    filter: `blur(28px)`,
+    background: `conic-gradient(from 0deg, transparent 45%, ${rgbaRing} 62%, ${toRGBA(color, opacity * 0.55)} 72%, transparent 85%)`,
+    filter: `blur(35px)`,
     animation: "halo-spin-cw 18s linear infinite",
     pointerEvents: "none",
-    opacity: breathe ? 0.7 + Math.sin((phase * Math.PI * 2) / 15) * 0.15 : 0.7,
+    opacity: ring1Opacity,
+    transition: "opacity 1.1s ease-in-out",
   };
 
-  // Anneau néon 2 — rotation lente sens anti-horaire, décalé
+  // ── Anneau néon 2 : large arc, rotation lente CCW, décalé ──
+  const ring2Opacity = breathe ? 0.60 + Math.sin((phase * Math.PI * 2) / 20) * 0.14 : 0.60;
   const ring2Style: CSSProperties = {
     position: "absolute",
     inset: "-30%",
     borderRadius: "50%",
-    background: `conic-gradient(from 120deg, transparent 55%, ${rgbaOuter} 72%, transparent 88%)`,
-    filter: `blur(40px)`,
+    background: `conic-gradient(from 120deg, transparent 40%, ${rgbaOuter} 58%, ${toRGBA(color, opacity * 0.30)} 68%, transparent 80%)`,
+    filter: `blur(55px)`,
     animation: "halo-spin-ccw 26s linear infinite",
     pointerEvents: "none",
-    opacity: breathe ? 0.5 + Math.sin((phase * Math.PI * 2) / 20) * 0.12 : 0.5,
+    opacity: ring2Opacity,
+    transition: "opacity 1.1s ease-in-out",
   };
 
   return (
@@ -86,6 +101,7 @@ export const Halo = ({
         @keyframes halo-spin-ccw { from { transform: rotate(0deg);   } to { transform: rotate(-360deg); } }
       `}</style>
       <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+        <div style={ambienceStyle} />
         <div style={ring2Style} />
         <div style={ring1Style} />
         <div style={mainStyle} />

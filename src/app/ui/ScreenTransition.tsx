@@ -1,11 +1,15 @@
 import type { ReactNode } from "react";
 
-export type AnimDir = "forward" | "backward" | "neutral";
+export type AnimDir = "forward" | "backward" | "neutral" | "flare";
+
+// cubic-bezier(0.16, 1, 0.3, 1) = ease-out-expo : décélération naturelle et fluide
+const SPRING = "cubic-bezier(0.16, 1, 0.3, 1)";
 
 const ANIM: Record<AnimDir, string> = {
-  forward:  "screenSlideFromRight 0.27s cubic-bezier(0.25, 0.46, 0.45, 0.94) both",
-  backward: "screenSlideFromLeft  0.27s cubic-bezier(0.25, 0.46, 0.45, 0.94) both",
-  neutral:  "screenFadeIn         0.22s ease both",
+  forward:  `screenSlideFromRight 0.38s ${SPRING} both`,
+  backward: `screenSlideFromLeft  0.38s ${SPRING} both`,
+  neutral:  `screenFadeIn         0.30s ease both`,
+  flare:    `screenBloomIn        0.50s ${SPRING} both`,
 };
 
 interface Props {

@@ -46,6 +46,7 @@ export default function App() {
   const [lastSavedColor, setLastSavedColor] = useState<string | null>(null);
   const [lastSavedEntry, setLastSavedEntry] = useState<LastSavedEntry | null>(null);
   const [transitioning, setTransitioning] = useState(false);
+  const [fadingOut, setFadingOut] = useState(false);
 
   // null = mode création, objet = mode édition
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
@@ -69,13 +70,15 @@ export default function App() {
     setScreen(target);
   }
 
-  /** Navigation avec flambée du halo (200ms) — pour les CTA principaux */
-  function navigateWithFlare(target: FlowScreen, dir: AnimDir = "forward") {
-    setTransitioning(true);
+  /** Navigation avec cross-fade + flambée du halo — pour les CTA principaux */
+  function navigateWithFlare(target: FlowScreen, dir: AnimDir = "flare") {
+    setTransitioning(true); // halo explose
+    setFadingOut(true);     // écran courant s'efface
     setTimeout(() => {
-      navigate(target, dir);
-      setTimeout(() => setTransitioning(false), 500);
-    }, 220);
+      setFadingOut(false);
+      navigate(target, dir); // nouvel écran apparaît en bloom
+      setTimeout(() => setTransitioning(false), 700); // halo se stabilise
+    }, 330); // durée du fade-out
   }
 
   function startNewRemanence(express = false) {
@@ -202,8 +205,8 @@ export default function App() {
   const isFlowScreen = flowScreens.includes(screen);
 
   // Boost d'opacité + scale pendant la transition (flambée du halo)
-  const effectiveOpacity = transitioning ? Math.min(0.9, haloOpacity * 3.2) : haloOpacity;
-  const effectiveScale   = transitioning ? haloScale * 1.4 : haloScale;
+  const effectiveOpacity = transitioning ? Math.min(0.92, haloOpacity * 4.0) : haloOpacity;
+  const effectiveScale   = transitioning ? haloScale * 1.6 : haloScale;
 
   return (
     <RootLayout
@@ -228,6 +231,8 @@ export default function App() {
         {isFlowScreen && <FlowProgress screen={screen} express={expressMode} />}
 
         {/* ── Écran actif avec animation ── */}
+        {/* Le div extérieur porte le fade-out (cross-fade) ; ScreenTransition porte le fade-in */}
+        <div style={{ animation: fadingOut ? "screenFadeOut 0.33s ease-in both" : undefined }}>
         <ScreenTransition screenKey={screen} direction={animDir}>
 
           {screen === "landing" && (
@@ -359,6 +364,7 @@ export default function App() {
           )}
 
         </ScreenTransition>
+        </div>
       </div>
     </RootLayout>
   );
