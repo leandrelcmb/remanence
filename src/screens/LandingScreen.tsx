@@ -16,7 +16,7 @@ export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal
         🧘 "Ancre l'instant"
       </p>
 
-      <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "grid", gap: 15 }}>
         {/* Parcours complet */}
         <RoundButton variant="primary" onClick={onStart}>
           Entrer en rémanence 🌱
@@ -29,7 +29,7 @@ export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal
             background: "rgba(255,255,255,0.08)",
             border: "1px solid rgba(255,255,255,0.2)",
             borderRadius: 999,
-            padding: "5px 20px",
+            padding: "15px 20px",
             fontSize: 15,
             color: "rgba(255,255,255,0.9)",
             cursor: "pointer",
@@ -59,11 +59,11 @@ export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal
           border: "none",
           cursor: "pointer",
           color: "inherit",
-          opacity: 0.4,
+          opacity: 0.7,
           fontSize: 15,
           letterSpacing: "0.08em",
           textAlign: "center",
-          padding: "4px 0",
+          padding: "1px 0",
           fontFamily: "inherit",
         }}
       >

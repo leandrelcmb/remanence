@@ -280,7 +280,7 @@ export function ConstellationScreen({
     <div style={{ display: "grid", gap: 20, minHeight: "100dvh", alignContent: "start" }}>
       <style>{CSS}</style>
 
-      <h2 style={{ margin: 2 }}>✨ Constellation personnalisée ✨</h2>
+      <h2 style={{ margin: 2, fontSize: 20}}>✨ Constellation personnalisée ✨</h2>
 
       {/* ── Filtres ── */}
       {journal.length > 0 && (

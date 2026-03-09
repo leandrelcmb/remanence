@@ -17,7 +17,7 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete }: Pro
   const displayColor = energyTint(item.colorHex, item.energy);
 
   return (
-    <div style={{ display: "grid", gap: 30, minHeight: "70dvh", alignContent: "center" }}>
+    <div style={{ display: "grid", gap: 30, minHeight: "85dvh", alignContent: "center" }}>
       <div style={{ display: "grid", gap: 6, textAlign: "center" }}>
         <h2 style={{ margin: 0, fontWeight: 600 }}>{item.artistName}</h2>
         <div style={{ opacity: 0.6 }}>
@@ -76,8 +76,8 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete }: Pro
 
       {/* Actions */}
       {!confirmingDelete ? (
-        <div style={{ display: "grid", gap: 10 }}>
-          <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "grid", gap: 60 }}>
+          <div style={{ display: "flex", gap: 20 }}>
             <div style={{ flex: 1 }}>
               <RoundButton variant="secondary" onClick={() => onEdit(item)}>
                 Modifier ✏️
