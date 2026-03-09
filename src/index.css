@@ -24,6 +24,25 @@ html, body, #root { height: 100%; background: #000; }
   from { opacity: 0; transform: translateX(-28px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* Particules DoneScreen — --particle-dy injecté en inline style par élément */
+@keyframes particleFloat {
+  0%   { opacity: 0.65; transform: translateY(0) scale(1); }
+  15%  { opacity: 0.75; }
+  80%  { opacity: 0.25; }
+  100% { opacity: 0;    transform: translateY(var(--particle-dy)) scale(0.55); }
+}
+
+/* Retour tactile des boutons de l'app (tap feedback mobile) */
+.remanence-btn {
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.remanence-btn:active {
+  opacity: 0.70;
+  transform: scale(0.97);
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

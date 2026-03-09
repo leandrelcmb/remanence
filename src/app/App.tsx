@@ -24,6 +24,7 @@ import { ConstellationScreen } from "../screens/ConstellationScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
 import { ContactsScreen } from "../screens/ContactsScreen";
+import { RecapScreen } from "../screens/RecapScreen";
 import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
@@ -225,7 +226,7 @@ export default function App() {
       haloFilterTransition={haloFilterTransition}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
-      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts") ? 0 : "40px 12px" }}>
+      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap") ? 0 : "40px 12px" }}>
 
         {/* Header : uniquement sur la landing */}
         {screen === "landing" && (
@@ -253,6 +254,7 @@ export default function App() {
               onConstellation={() => navigateWithFlare("constellation", "forward")}
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
               onContacts={() => navigate("contacts", "forward")}
+              onRecap={() => navigate("recap", "forward")}
             />
           )}
 
@@ -368,6 +370,16 @@ export default function App() {
             <ContactsScreen
               festivalId={festivalId ?? ""}
               festivalName={festival?.name ?? ""}
+              onBack={() => navigate("landing", "backward")}
+            />
+          )}
+
+          {screen === "recap" && (
+            <RecapScreen
+              journal={journal}
+              festival={festival}
+              user={user}
+              festivalId={festivalId ?? ""}
               onBack={() => navigate("landing", "backward")}
             />
           )}

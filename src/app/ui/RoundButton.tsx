@@ -13,25 +13,27 @@ export function RoundButton({
   disabled,
   variant = "primary",
 }: Props) {
-  const bg =
-    variant === "primary" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)";
-  const border =
-    variant === "primary" ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.12)";
+  const isPrimary = variant === "primary";
 
   return (
     <button
+      className="remanence-btn"
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       style={{
         width: "100%",
         borderRadius: 999,
         padding: "18px 20px",
-        border: `1px solid ${border}`,
-        background: bg,
+        border: `1px solid ${isPrimary ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.12)"}`,
+        background: isPrimary ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.04)",
+        backdropFilter: "blur(10px)",
         color: "white",
         cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.6 : 1,
-        fontSize: 20,
+        opacity: disabled ? 0.5 : 1,
+        fontSize: 17,
+        fontWeight: isPrimary ? 600 : 400,
+        fontFamily: "inherit",
+        letterSpacing: "0.03em",
       }}
     >
       {children}

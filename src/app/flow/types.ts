@@ -11,7 +11,8 @@ export type FlowScreen =
   | "detail"
   | "constellation"
   | "festivalPicker"
-  | "contacts";
+  | "contacts"
+  | "recap";
 
 export type Draft = {
   artistName: string;
