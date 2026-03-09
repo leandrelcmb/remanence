@@ -40,7 +40,10 @@ export function useAmbientColor({
       screen === "constellation" ||
       screen === "contacts" ||
       screen === "festivalPicker" ||
-      screen === "recap"
+      screen === "recap" ||
+      screen === "games" ||
+      screen === "chasse" ||
+      screen === "comingSoon"
     ) {
       return latestJournalColor;
     }
@@ -53,6 +56,8 @@ export function useAmbientColor({
     if (screen === "done") return 0.40;
     if (screen === "journal") return 0.24;
     if (screen === "recap") return 0.26;
+    if (screen === "games") return 0.28;
+    if (screen === "chasse") return 0.32;
     if (screen === "constellation") return 0.22;
     if (screen === "detail" && selectedItem) return 0.26 + selectedItem.energy * 0.022;
     if (screen === "landing") return 0.30;
@@ -66,6 +71,8 @@ export function useAmbientColor({
     if (screen === "done") return 1.25;
     if (screen === "journal") return 1.10;
     if (screen === "recap") return 1.15;
+    if (screen === "games") return 1.15;
+    if (screen === "chasse") return 1.20;
     if (screen === "constellation") return 1.10;
     if (screen === "detail" && selectedItem) return 1 + (selectedItem.energy / 10) * 0.38;
     return 1.18;

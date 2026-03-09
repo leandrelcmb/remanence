@@ -25,6 +25,9 @@ import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
 import { ContactsScreen } from "../screens/ContactsScreen";
 import { RecapScreen } from "../screens/RecapScreen";
+import { GamesScreen } from "../screens/GamesScreen";
+import { ChasseScreen, type ChasseType } from "../screens/ChasseScreen";
+import { ComingSoonScreen } from "../screens/ComingSoonScreen";
 import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
@@ -56,6 +59,9 @@ export default function App() {
 
   // true = parcours raccourci (capture → setInfo → color → energy → focus → done)
   const [expressMode, setExpressMode] = useState(false);
+
+  // Type de chasse sélectionné depuis GamesScreen
+  const [chasseType, setChasseType] = useState<ChasseType>("chromatic");
 
   const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
   const { booting, profileReady, saveProfile, user, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
@@ -226,7 +232,7 @@ export default function App() {
       haloFilterTransition={haloFilterTransition}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
-      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap") ? 0 : "40px 12px" }}>
+      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games") ? 0 : "40px 12px" }}>
 
         {/* Header : uniquement sur la landing */}
         {screen === "landing" && (
@@ -254,6 +260,7 @@ export default function App() {
               onConstellation={() => navigateWithFlare("constellation", "forward")}
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
               onContacts={() => navigate("contacts", "forward")}
+              onGames={() => navigate("games", "forward")}
             />
           )}
 
@@ -382,6 +389,25 @@ export default function App() {
               festivalId={festivalId ?? ""}
               onBack={() => navigate("landing", "backward")}
             />
+          )}
+
+          {screen === "games" && (
+            <GamesScreen
+              onBack={() => navigate("landing", "backward")}
+              onChasse={(type) => { setChasseType(type); navigate("chasse", "forward"); }}
+              onComingSoon={() => navigate("comingSoon", "forward")}
+            />
+          )}
+
+          {screen === "chasse" && (
+            <ChasseScreen
+              chasseType={chasseType}
+              onBack={() => navigate("games", "backward")}
+            />
+          )}
+
+          {screen === "comingSoon" && (
+            <ComingSoonScreen onBack={() => navigate("games", "backward")} />
           )}
 
         </ScreenTransition>
