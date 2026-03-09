@@ -18,11 +18,8 @@ export const RootLayout = ({
   return (
     /* Fond noir plein écran */
     <div style={{ backgroundColor: Colors.black, color: "white", minHeight: "100dvh" }}>
-      {/* Colonne centrée contrainte à 390px (iPhone 12 Pro) */}
       <div
         style={{
-          maxWidth: 390,
-          margin: "0 auto",
           minHeight: "100dvh",
           position: "relative",
           overflow: "hidden",
