@@ -44,6 +44,7 @@ export default function App() {
   const [detailBackTarget, setDetailBackTarget] = useState<"journal" | "constellation">("journal");
   const [lastSavedColor, setLastSavedColor] = useState<string | null>(null);
   const [lastSavedEntry, setLastSavedEntry] = useState<LastSavedEntry | null>(null);
+  const [transitioning, setTransitioning] = useState(false);
 
   // null = mode création, objet = mode édition
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
@@ -67,12 +68,21 @@ export default function App() {
     setScreen(target);
   }
 
+  /** Navigation avec flambée du halo (200ms) — pour les CTA principaux */
+  function navigateWithFlare(target: FlowScreen, dir: AnimDir = "forward") {
+    setTransitioning(true);
+    setTimeout(() => {
+      navigate(target, dir);
+      setTimeout(() => setTransitioning(false), 500);
+    }, 220);
+  }
+
   function startNewRemanence(express = false) {
     resetDraft();
     setSelectedItem(null);
     setEditingEntry(null);
     setExpressMode(express);
-    navigate("capture", "forward");
+    navigateWithFlare("capture", "forward");
   }
 
   function openDetail(item: JournalItem, from: "journal" | "constellation") {
@@ -190,11 +200,15 @@ export default function App() {
   const flowScreens = expressMode ? EXPRESS_FLOW_SCREENS : FULL_FLOW_SCREENS;
   const isFlowScreen = flowScreens.includes(screen);
 
+  // Boost d'opacité + scale pendant la transition (flambée du halo)
+  const effectiveOpacity = transitioning ? Math.min(0.9, haloOpacity * 3.2) : haloOpacity;
+  const effectiveScale   = transitioning ? haloScale * 1.4 : haloScale;
+
   return (
     <RootLayout
       haloColor={haloColor}
-      haloOpacity={haloOpacity}
-      haloScale={haloScale}
+      haloOpacity={effectiveOpacity}
+      haloScale={effectiveScale}
       haloCenterY={haloCenterY}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
@@ -221,7 +235,7 @@ export default function App() {
               onStart={() => startNewRemanence(false)}
               onExpressStart={() => startNewRemanence(true)}
               onJournal={() => navigate("journal", "forward")}
-              onConstellation={() => navigate("constellation", "forward")}
+              onConstellation={() => navigateWithFlare("constellation", "forward")}
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
             />
           )}

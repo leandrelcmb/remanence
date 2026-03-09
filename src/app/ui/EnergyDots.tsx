@@ -37,7 +37,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 14px;
+      height: 22px;
       border-radius: 999px;
       outline: none;
       background:
@@ -54,8 +54,8 @@ export function EnergyDots({ value, color, onChange }: Props) {
     .remanence-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 28px;
-      height: 28px;
+      width: 38px;
+      height: 38px;
       border-radius: 999px;
       border: 2px solid rgba(255,255,255,0.85);
       background: ${tint};
@@ -71,7 +71,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
     }
 
     .remanence-range::-moz-range-track {
-      height: 14px;
+      height: 22px;
       border-radius: 999px;
       border: none;
       background:
@@ -86,8 +86,8 @@ export function EnergyDots({ value, color, onChange }: Props) {
     }
 
     .remanence-range::-moz-range-thumb {
-      width: 28px;
-      height: 28px;
+      width: 38px;
+      height: 38px;
       border-radius: 999px;
       border: 2px solid rgba(255,255,255,0.85);
       background: ${tint};

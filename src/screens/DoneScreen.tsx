@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { RoundButton } from "../app/ui/RoundButton";
 import { energyTint } from "../app/ui/EnergyDots";
 import { focusEmoji } from "./utils";
@@ -19,6 +20,13 @@ type Props = {
 
 export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
   const accentColor = lastSavedColor ?? "white";
+  const [glowing, setGlowing] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setGlowing(true), 100);
+    const t2 = setTimeout(() => setGlowing(false), 1800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
 
   return (
     <div style={{ display: "grid", gap: 100, minHeight: "85dvh", alignContent: "center" }}>
@@ -141,9 +149,16 @@ export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
         </div>
       )}
 
-      <RoundButton variant="primary" onClick={onHome}>
-        Se reconnecter à l'instant 🍀
-      </RoundButton>
+      <div style={{
+        borderRadius: 999,
+        transition: "box-shadow 0.6s ease, transform 0.6s ease",
+        boxShadow: glowing ? `0 0 40px ${accentColor}88, 0 0 80px ${accentColor}44` : "none",
+        transform: glowing ? "scale(1.03)" : "scale(1)",
+      }}>
+        <RoundButton variant="primary" onClick={onHome}>
+          Se reconnecter à l'instant 🍀
+        </RoundButton>
+      </div>
     </div>
   );
 }

@@ -40,21 +40,58 @@ export const Halo = ({
     return scale * s;
   }, [phase, scale, breathe]);
 
-  const style: CSSProperties = {
+  const rgba = toRGBA(color, opacity);
+  const rgbaRing = toRGBA(color, opacity * 0.55);
+  const rgbaOuter = toRGBA(color, opacity * 0.28);
+
+  // Gradient central principal (opacité augmentée)
+  const mainStyle: CSSProperties = {
     position: "absolute",
     inset: 0,
-    background: `radial-gradient(circle at 50% ${centerY}%, ${toRGBA(
-      color,
-      opacity
-    )} 0%, rgba(0,0,0,0) 80%)`,
+    background: `radial-gradient(circle at 50% ${centerY}%, ${rgba} 0%, rgba(0,0,0,0) 72%)`,
     transform: `scale(${breatheScale})`,
-    transition:
-      "opacity 0.8s ease-in-out, transform 0.8s ease-in-out, background 0.8s ease-in-out",
+    transition: "opacity 0.8s ease-in-out, transform 0.8s ease-in-out, background 0.8s ease-in-out",
     pointerEvents: "none",
     willChange: "transform, opacity, background",
   };
 
-  return <div style={style} />;
+  // Anneau néon 1 — rotation lente sens horaire
+  const ring1Style: CSSProperties = {
+    position: "absolute",
+    inset: "-20%",
+    borderRadius: "50%",
+    background: `conic-gradient(from 0deg, transparent 60%, ${rgbaRing} 75%, transparent 90%)`,
+    filter: `blur(28px)`,
+    animation: "halo-spin-cw 18s linear infinite",
+    pointerEvents: "none",
+    opacity: breathe ? 0.7 + Math.sin((phase * Math.PI * 2) / 15) * 0.15 : 0.7,
+  };
+
+  // Anneau néon 2 — rotation lente sens anti-horaire, décalé
+  const ring2Style: CSSProperties = {
+    position: "absolute",
+    inset: "-30%",
+    borderRadius: "50%",
+    background: `conic-gradient(from 120deg, transparent 55%, ${rgbaOuter} 72%, transparent 88%)`,
+    filter: `blur(40px)`,
+    animation: "halo-spin-ccw 26s linear infinite",
+    pointerEvents: "none",
+    opacity: breathe ? 0.5 + Math.sin((phase * Math.PI * 2) / 20) * 0.12 : 0.5,
+  };
+
+  return (
+    <>
+      <style>{`
+        @keyframes halo-spin-cw  { from { transform: rotate(0deg);   } to { transform: rotate(360deg);  } }
+        @keyframes halo-spin-ccw { from { transform: rotate(0deg);   } to { transform: rotate(-360deg); } }
+      `}</style>
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+        <div style={ring2Style} />
+        <div style={ring1Style} />
+        <div style={mainStyle} />
+      </div>
+    </>
+  );
 };
 
 function toRGBA(color: string, opacity: number) {

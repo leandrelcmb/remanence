@@ -41,13 +41,13 @@ export function useAmbientColor({
   }, [screen, selectedItem, displayDraftColor, latestJournalColor, lastSavedColor]);
 
   const haloOpacity = useMemo(() => {
-    if (screen === "energy") return 0.12 + draft.energy * 0.02;
-    if (screen === "color") return 0.28;
-    if (screen === "done") return 0.22;
-    if (screen === "journal") return 0.12;
-    if (screen === "constellation") return 0.1;
-    if (screen === "detail" && selectedItem) return 0.16 + selectedItem.energy * 0.015;
-    return 0.16;
+    if (screen === "energy") return 0.18 + draft.energy * 0.028;
+    if (screen === "color") return 0.45;
+    if (screen === "done") return 0.38;
+    if (screen === "journal") return 0.20;
+    if (screen === "constellation") return 0.18;
+    if (screen === "detail" && selectedItem) return 0.22 + selectedItem.energy * 0.02;
+    return 0.22;
   }, [screen, draft.energy, selectedItem]);
 
   const haloScale = useMemo(() => {
