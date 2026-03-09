@@ -1,4 +1,20 @@
 import { RoundButton } from "../app/ui/RoundButton";
+import type { ChasseType } from "../core/models/chasseTypes";
+
+type ActiveChasseInfo = {
+  chasseType: ChasseType;
+  timerExpiresAt: number;
+  resultLabel: string;
+  resultColor: string;
+  resultIcon: string;
+};
+
+function formatRemainingTime(expiresAt: number): string {
+  const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+  const mm = Math.floor(remaining / 60);
+  const ss = remaining % 60;
+  return `${mm}:${ss.toString().padStart(2, "0")}`;
+}
 
 type Props = {
   festivalName: string;
@@ -9,9 +25,15 @@ type Props = {
   onFestivalPicker: () => void;
   onContacts: () => void;
   onGames: () => void;
+  activeChasse?: ActiveChasseInfo;
+  onResumeChasse: () => void;
 };
 
-export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal, onConstellation, onFestivalPicker, onContacts, onGames }: Props) {
+export function LandingScreen({
+  festivalName, onStart, onExpressStart, onJournal,
+  onConstellation, onFestivalPicker, onContacts, onGames,
+  activeChasse, onResumeChasse,
+}: Props) {
   return (
     <div style={{ display: "grid", gap: 60, minHeight: "85dvh", alignContent: "center" }}>
       <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
@@ -19,6 +41,44 @@ export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal
       </p>
 
       <div style={{ display: "grid", gap: 15 }}>
+
+        {/* ── Bannière session Chasse active ── */}
+        {activeChasse && activeChasse.timerExpiresAt > Date.now() && (
+          <button
+            onClick={onResumeChasse}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              background: "rgba(255,255,255,0.07)",
+              border: `1px solid ${activeChasse.resultColor}55`,
+              borderRadius: 16,
+              padding: "12px 16px",
+              color: "white",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              width: "100%",
+              marginBottom: 4,
+            }}
+          >
+            <div style={{
+              width: 10, height: 10,
+              borderRadius: "50%",
+              background: activeChasse.resultColor,
+              boxShadow: `0 0 8px ${activeChasse.resultColor}`,
+              flexShrink: 0,
+            }} />
+            <div style={{ flex: 1, textAlign: "left" }}>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>
+                {activeChasse.resultIcon} {activeChasse.resultLabel} en cours
+              </div>
+              <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+                {formatRemainingTime(activeChasse.timerExpiresAt)} restantes · Reprendre →
+              </div>
+            </div>
+          </button>
+        )}
+
         {/* Parcours complet */}
         <RoundButton variant="primary" onClick={onStart}>
           Entrer en rémanence 🌱
@@ -52,7 +112,7 @@ export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal
           Constellations ✨
         </RoundButton>
 
-        {/* Rencontres — discret comme Trace éclair */}
+        {/* Rencontres */}
         <button
           onClick={onContacts}
           style={{
@@ -70,6 +130,7 @@ export function LandingScreen({ festivalName, onStart, onExpressStart, onJournal
           Rencontres 🤝
         </button>
 
+        {/* Jeux */}
         <button
           onClick={onGames}
           style={{

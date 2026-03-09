@@ -37,6 +37,16 @@ html, body, #root { height: 100%; background: #000; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Mode édition grille photo Chasse — long press → wobble iOS-like */
+@keyframes chasseWobble {
+  0%, 100% { transform: rotate(-1.2deg); }
+  50%       { transform: rotate( 1.2deg); }
+}
+.chasse-wobble {
+  animation: chasseWobble 0.35s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
+
 /* Retour tactile des boutons de l'app (tap feedback mobile) */
 .remanence-btn {
   -webkit-tap-highlight-color: transparent;

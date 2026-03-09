@@ -1,4 +1,5 @@
 import type { Artist, Festival, FestivalContact, SetEntry, UserProfile, UUID } from "../models/types";
+import type { ChasseActiveSession, ChasseHistoryEntry } from "../models/chasseTypes";
 import { getDB } from "./db";
 
 export const MetaKeys = {
@@ -127,4 +128,39 @@ export async function putContact(contact: FestivalContact): Promise<void> {
 export async function deleteContact(id: UUID): Promise<void> {
   const db = await getDB();
   await db.delete("contacts", id);
+}
+
+/** CHASSE — session active */
+
+export async function getActiveChasse(): Promise<ChasseActiveSession | undefined> {
+  const db = await getDB();
+  return db.get("chasseActive", "current");
+}
+
+export async function setActiveChasse(session: ChasseActiveSession): Promise<void> {
+  const db = await getDB();
+  await db.put("chasseActive", session, "current");
+}
+
+export async function clearActiveChasse(): Promise<void> {
+  const db = await getDB();
+  await db.delete("chasseActive", "current");
+}
+
+/** CHASSE — historique */
+
+export async function addChasseHistory(entry: ChasseHistoryEntry): Promise<void> {
+  const db = await getDB();
+  await db.put("chasseHistory", entry);
+}
+
+export async function listChasseHistory(): Promise<ChasseHistoryEntry[]> {
+  const db = await getDB();
+  const all = await db.getAll("chasseHistory");
+  return all.sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+}
+
+export async function deleteChasseHistory(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete("chasseHistory", id);
 }

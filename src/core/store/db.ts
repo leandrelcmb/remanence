@@ -1,6 +1,7 @@
 import { openDB } from "idb";
 import type { DBSchema, IDBPDatabase } from "idb";
 import type { Artist, Festival, FestivalContact, SetEntry, UserProfile, UUID } from "../models/types";
+import type { ChasseActiveSession, ChasseHistoryEntry } from "../models/chasseTypes";
 
 interface RemanenceDB extends DBSchema {
   meta: {
@@ -35,13 +36,22 @@ interface RemanenceDB extends DBSchema {
     value: FestivalContact;
     indexes: { "by-festivalId": UUID };
   };
+  chasseActive: {
+    key: string;                // clé = "current" (enregistrement unique)
+    value: ChasseActiveSession;
+  };
+  chasseHistory: {
+    key: string;
+    value: ChasseHistoryEntry;
+    indexes: { "by-savedAt": string };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<RemanenceDB>> | null = null;
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<RemanenceDB>("remanence-db", 2, {
+    dbPromise = openDB<RemanenceDB>("remanence-db", 3, {
       upgrade(db, oldVersion) {
         // ── v1 : stores initiaux ──────────────────────────────────────────────
         if (oldVersion < 1) {
@@ -65,6 +75,13 @@ export function getDB() {
         if (oldVersion < 2) {
           const contacts = db.createObjectStore("contacts", { keyPath: "id" });
           contacts.createIndex("by-festivalId", "festivalId");
+        }
+
+        // ── v3 : sessions de chasse ───────────────────────────────────────────
+        if (oldVersion < 3) {
+          db.createObjectStore("chasseActive");                                   // clé explicite
+          const history = db.createObjectStore("chasseHistory", { keyPath: "id" });
+          history.createIndex("by-savedAt", "savedAt");
         }
       },
     });

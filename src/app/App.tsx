@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RootLayout } from "./RootLayout";
 import { createSetEntry, updateJournalItem, deleteJournalItem } from "../core/store/service";
 import type { JournalItem } from "../core/store/service";
@@ -26,8 +26,10 @@ import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
 import { ContactsScreen } from "../screens/ContactsScreen";
 import { RecapScreen } from "../screens/RecapScreen";
 import { GamesScreen } from "../screens/GamesScreen";
-import { ChasseScreen, type ChasseType } from "../screens/ChasseScreen";
+import { ChasseScreen } from "../screens/ChasseScreen";
 import { ComingSoonScreen } from "../screens/ComingSoonScreen";
+import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
+import { getActiveChasse, clearActiveChasse } from "../core/store/repo";
 import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
@@ -63,6 +65,9 @@ export default function App() {
   // Type de chasse sélectionné depuis GamesScreen
   const [chasseType, setChasseType] = useState<ChasseType>("chromatic");
 
+  // Session de chasse active (persistée dans IndexedDB)
+  const [activeChasse, setActiveChasse] = useState<ChasseActiveSession | null>(null);
+
   const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
   const { booting, profileReady, saveProfile, user, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
   const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
@@ -72,6 +77,17 @@ export default function App() {
     selectedItem,
     lastSavedColor,
   });
+
+  // Charger la session de chasse active au montage
+  useEffect(() => {
+    getActiveChasse().then((s) => {
+      if (s && s.timerExpiresAt > Date.now()) {
+        setActiveChasse(s);
+      } else if (s) {
+        clearActiveChasse(); // expirée → nettoyer silencieusement
+      }
+    });
+  }, []);
 
   /** Navigation avec direction d'animation */
   function navigate(target: FlowScreen, dir: AnimDir = "neutral") {
@@ -261,6 +277,18 @@ export default function App() {
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
               onContacts={() => navigate("contacts", "forward")}
               onGames={() => navigate("games", "forward")}
+              activeChasse={activeChasse ? {
+                chasseType: activeChasse.chasseType,
+                timerExpiresAt: activeChasse.timerExpiresAt,
+                resultLabel: activeChasse.result.label,
+                resultColor: activeChasse.result.color,
+                resultIcon: activeChasse.result.icon,
+              } : undefined}
+              onResumeChasse={() => {
+                if (!activeChasse) return;
+                setChasseType(activeChasse.chasseType);
+                navigate("chasse", "forward");
+              }}
             />
           )}
 
@@ -402,7 +430,15 @@ export default function App() {
           {screen === "chasse" && (
             <ChasseScreen
               chasseType={chasseType}
-              onBack={() => navigate("games", "backward")}
+              resumeSession={activeChasse ?? undefined}
+              onBack={() => {
+                // Rafraîchir l'état de la session active après annulation/sauvegarde
+                setActiveChasse(null);
+                getActiveChasse().then((s) =>
+                  setActiveChasse(s && s.timerExpiresAt > Date.now() ? s : null)
+                );
+                navigate("games", "backward");
+              }}
             />
           )}
 
