@@ -348,7 +348,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
               cursor: "pointer", fontFamily: "inherit",
             }}
           >
-            ↪️ Retour
+            Home ॐ
           </button>
         </div>
 
@@ -370,7 +370,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
       </div>
 
       {/* ── Liste scrollable ── */}
-      <div style={{
+      <div className="no-scrollbar" style={{
         flex: 1, overflowY: "auto", padding: "12px 12px 40px",
         display: "flex", flexDirection: "column", gap: 10,
       }}>

@@ -33,6 +33,10 @@ html, body, #root { height: 100%; background: #000; }
   100% { opacity: 0;    transform: translateY(var(--particle-dy)) scale(0.55); }
 }
 
+/* Masquer la scrollbar native (PWA — look natif mobile) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Retour tactile des boutons de l'app (tap feedback mobile) */
 .remanence-btn {
   -webkit-tap-highlight-color: transparent;

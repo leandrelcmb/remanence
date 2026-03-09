@@ -83,7 +83,7 @@ function RecapHeader({ festival, onBack }: { festival: Festival | null; onBack: 
             cursor: "pointer", fontFamily: "inherit",
           }}
         >
-          ↪️ Retour
+          Home ॐ
         </button>
       </div>
     </div>
@@ -184,7 +184,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
       <RecapHeader festival={festival} onBack={onBack} />
 
       {/* ── Corps scrollable ── */}
-      <div style={{
+      <div className="no-scrollbar" style={{
         flex: 1, overflowY: "auto",
         padding: "20px 16px 60px",
         display: "flex", flexDirection: "column", gap: 28,

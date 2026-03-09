@@ -16,6 +16,7 @@ type Props = {
   onSelectItem: (item: JournalItem) => void;
   onHome: () => void;
   onSavePseudo: (name: string) => void;
+  onRecap: () => void;
 };
 
 // ── Filtres ───────────────────────────────────────────────────────────────────
@@ -221,6 +222,7 @@ export function JournalScreen({
   onSelectItem,
   onHome,
   onSavePseudo,
+  onRecap,
 }: Props) {
   const [activeFocus, setActiveFocus] = useState<string[]>([]);
   const [exporting, setExporting] = useState(false);
@@ -393,6 +395,28 @@ export function JournalScreen({
 
         {/* ── Mini-stats ── */}
         <MiniStats journal={journal} />
+
+        {/* ── Récap festival ── */}
+        <div style={{ padding: "10px 12px 0" }}>
+          <button
+            onClick={onRecap}
+            style={{
+              width: "100%",
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 999,
+              padding: "11px 18px",
+              fontSize: 14,
+              color: "rgba(255,255,255,0.75)",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              letterSpacing: "0.04em",
+              textAlign: "center",
+            }}
+          >
+            Récap du festival 🎇
+          </button>
+        </div>
 
         {/* ── Filtres ── */}
         {journal.length > 0 && (

@@ -254,7 +254,6 @@ export default function App() {
               onConstellation={() => navigateWithFlare("constellation", "forward")}
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
               onContacts={() => navigate("contacts", "forward")}
-              onRecap={() => navigate("recap", "forward")}
             />
           )}
 
@@ -333,6 +332,7 @@ export default function App() {
               onSelectItem={(item) => openDetail(item, "journal")}
               onHome={() => navigate("landing", "backward")}
               onSavePseudo={saveProfile}
+              onRecap={() => navigate("recap", "forward")}
             />
           )}
 
