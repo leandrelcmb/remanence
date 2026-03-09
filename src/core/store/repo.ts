@@ -1,4 +1,4 @@
-import type { Artist, Festival, SetEntry, UserProfile, UUID } from "../models/types";
+import type { Artist, Festival, FestivalContact, SetEntry, UserProfile, UUID } from "../models/types";
 import { getDB } from "./db";
 
 export const MetaKeys = {
@@ -106,4 +106,20 @@ export async function getArtistById(artistId: UUID) {
 export async function deleteSetEntry(id: UUID): Promise<void> {
   const db = await getDB();
   await db.delete("setEntries", id);
+}
+
+/** CONTACTS */
+export async function addContact(contact: FestivalContact): Promise<void> {
+  const db = await getDB();
+  await db.put("contacts", contact);
+}
+
+export async function listContactsByFestival(festivalId: UUID): Promise<FestivalContact[]> {
+  const db = await getDB();
+  return db.getAllFromIndex("contacts", "by-festivalId", festivalId);
+}
+
+export async function deleteContact(id: UUID): Promise<void> {
+  const db = await getDB();
+  await db.delete("contacts", id);
 }

@@ -23,6 +23,7 @@ import { DetailScreen } from "../screens/DetailScreen";
 import { ConstellationScreen } from "../screens/ConstellationScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
+import { ContactsScreen } from "../screens/ContactsScreen";
 import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
@@ -237,6 +238,7 @@ export default function App() {
               onJournal={() => navigate("journal", "forward")}
               onConstellation={() => navigateWithFlare("constellation", "forward")}
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
+              onContacts={() => navigate("contacts", "forward")}
             />
           )}
 
@@ -344,6 +346,14 @@ export default function App() {
               activeFestivalId={festivalId}
               onSwitch={(id) => { switchFestival(id); navigate("landing", "backward"); }}
               onCreate={createFestival}
+              onBack={() => navigate("landing", "backward")}
+            />
+          )}
+
+          {screen === "contacts" && (
+            <ContactsScreen
+              festivalId={festivalId ?? ""}
+              festivalName={festival?.name ?? ""}
               onBack={() => navigate("landing", "backward")}
             />
           )}

@@ -44,6 +44,16 @@ export interface UserProfile {
   createdAt: string; // ISO
 }
 
+export interface FestivalContact {
+  id: UUID;
+  festivalId: UUID;
+  name: string;       // prénom / pseudo
+  photo?: string;     // base64 optionnelle
+  note?: string;      // texte libre court
+  metAt?: string;     // ISO timestamp
+  createdAt: string;  // ISO
+}
+
 /** Snapshot duo (.remanence) */
 export interface RemanenceSnapshotV1 {
   version: "1.0";
