@@ -41,24 +41,25 @@ export function useAmbientColor({
   }, [screen, selectedItem, displayDraftColor, latestJournalColor, lastSavedColor]);
 
   const haloOpacity = useMemo(() => {
-    if (screen === "energy") return 0.18 + draft.energy * 0.028;
-    if (screen === "color") return 0.45;
-    if (screen === "done") return 0.38;
-    if (screen === "journal") return 0.20;
-    if (screen === "constellation") return 0.18;
-    if (screen === "detail" && selectedItem) return 0.22 + selectedItem.energy * 0.02;
-    return 0.22;
+    if (screen === "energy") return 0.20 + draft.energy * 0.030;
+    if (screen === "color") return 0.48;
+    if (screen === "done") return 0.40;
+    if (screen === "journal") return 0.24;
+    if (screen === "constellation") return 0.22;
+    if (screen === "detail" && selectedItem) return 0.26 + selectedItem.energy * 0.022;
+    if (screen === "landing") return 0.30;
+    return 0.28;
   }, [screen, draft.energy, selectedItem]);
 
   const haloScale = useMemo(() => {
-    if (screen === "landing") return 1.1;
+    if (screen === "landing") return 1.2;
     if (screen === "energy") return 1 + (draft.energy / 10) * 0.5;
     if (screen === "color") return 1.35;
     if (screen === "done") return 1.25;
-    if (screen === "journal") return 1.08;
-    if (screen === "constellation") return 1.04;
-    if (screen === "detail" && selectedItem) return 1 + (selectedItem.energy / 10) * 0.35;
-    return 1.15;
+    if (screen === "journal") return 1.10;
+    if (screen === "constellation") return 1.10;
+    if (screen === "detail" && selectedItem) return 1 + (selectedItem.energy / 10) * 0.38;
+    return 1.18;
   }, [screen, draft.energy, selectedItem]);
 
   const haloCenterY = useMemo(() => {
