@@ -73,12 +73,12 @@ export default function App() {
   /** Navigation avec cross-fade + flambée du halo — pour les CTA principaux */
   function navigateWithFlare(target: FlowScreen, dir: AnimDir = "flare") {
     setTransitioning(true); // halo explose
-    setFadingOut(true);     // écran courant s'efface
+    setFadingOut(true);     // écran courant s'efface lentement
     setTimeout(() => {
       setFadingOut(false);
-      navigate(target, dir); // nouvel écran apparaît en bloom
-      setTimeout(() => setTransitioning(false), 700); // halo se stabilise
-    }, 330); // durée du fade-out
+      navigate(target, dir); // nouvel écran apparaît en bloom (0.75s)
+      setTimeout(() => setTransitioning(false), 900); // halo se stabilise
+    }, 550); // durée du fade-out (0.55s)
   }
 
   function startNewRemanence(express = false) {
@@ -232,7 +232,7 @@ export default function App() {
 
         {/* ── Écran actif avec animation ── */}
         {/* Le div extérieur porte le fade-out (cross-fade) ; ScreenTransition porte le fade-in */}
-        <div style={{ animation: fadingOut ? "screenFadeOut 0.33s ease-in both" : undefined }}>
+        <div style={{ animation: fadingOut ? "screenFadeOut 0.55s ease-in-out both" : undefined }}>
         <ScreenTransition screenKey={screen} direction={animDir}>
 
           {screen === "landing" && (
