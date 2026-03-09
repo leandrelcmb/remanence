@@ -1,4 +1,4 @@
-import type { Artist, Festival, SetEntry, UserProfile, UUID, FocusType } from "../models/types";
+import type { Artist, Festival, FestivalContact, SetEntry, UserProfile, UUID, FocusType } from "../models/types";
 import { clampInt, nowISO, uuid } from "../models/utils";
 import {
   addFestival,
@@ -14,6 +14,9 @@ import {
   listSetEntriesByFestivalSorted,
   getArtistById,
   deleteSetEntry,
+  addContact,
+  listContactsByFestival,
+  deleteContact,
 } from "./repo";
 
 function normalizeName(s: string) {
@@ -256,4 +259,53 @@ export async function listJournalItems(festivalId: string): Promise<JournalItem[
 
   items.sort((a, b) => (a.startTime < b.startTime ? 1 : -1));
   return items;
+}
+
+// ── Export photos ──────────────────────────────────────────────────────────
+export type PhotoExportItem = {
+  artistName: string;
+  stageName: string;
+  style?: string;
+  photo: string; // base64 data URL
+};
+
+export async function getEntriesWithPhotos(festivalId: UUID): Promise<PhotoExportItem[]> {
+  const items = await listJournalItems(festivalId);
+  return items
+    .filter((item) => !!item.photo)
+    .map((item) => ({
+      artistName: item.artistName,
+      stageName: item.stageName,
+      style: item.style,
+      photo: item.photo as string,
+    }));
+}
+
+// ── Contacts festival ──────────────────────────────────────────────────────
+export async function createContact(params: {
+  festivalId: UUID;
+  name: string;
+  photo?: string;
+  note?: string;
+}): Promise<FestivalContact> {
+  const contact: FestivalContact = {
+    id: uuid(),
+    festivalId: params.festivalId,
+    name: params.name.trim(),
+    photo: params.photo,
+    note: params.note?.trim(),
+    metAt: nowISO(),
+    createdAt: nowISO(),
+  };
+  await addContact(contact);
+  return contact;
+}
+
+export async function listFestivalContacts(festivalId: UUID): Promise<FestivalContact[]> {
+  const contacts = await listContactsByFestival(festivalId);
+  return contacts.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+export async function removeFestivalContact(id: UUID): Promise<void> {
+  await deleteContact(id);
 }

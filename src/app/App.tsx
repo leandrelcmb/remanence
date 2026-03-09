@@ -23,6 +23,7 @@ import { DetailScreen } from "../screens/DetailScreen";
 import { ConstellationScreen } from "../screens/ConstellationScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
+import { ContactsScreen } from "../screens/ContactsScreen";
 import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
@@ -44,6 +45,7 @@ export default function App() {
   const [detailBackTarget, setDetailBackTarget] = useState<"journal" | "constellation">("journal");
   const [lastSavedColor, setLastSavedColor] = useState<string | null>(null);
   const [lastSavedEntry, setLastSavedEntry] = useState<LastSavedEntry | null>(null);
+  const [transitioning, setTransitioning] = useState(false);
 
   // null = mode création, objet = mode édition
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
@@ -67,12 +69,21 @@ export default function App() {
     setScreen(target);
   }
 
+  /** Navigation avec flambée du halo (200ms) — pour les CTA principaux */
+  function navigateWithFlare(target: FlowScreen, dir: AnimDir = "forward") {
+    setTransitioning(true);
+    setTimeout(() => {
+      navigate(target, dir);
+      setTimeout(() => setTransitioning(false), 500);
+    }, 220);
+  }
+
   function startNewRemanence(express = false) {
     resetDraft();
     setSelectedItem(null);
     setEditingEntry(null);
     setExpressMode(express);
-    navigate("capture", "forward");
+    navigateWithFlare("capture", "forward");
   }
 
   function openDetail(item: JournalItem, from: "journal" | "constellation") {
@@ -190,11 +201,15 @@ export default function App() {
   const flowScreens = expressMode ? EXPRESS_FLOW_SCREENS : FULL_FLOW_SCREENS;
   const isFlowScreen = flowScreens.includes(screen);
 
+  // Boost d'opacité + scale pendant la transition (flambée du halo)
+  const effectiveOpacity = transitioning ? Math.min(0.9, haloOpacity * 3.2) : haloOpacity;
+  const effectiveScale   = transitioning ? haloScale * 1.4 : haloScale;
+
   return (
     <RootLayout
       haloColor={haloColor}
-      haloOpacity={haloOpacity}
-      haloScale={haloScale}
+      haloOpacity={effectiveOpacity}
+      haloScale={effectiveScale}
       haloCenterY={haloCenterY}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
@@ -221,8 +236,9 @@ export default function App() {
               onStart={() => startNewRemanence(false)}
               onExpressStart={() => startNewRemanence(true)}
               onJournal={() => navigate("journal", "forward")}
-              onConstellation={() => navigate("constellation", "forward")}
+              onConstellation={() => navigateWithFlare("constellation", "forward")}
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
+              onContacts={() => navigate("contacts", "forward")}
             />
           )}
 
@@ -296,6 +312,7 @@ export default function App() {
               journal={journal}
               latestJournalColor={latestJournalColor}
               userName={user?.displayName ?? ""}
+              festivalId={festivalId ?? ""}
               onNewEntry={startNewRemanence}
               onSelectItem={(item) => openDetail(item, "journal")}
               onHome={() => navigate("landing", "backward")}
@@ -329,6 +346,14 @@ export default function App() {
               activeFestivalId={festivalId}
               onSwitch={(id) => { switchFestival(id); navigate("landing", "backward"); }}
               onCreate={createFestival}
+              onBack={() => navigate("landing", "backward")}
+            />
+          )}
+
+          {screen === "contacts" && (
+            <ContactsScreen
+              festivalId={festivalId ?? ""}
+              festivalName={festival?.name ?? ""}
               onBack={() => navigate("landing", "backward")}
             />
           )}

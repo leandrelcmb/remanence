@@ -10,8 +10,6 @@ const RGB_COLORS = [
   "#0A84FF",
   "#5E5CE6",
   "#BF5AF2",
-  "#FF2D55",
-  "#FFFFFF",
 ];
 
 type Props = {
