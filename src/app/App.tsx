@@ -47,8 +47,8 @@ export default function App() {
   const [lastSavedEntry, setLastSavedEntry] = useState<LastSavedEntry | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
-  const [haloBrightness, setHaloBrightness] = useState(1.0);
-  const [haloBrightnessTransition, setHaloBrightnessTransition] = useState("filter 1.5s ease-in-out");
+  const [haloFilter, setHaloFilter] = useState("brightness(1)");
+  const [haloFilterTransition, setHaloFilterTransition] = useState("filter 1.5s ease-in-out");
 
   // null = mode création, objet = mode édition
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
@@ -74,17 +74,17 @@ export default function App() {
 
   /** Navigation avec cross-fade + flambée du halo — pour les CTA principaux */
   function navigateWithFlare(target: FlowScreen, dir: AnimDir = "flare") {
-    // Spike instantané : brightness → 4.0 presque sans transition
-    setHaloBrightnessTransition("filter 0.08s ease");
-    setHaloBrightness(4.0);
+    // Spike instantané : saturate + brightness pour garder la couleur vivante (pas de blanc)
+    setHaloFilterTransition("filter 0.08s ease");
+    setHaloFilter("saturate(2.5) brightness(2.0)");
     setTransitioning(true); // scale boost
     setFadingOut(true);     // écran courant s'efface (0.55s)
     setTimeout(() => {
       setFadingOut(false);
       navigate(target, dir); // nouvel écran apparaît en bloom (0.75s)
       // Fade-back long et doux : léger au début, effilochement à la fin
-      setHaloBrightnessTransition("filter 2.5s ease-in-out");
-      setHaloBrightness(1.0);
+      setHaloFilterTransition("filter 2.5s ease-in-out");
+      setHaloFilter("brightness(1)");
       setTimeout(() => setTransitioning(false), 900);
     }, 550);
   }
@@ -221,8 +221,8 @@ export default function App() {
       haloOpacity={haloOpacity}
       haloScale={effectiveScale}
       haloCenterY={haloCenterY}
-      haloBrightness={haloBrightness}
-      haloBrightnessTransition={haloBrightnessTransition}
+      haloFilter={haloFilter}
+      haloFilterTransition={haloFilterTransition}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
       <div style={{ position: "relative", zIndex: 1, padding: screen === "journal" ? 0 : "40px 12px" }}>

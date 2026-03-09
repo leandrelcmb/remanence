@@ -34,7 +34,13 @@ export function useAmbientColor({
       return energyTint(selectedItem.colorHex, selectedItem.energy);
     }
     if (screen === "done" && lastSavedColor) return lastSavedColor;
-    if (screen === "landing" || screen === "journal" || screen === "constellation") {
+    if (
+      screen === "landing" ||
+      screen === "journal" ||
+      screen === "constellation" ||
+      screen === "contacts" ||
+      screen === "festivalPicker"
+    ) {
       return latestJournalColor;
     }
     return displayDraftColor;

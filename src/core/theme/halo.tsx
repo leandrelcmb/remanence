@@ -7,8 +7,8 @@ interface HaloProps {
   scale?: number;
   breathe?: boolean;
   centerY?: number; // 0..100 (en %)
-  brightness?: number;           // filter: brightness(), 1.0 = normal
-  brightnessTransition?: string; // CSS transition pour l'animation du brightness
+  filterBoost?: string;          // CSS filter complet, ex: "saturate(2.5) brightness(2.0)"
+  filterTransition?: string;     // CSS transition pour l'animation du filter
 }
 
 export const Halo = ({
@@ -17,8 +17,8 @@ export const Halo = ({
   scale = 1.1,
   breathe = true,
   centerY = 50,
-  brightness = 1.0,
-  brightnessTransition = "filter 1.5s ease-in-out",
+  filterBoost = "brightness(1)",
+  filterTransition = "filter 1.5s ease-in-out",
 }: HaloProps) => {
   const [phase, setPhase] = useState(0);
 
@@ -104,7 +104,7 @@ export const Halo = ({
         @keyframes halo-spin-cw  { from { transform: rotate(0deg);   } to { transform: rotate(360deg);  } }
         @keyframes halo-spin-ccw { from { transform: rotate(0deg);   } to { transform: rotate(-360deg); } }
       `}</style>
-      <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", filter: `brightness(${brightness})`, transition: brightnessTransition }}>
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", filter: filterBoost, transition: filterTransition }}>
         <div style={ambienceStyle} />
         <div style={ring2Style} />
         <div style={ring1Style} />
