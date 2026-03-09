@@ -310,11 +310,12 @@ export function ConstellationScreen({
               ))}
             </div>
           )}
-          {(activeFocus.length > 0 || activeStage.length > 0) && (
-            <div style={{ fontSize: 12, opacity: 0.5 }}>
-              {filteredJournal.length} étoile{filteredJournal.length !== 1 ? "s" : ""}
-            </div>
-          )}
+          <div style={{ fontSize: 12, opacity: 0.5 }}>
+            {filteredJournal.length} étoile{filteredJournal.length !== 1 ? "s" : ""}
+            {(activeFocus.length > 0 || activeStage.length > 0)
+              ? ` · ${journal.length} au total`
+              : ` au total`}
+          </div>
         </div>
       )}
 
