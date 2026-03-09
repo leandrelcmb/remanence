@@ -99,7 +99,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
   `;
 
   return (
-    <div style={{ display: "grid", gap: 32, justifyItems: "center" }}>
+    <div style={{ display: "grid", gap: 32 }}>
       <style>{sliderCss}</style>
 
       <div
@@ -107,6 +107,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
           display: "grid",
           gap: 10,
           justifyItems: "center",
+          textAlign: "center",
         }}
       >
         <div
@@ -125,7 +126,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
         </div>
       </div>
 
-      <div style={{ width: "100%", maxWidth: 340, display: "grid", gap: 14 }}>
+      <div style={{ width: "100%", display: "grid", gap: 14 }}>
         <input
           className="remanence-range"
           type="range"
