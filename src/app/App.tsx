@@ -178,7 +178,7 @@ export default function App() {
   if (!profileReady) {
     return (
       <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
-        <div style={{ position: "relative", zIndex: 1, padding: "40px 20px" }}>
+        <div style={{ position: "relative", zIndex: 1, padding: "40px 12px" }}>
           <ScreenTransition screenKey="onboarding" direction="neutral">
             <OnboardingScreen onSave={saveProfile} />
           </ScreenTransition>
@@ -198,7 +198,7 @@ export default function App() {
       haloCenterY={haloCenterY}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
-      <div style={{ position: "relative", zIndex: 1, padding: screen === "journal" ? 0 : "40px 20px" }}>
+      <div style={{ position: "relative", zIndex: 1, padding: screen === "journal" ? 0 : "40px 12px" }}>
 
         {/* Header : uniquement sur la landing */}
         {screen === "landing" && (

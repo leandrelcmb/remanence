@@ -26,8 +26,9 @@ function FilterChip({
       onClick={onClick}
       style={{
         borderRadius: 999,
-        padding: "5px 12px",
-        fontSize: 15,
+        padding: "4px 10px",
+        fontSize: 12,
+        lineHeight: 1,
         background: active ? "rgba(160,120,255,0.28)" : "rgba(255,255,255,0.06)",
         border: `1px solid ${active ? "rgba(160,120,255,0.55)" : "rgba(255,255,255,0.1)"}`,
         color: "white",
@@ -280,7 +281,7 @@ export function ConstellationScreen({
     <div style={{ display: "grid", gap: 20, minHeight: "100dvh", alignContent: "start" }}>
       <style>{CSS}</style>
 
-      <h2 style={{ margin: 2 }}>✨ Constellation personnalisée ✨</h2>
+      <h2 style={{ margin: 2, fontSize: 20}}>✨ Constellation personnalisée ✨</h2>
 
       {/* ── Filtres ── */}
       {journal.length > 0 && (

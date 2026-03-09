@@ -34,7 +34,7 @@ export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
           textShadow: `0 0 28px ${accentColor}55`,
         }}
       >
-        "Ta trace est ancrée 🎁"
+        Ta trace est ancrée 🎁
       </p>
 
       {/* Carte récap */}
