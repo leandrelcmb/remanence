@@ -17,9 +17,11 @@ export const RootLayout = ({
 }) => {
   return (
     /* Fond noir plein écran */
-    <div style={{ backgroundColor: Colors.black, color: "white", minHeight: "100dvh" }}>
+    <div style={{ backgroundColor: Colors.black, color: "white", minHeight: "100dvh", display: "flex", justifyContent: "center" }}>
       <div
         style={{
+          width: "100%",
+          maxWidth: 430,
           minHeight: "100dvh",
           position: "relative",
           overflow: "hidden",
