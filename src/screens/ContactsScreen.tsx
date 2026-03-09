@@ -204,8 +204,17 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
   return (
     <div style={{ display: "grid", gap: 0, minHeight: "100dvh" }}>
 
-      {/* ── Header ── */}
-      <div style={{ padding: "40px 12px 24px", display: "grid", gap: 18 }}>
+      {/* ── Header sticky — reste visible quel que soit le scroll ── */}
+      <div style={{
+        padding: "40px 12px 18px",
+        display: "grid",
+        gap: 14,
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+        backdropFilter: "blur(20px)",
+        background: "rgba(0,0,0,0.6)",
+      }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 26, fontWeight: 500 }}>Rencontres 🤝</h2>
@@ -230,10 +239,24 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
           </button>
         </div>
 
-        {/* Bouton ajouter */}
-        <RoundButton variant="primary" onClick={() => setShowForm(true)}>
+        {/* Bouton ajouter — compact, même style que RoundButton mais moins haut */}
+        <button
+          onClick={() => setShowForm(true)}
+          style={{
+            width: "100%",
+            borderRadius: 999,
+            padding: "10px 20px",
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.12)",
+            color: "white",
+            cursor: "pointer",
+            fontSize: 15,
+            fontFamily: "inherit",
+            letterSpacing: "0.03em",
+          }}
+        >
           + Ajouter une rencontre
-        </RoundButton>
+        </button>
       </div>
 
       {/* ── Liste ── */}
@@ -333,7 +356,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
             {/* Nom */}
             <input
               type="text"
-              placeholder="Prénom ou pseudo *"
+              placeholder="Prénom ou @"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               style={{
@@ -352,7 +375,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
 
             {/* Note */}
             <textarea
-              placeholder="Une note, un moment partagé… (optionnel)"
+              placeholder="Une particularité, un moment partagé… (optionnel)"
               value={form.note}
               onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
               rows={3}

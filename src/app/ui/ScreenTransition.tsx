@@ -9,7 +9,7 @@ const ANIM: Record<AnimDir, string> = {
   forward:  `screenSlideFromRight 0.38s ${SPRING} both`,
   backward: `screenSlideFromLeft  0.38s ${SPRING} both`,
   neutral:  `screenFadeIn         0.30s ease both`,
-  flare:    `screenBloomIn        0.50s ${SPRING} both`,
+  flare:    `screenBloomIn        0.75s ${SPRING} both`,
 };
 
 interface Props {
