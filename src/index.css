@@ -10,9 +10,11 @@ html, body, #root { height: 100%; background: #000; }
   to   { opacity: 0; }
 }
 /* Bloom : entrée après cross-fade halo (scale + drift vertical + fondu) */
+/* transform:none dans "to" → évite de créer un stacking context résiduel   */
+/* (position:fixed des modals fonctionne correctement après la fin de l'anim) */
 @keyframes screenBloomIn {
   from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to   { opacity: 1; transform: scale(1.0)  translateY(0);   }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes screenSlideFromRight {
   from { opacity: 0; transform: translateX(28px); }

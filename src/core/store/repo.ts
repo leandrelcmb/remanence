@@ -119,6 +119,11 @@ export async function listContactsByFestival(festivalId: UUID): Promise<Festival
   return db.getAllFromIndex("contacts", "by-festivalId", festivalId);
 }
 
+export async function putContact(contact: FestivalContact): Promise<void> {
+  const db = await getDB();
+  await db.put("contacts", contact);
+}
+
 export async function deleteContact(id: UUID): Promise<void> {
   const db = await getDB();
   await db.delete("contacts", id);

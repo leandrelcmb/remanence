@@ -15,6 +15,7 @@ import {
   getArtistById,
   deleteSetEntry,
   addContact,
+  putContact,
   listContactsByFestival,
   deleteContact,
 } from "./repo";
@@ -304,6 +305,10 @@ export async function createContact(params: {
 export async function listFestivalContacts(festivalId: UUID): Promise<FestivalContact[]> {
   const contacts = await listContactsByFestival(festivalId);
   return contacts.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+export async function updateFestivalContact(contact: FestivalContact): Promise<void> {
+  await putContact(contact);
 }
 
 export async function removeFestivalContact(id: UUID): Promise<void> {
