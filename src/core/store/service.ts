@@ -257,3 +257,23 @@ export async function listJournalItems(festivalId: string): Promise<JournalItem[
   items.sort((a, b) => (a.startTime < b.startTime ? 1 : -1));
   return items;
 }
+
+// ── Export photos ──────────────────────────────────────────────────────────
+export type PhotoExportItem = {
+  artistName: string;
+  stageName: string;
+  style?: string;
+  photo: string; // base64 data URL
+};
+
+export async function getEntriesWithPhotos(festivalId: UUID): Promise<PhotoExportItem[]> {
+  const items = await listJournalItems(festivalId);
+  return items
+    .filter((item) => !!item.photo)
+    .map((item) => ({
+      artistName: item.artistName,
+      stageName: item.stageName,
+      style: item.style,
+      photo: item.photo as string,
+    }));
+}

@@ -310,6 +310,7 @@ export default function App() {
               journal={journal}
               latestJournalColor={latestJournalColor}
               userName={user?.displayName ?? ""}
+              festivalId={festivalId ?? ""}
               onNewEntry={startNewRemanence}
               onSelectItem={(item) => openDetail(item, "journal")}
               onHome={() => navigate("landing", "backward")}
