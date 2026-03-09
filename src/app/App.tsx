@@ -47,6 +47,8 @@ export default function App() {
   const [lastSavedEntry, setLastSavedEntry] = useState<LastSavedEntry | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
+  const [haloBrightness, setHaloBrightness] = useState(1.0);
+  const [haloBrightnessTransition, setHaloBrightnessTransition] = useState("filter 1.5s ease-in-out");
 
   // null = mode création, objet = mode édition
   const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
@@ -72,13 +74,19 @@ export default function App() {
 
   /** Navigation avec cross-fade + flambée du halo — pour les CTA principaux */
   function navigateWithFlare(target: FlowScreen, dir: AnimDir = "flare") {
-    setTransitioning(true); // halo explose
-    setFadingOut(true);     // écran courant s'efface lentement
+    // Spike instantané : brightness → 4.0 presque sans transition
+    setHaloBrightnessTransition("filter 0.08s ease");
+    setHaloBrightness(4.0);
+    setTransitioning(true); // scale boost
+    setFadingOut(true);     // écran courant s'efface (0.55s)
     setTimeout(() => {
       setFadingOut(false);
       navigate(target, dir); // nouvel écran apparaît en bloom (0.75s)
-      setTimeout(() => setTransitioning(false), 900); // halo se stabilise
-    }, 550); // durée du fade-out (0.55s)
+      // Fade-back long et doux : léger au début, effilochement à la fin
+      setHaloBrightnessTransition("filter 2.5s ease-in-out");
+      setHaloBrightness(1.0);
+      setTimeout(() => setTransitioning(false), 900);
+    }, 550);
   }
 
   function startNewRemanence(express = false) {
@@ -204,16 +212,17 @@ export default function App() {
   const flowScreens = expressMode ? EXPRESS_FLOW_SCREENS : FULL_FLOW_SCREENS;
   const isFlowScreen = flowScreens.includes(screen);
 
-  // Boost d'opacité + scale pendant la transition (flambée du halo)
-  const effectiveOpacity = transitioning ? Math.min(0.92, haloOpacity * 4.0) : haloOpacity;
-  const effectiveScale   = transitioning ? haloScale * 1.6 : haloScale;
+  // Scale boost pendant la transition (le brightness est géré via filter dans Halo)
+  const effectiveScale = transitioning ? haloScale * 1.6 : haloScale;
 
   return (
     <RootLayout
       haloColor={haloColor}
-      haloOpacity={effectiveOpacity}
+      haloOpacity={haloOpacity}
       haloScale={effectiveScale}
       haloCenterY={haloCenterY}
+      haloBrightness={haloBrightness}
+      haloBrightnessTransition={haloBrightnessTransition}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
       <div style={{ position: "relative", zIndex: 1, padding: screen === "journal" ? 0 : "40px 12px" }}>
