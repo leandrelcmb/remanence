@@ -8,12 +8,16 @@ export const RootLayout = ({
   haloOpacity = 0.35,
   haloScale = 1.1,
   haloCenterY = 50,
+  haloBrightness = 1.0,
+  haloBrightnessTransition = "filter 1.5s ease-in-out",
 }: {
   children: ReactNode;
   haloColor?: string;
   haloOpacity?: number;
   haloScale?: number;
   haloCenterY?: number;
+  haloBrightness?: number;
+  haloBrightnessTransition?: string;
 }) => {
   return (
     /* Fond noir plein écran */
@@ -27,7 +31,14 @@ export const RootLayout = ({
           overflow: "hidden",
         }}
       >
-        <Halo color={haloColor} opacity={haloOpacity} scale={haloScale} centerY={haloCenterY} />
+        <Halo
+          color={haloColor}
+          opacity={haloOpacity}
+          scale={haloScale}
+          centerY={haloCenterY}
+          brightness={haloBrightness}
+          brightnessTransition={haloBrightnessTransition}
+        />
         <div style={{ position: "relative", zIndex: 1 }}>{children}</div>
       </div>
     </div>

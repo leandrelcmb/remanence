@@ -206,9 +206,9 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
 
       {/* ── Header sticky — reste visible quel que soit le scroll ── */}
       <div style={{
-        padding: "40px 12px 18px",
+        padding: "20px 12px 14px",
         display: "grid",
-        gap: 14,
+        gap: 12,
         position: "sticky",
         top: 0,
         zIndex: 10,
@@ -230,7 +230,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
               borderRadius: 999,
               padding: "8px 16px",
               color: "rgba(255,255,255,0.7)",
-              fontSize: 14,
+              fontSize: 16,
               cursor: "pointer",
               fontFamily: "inherit",
             }}
@@ -239,20 +239,21 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
           </button>
         </div>
 
-        {/* Bouton ajouter — compact, même style que RoundButton mais moins haut */}
+        {/* Bouton ajouter — pill compact, auto-width */}
         <button
           onClick={() => setShowForm(true)}
           style={{
-            width: "100%",
+            width: "auto",
+            alignSelf: "start",
             borderRadius: 999,
-            padding: "10px 20px",
-            border: "1px solid rgba(255,255,255,0.14)",
-            background: "rgba(255,255,255,0.12)",
-            color: "white",
+            padding: "6px 14px",
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "rgba(255,255,255,0.10)",
+            color: "rgba(255,255,255,0.9)",
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 13,
             fontFamily: "inherit",
-            letterSpacing: "0.03em",
+            letterSpacing: "0.04em",
           }}
         >
           + Ajouter une rencontre
