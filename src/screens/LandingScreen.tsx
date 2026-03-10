@@ -26,13 +26,14 @@ type Props = {
   onFestivalPicker: () => void;
   onContacts: () => void;
   onGames: () => void;
+  onSante: () => void;
   activeChasse?: ActiveChasseInfo;
   onResumeChasse: () => void;
 };
 
 export function LandingScreen({
   festivalName, onStart, onExpressStart, onJournal,
-  onConstellation, onFestivalPicker, onContacts, onGames,
+  onConstellation, onFestivalPicker, onContacts, onGames, onSante,
   activeChasse, onResumeChasse,
 }: Props) {
   // Timer live : se met à jour chaque seconde quand une session est active
@@ -155,6 +156,24 @@ export function LandingScreen({
           }}
         >
           Jeux 🎮
+        </button>
+
+        {/* Santé */}
+        <button
+          onClick={onSante}
+          style={{
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 999,
+            padding: "15px 20px",
+            fontSize: 15,
+            color: "rgba(255,255,255,0.9)",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            letterSpacing: "0.05em",
+          }}
+        >
+          Santé 🧠
         </button>
 
       </div>

@@ -30,6 +30,7 @@ import { ChasseScreen } from "../screens/ChasseScreen";
 import { IntrospectionScreen } from "../screens/IntrospectionScreen";
 import { TreasureScreen } from "../screens/TreasureScreen";
 import { TheoriesScreen } from "../screens/TheoriesScreen";
+import { SanteScreen } from "../screens/SanteScreen";
 import { ComingSoonScreen } from "../screens/ComingSoonScreen";
 import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
 import { getActiveChasse, clearActiveChasse } from "../core/store/repo";
@@ -251,7 +252,7 @@ export default function App() {
       haloFilterTransition={haloFilterTransition}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
-      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "chasse" || screen === "comingSoon") ? 0 : "40px 12px" }}>
+      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "sante" || screen === "chasse" || screen === "comingSoon") ? 0 : "40px 12px" }}>
 
         {/* Header : uniquement sur la landing */}
         {screen === "landing" && (
@@ -280,6 +281,7 @@ export default function App() {
               onFestivalPicker={() => navigate("festivalPicker", "forward")}
               onContacts={() => navigate("contacts", "forward")}
               onGames={() => navigate("games", "forward")}
+              onSante={() => navigate("sante", "forward")}
               activeChasse={activeChasse ? {
                 chasseType: activeChasse.chasseType,
                 timerExpiresAt: activeChasse.timerExpiresAt,
@@ -458,6 +460,10 @@ export default function App() {
                 navigate("games", "backward");
               }}
             />
+          )}
+
+          {screen === "sante" && (
+            <SanteScreen onBack={() => navigate("landing", "backward")} />
           )}
 
           {screen === "comingSoon" && (
