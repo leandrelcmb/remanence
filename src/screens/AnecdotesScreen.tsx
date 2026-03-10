@@ -1,9 +1,25 @@
 import { useState, useMemo } from "react";
 
-// ── Palette ────────────────────────────────────────────────────────────────────
+// ── Utilitaires couleur (palette dynamique depuis haloColor) ─────────────────
 
-const VIOLET        = "#BF5AF2";
-const VIOLET_GLOW   = "rgba(191, 90, 242, 0.16)";
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    const n = parseInt(color.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [191, 90, 242]; // fallback violet
+}
+function lighten(c: number, factor: number): number {
+  return Math.round(c + (255 - c) * factor);
+}
+function toHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+
+// ── Palette fixe (feedback correct/incorrect) ─────────────────────────────────
+
 const GREEN_CORRECT = "#34C759";
 const RED_WRONG     = "#FF3B30";
 
@@ -18,10 +34,6 @@ const CSS = `
   0%   { transform: scale(1); }
   40%  { transform: scale(1.025); }
   100% { transform: scale(1); }
-}
-@keyframes anecdotesPulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(191,90,242,0); }
-  50%     { box-shadow: 0 0 22px 6px rgba(191,90,242,0.38); }
 }
 @keyframes anecdotesFade {
   from { opacity: 0; transform: translateY(-4px); }
@@ -194,9 +206,20 @@ function shuffle<T>(arr: T[]): T[] {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-type Props = { onBack: () => void };
+type Props = { onBack: () => void; haloColor?: string };
 
-export function AnecdotesScreen({ onBack }: Props) {
+export function AnecdotesScreen({ onBack, haloColor }: Props) {
+  // ── Palette dynamique depuis le halo ───────────────────────────────────────
+  const [r, g, b]   = parseColor(haloColor ?? "#BF5AF2");
+  const haloMain    = toHex(r, g, b);
+  const haloLight   = toHex(lighten(r, 0.22), lighten(g, 0.22), lighten(b, 0.22));
+  const haloGlow    = `rgba(${r},${g},${b},0.22)`;
+  const haloGlowSft = `rgba(${r},${g},${b},0.16)`;
+  const pulseCss    = `@keyframes anecdotesPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(${r},${g},${b},0); }
+  50%     { box-shadow: 0 0 22px 6px rgba(${r},${g},${b},0.38); }
+}`;
+
   // Deck pré-calculé : mélangé + orientation aléatoire (flipped = B affiché en 1er)
   const displayCards = useMemo(
     () => shuffle(ANECDOTES).map(c => ({ ...c, flipped: Math.random() < 0.5 })),
@@ -299,6 +322,7 @@ export function AnecdotesScreen({ onBack }: Props) {
       overflow:       "hidden",
     }}>
       <style>{CSS}</style>
+      <style>{pulseCss}</style>
 
       {/* ── Header ── */}
       <div style={{
@@ -454,8 +478,8 @@ export function AnecdotesScreen({ onBack }: Props) {
               borderRadius:  999,
               padding:       "16px 20px",
               border:        "none",
-              background:    `linear-gradient(135deg, ${VIOLET} 0%, #D084F8 100%)`,
-              boxShadow:     `0 0 18px ${VIOLET_GLOW}, 0 4px 20px rgba(191,90,242,0.22)`,
+              background:    `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+              boxShadow:     `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
               color:         "white",
               fontSize:      16,
               fontWeight:    600,

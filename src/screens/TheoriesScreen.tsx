@@ -1,11 +1,25 @@
 import { useState, useRef, useEffect } from "react";
 
-// ── Palette (identique à TreasureScreen) ─────────────────────────────────────
+// ── Utilitaires couleur (palette dynamique depuis haloColor) ─────────────────
 
-const GOLD        = "#F0B429";
-const GOLD_GLOW   = "rgba(240, 180, 41, 0.16)";
-const GOLD_BORDER = "rgba(240, 180, 41, 0.45)";
-const GOLD_DIM    = "rgba(240, 180, 41, 0.55)";
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    const n = parseInt(color.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [240, 180, 41]; // fallback gold
+}
+function lighten(c: number, factor: number): number {
+  return Math.round(c + (255 - c) * factor);
+}
+function darken(c: number, factor: number): number {
+  return Math.round(c * (1 - factor));
+}
+function toHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -118,7 +132,7 @@ const VARIANTS: Variant[] = [
   {
     emoji: "🗳️",
     label: "Vote du groupe",
-    desc:  "Chaque joueur dit si cette théorie pourrait être vraie. La majorité décide si elle entre dans le canon du festival.",
+    desc:  "Chaque joueur dit si cette théorie pourrait être vraie. La majorité l'emporte.",
   },
   {
     emoji: "✨",
@@ -147,10 +161,6 @@ const CSS = `
   60%  { transform: scale(1.02) rotate( 0.8deg); }
   100% { transform: scale(1)    rotate(0deg);    }
 }
-@keyframes theoriesPulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(240,180,41,0); }
-  50%     { box-shadow: 0 0 20px 6px rgba(240,180,41,0.35); }
-}
 `;
 
 // ── ScratchCard ───────────────────────────────────────────────────────────────
@@ -159,10 +169,15 @@ type ScratchCardProps = {
   children: React.ReactNode;
   revealed: boolean;
   onReveal: () => void;
-  hint: string;   // texte affiché sur la carte dorée
+  hint: string;        // texte affiché sur la carte dorée
+  borderColor: string; // couleur dynamique du bord
+  glowColor: string;   // couleur dynamique du halo
+  gradDark: string;    // couleur sombre du dégradé canvas
+  gradMain: string;    // couleur principale du dégradé canvas
+  gradLight: string;   // couleur claire du dégradé canvas
 };
 
-function ScratchCard({ children, revealed, onReveal, hint }: ScratchCardProps) {
+function ScratchCard({ children, revealed, onReveal, hint, borderColor, glowColor, gradDark, gradMain, gradLight }: ScratchCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const stateRef     = useRef({ count: 0, drawing: false });
@@ -184,12 +199,12 @@ function ScratchCard({ children, revealed, onReveal, hint }: ScratchCardProps) {
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    // ── Gradient doré ──────────────────────────────────────────────────────
+    // ── Gradient dynamique (couleur du halo) ───────────────────────────────
     const grad = ctx.createLinearGradient(0, 0, width, height);
-    grad.addColorStop(0,    "#C8900A");
-    grad.addColorStop(0.35, "#F0B429");
-    grad.addColorStop(0.65, "#FBBF24");
-    grad.addColorStop(1,    "#D97706");
+    grad.addColorStop(0,    gradDark);
+    grad.addColorStop(0.35, gradMain);
+    grad.addColorStop(0.65, gradLight);
+    grad.addColorStop(1,    gradDark);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
 
@@ -247,9 +262,9 @@ function ScratchCard({ children, revealed, onReveal, hint }: ScratchCardProps) {
         position: "relative",
         borderRadius: 16,
         overflow: "hidden",
-        border: `1px solid ${GOLD_BORDER}`,
-        background: "rgba(25,16,4,0.97)",
-        boxShadow: `0 0 28px ${GOLD_GLOW}`,
+        border: `1px solid ${borderColor}`,
+        background: "rgba(10,10,16,0.97)",
+        boxShadow: `0 0 28px ${glowColor}`,
       }}
     >
       {/* Contenu révélé — toujours dans le DOM, visible sous l'overlay */}
@@ -289,9 +304,23 @@ function ScratchCard({ children, revealed, onReveal, hint }: ScratchCardProps) {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-type Props = { onBack: () => void };
+type Props = { onBack: () => void; haloColor?: string };
 
-export function TheoriesScreen({ onBack }: Props) {
+export function TheoriesScreen({ onBack, haloColor }: Props) {
+  // ── Palette dynamique ────────────────────────────────────────────────────
+  const [r, g, b]  = parseColor(haloColor ?? "#F0B429");
+  const haloMain   = toHex(r, g, b);
+  const haloLight  = toHex(lighten(r, 0.22), lighten(g, 0.22), lighten(b, 0.22));
+  const haloDark   = toHex(darken(r, 0.28),  darken(g, 0.28),  darken(b, 0.28));
+  const haloGlow   = `rgba(${r},${g},${b},0.16)`;
+  const haloBorder = `rgba(${r},${g},${b},0.45)`;
+  const haloDim    = `rgba(${r},${g},${b},0.55)`;
+  const haloGlowMd = `rgba(${r},${g},${b},0.28)`;
+  const pulseCss   = `@keyframes theoriesPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(${r},${g},${b},0); }
+  50%     { box-shadow: 0 0 20px 6px rgba(${r},${g},${b},0.35); }
+}`;
+
   const [theory,  setTheory]  = useState<Theory> (() => pickRandom(THEORIES));
   const [variant, setVariant] = useState<Variant>(() => pickRandom(VARIANTS));
 
@@ -317,6 +346,7 @@ export function TheoriesScreen({ onBack }: Props) {
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <style>{CSS}</style>
+      <style>{pulseCss}</style>
 
       {/* ── Header fixe ── */}
       <div style={{
@@ -375,7 +405,7 @@ export function TheoriesScreen({ onBack }: Props) {
         <div>
           <div style={{
             fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
-            textTransform: "uppercase", color: GOLD_DIM,
+            textTransform: "uppercase", color: haloDim,
             marginBottom: 8, paddingLeft: 2,
           }}>
             Théorie
@@ -386,6 +416,11 @@ export function TheoriesScreen({ onBack }: Props) {
             revealed={theoryRevealed}
             onReveal={() => setTheoryRevealed(true)}
             hint={`${catMeta.emoji} ${catMeta.label}`}
+            borderColor={haloBorder}
+            glowColor={haloGlow}
+            gradDark={haloDark}
+            gradMain={haloMain}
+            gradLight={haloLight}
           >
             <div style={{
               padding: "22px 18px 24px",
@@ -400,7 +435,7 @@ export function TheoriesScreen({ onBack }: Props) {
                 <span style={{ fontSize: 26, lineHeight: 1 }}>{catMeta.emoji}</span>
                 <span style={{
                   fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
-                  textTransform: "uppercase", color: GOLD,
+                  textTransform: "uppercase", color: haloMain,
                 }}>
                   {catMeta.label}
                 </span>
@@ -424,7 +459,7 @@ export function TheoriesScreen({ onBack }: Props) {
         <div>
           <div style={{
             fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
-            textTransform: "uppercase", color: GOLD_DIM,
+            textTransform: "uppercase", color: haloDim,
             marginBottom: 8, paddingLeft: 2,
           }}>
             Variante
@@ -435,6 +470,11 @@ export function TheoriesScreen({ onBack }: Props) {
             revealed={variantRevealed}
             onReveal={() => setVariantRevealed(true)}
             hint={`${variant.emoji} ${variant.label}`}
+            borderColor={haloBorder}
+            glowColor={haloGlow}
+            gradDark={haloDark}
+            gradMain={haloMain}
+            gradLight={haloLight}
           >
             <div style={{
               padding: "22px 18px 24px",
@@ -449,7 +489,7 @@ export function TheoriesScreen({ onBack }: Props) {
                 <span style={{ fontSize: 30, lineHeight: 1 }}>{variant.emoji}</span>
                 <span style={{
                   fontSize: 16, fontWeight: 700,
-                  color: GOLD, letterSpacing: "0.02em",
+                  color: haloMain, letterSpacing: "0.02em",
                 }}>
                   {variant.label}
                 </span>
@@ -472,12 +512,12 @@ export function TheoriesScreen({ onBack }: Props) {
           <div style={{
             textAlign: "center",
             fontSize: 12,
-            color: GOLD,
+            color: haloMain,
             opacity: 0.75,
             letterSpacing: "0.04em",
             animation: "theoriesReveal 0.5s ease forwards",
           }}>
-            ✦ Bonne théorie ! Shufflez pour une nouvelle paire ✦
+            ✦ Bonne théorie ! Cliquez pour une nouvelle paire ✦
           </div>
         )}
 
@@ -488,9 +528,9 @@ export function TheoriesScreen({ onBack }: Props) {
             width: "100%",
             padding: "15px",
             borderRadius: 14,
-            background: `linear-gradient(135deg, #C8900A, ${GOLD} 45%, #FBBF24)`,
+            background: `linear-gradient(135deg, ${haloDark}, ${haloMain} 45%, ${haloLight})`,
             border: "none",
-            color: "#1a0e00",
+            color: "#0a0a10",
             fontSize: 16, fontWeight: 700,
             cursor: "pointer",
             fontFamily: "inherit",
@@ -498,10 +538,10 @@ export function TheoriesScreen({ onBack }: Props) {
             animation: shuffleAnim
               ? "theoriesShuffle 0.65s cubic-bezier(.22,1,.36,1) forwards"
               : (bothRevealed ? "theoriesPulse 2s ease-in-out infinite" : undefined),
-            boxShadow: `0 4px 20px ${GOLD_GLOW}`,
+            boxShadow: `0 4px 20px ${haloGlowMd}`,
           }}
         >
-          🔀 Nouvelles cartes
+          Nouvelles cartes
         </button>
 
         {/* ── Légende des variantes ── */}
@@ -524,7 +564,7 @@ export function TheoriesScreen({ onBack }: Props) {
             <div key={v.label} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
               <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{v.emoji}</span>
               <div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, opacity: 0.85 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: haloMain, opacity: 0.85 }}>
                   {v.label} —{" "}
                 </span>
                 <span style={{ fontSize: 12, opacity: 0.55, lineHeight: 1.5 }}>

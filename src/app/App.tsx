@@ -447,7 +447,10 @@ export default function App() {
           )}
 
           {screen === "theories" && (
-            <TheoriesScreen onBack={() => navigate("games", "backward")} />
+            <TheoriesScreen
+              haloColor={haloColor}
+              onBack={() => navigate("games", "backward")}
+            />
           )}
 
           {screen === "chasse" && (
@@ -466,7 +469,10 @@ export default function App() {
           )}
 
           {screen === "anecdotes" && (
-            <AnecdotesScreen onBack={() => navigate("games", "backward")} />
+            <AnecdotesScreen
+              haloColor={haloColor}
+              onBack={() => navigate("games", "backward")}
+            />
           )}
 
           {screen === "sante" && (
