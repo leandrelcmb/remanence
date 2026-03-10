@@ -36,14 +36,6 @@ type Props = {
 // ── CSS animations ─────────────────────────────────────────────────────────────
 
 const CSS = `
-@keyframes landingGlowBreath {
-  0%, 100% {
-    box-shadow: 0 0 18px rgba(0,255,170,0.35), 0 4px 24px rgba(0,255,184,0.25);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(0,255,170,0.55), 0 4px 36px rgba(0,255,184,0.42);
-  }
-}
 @keyframes landingOrnamentSpin {
   from { transform: translate(-50%, -50%) rotate(0deg);   }
   to   { transform: translate(-50%, -50%) rotate(360deg); }
@@ -69,6 +61,32 @@ const CSS = `
   to   { opacity: 1; transform: translateY(0);    }
 }
 `;
+
+// ── Utilitaires couleur ───────────────────────────────────────────────────────
+
+function parseColor(color: string): [number, number, number] {
+  const v = color.trim();
+  if (v.startsWith("#")) {
+    const h = v.replace("#", "");
+    if (h.length === 6) {
+      const r = parseInt(h.slice(0, 2), 16);
+      const g = parseInt(h.slice(2, 4), 16);
+      const b = parseInt(h.slice(4, 6), 16);
+      if (![r, g, b].some(Number.isNaN)) return [r, g, b];
+    }
+  }
+  const m = v.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [0, 255, 183]; // fallback neon vert
+}
+
+function lighten(c: number, factor: number): number {
+  return Math.min(255, Math.round(c + (255 - c) * factor));
+}
+
+function toHex(r: number, g: number, b: number): string {
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
 
 // ── Ornement mystique ──────────────────────────────────────────────────────────
 
@@ -181,15 +199,34 @@ export function LandingScreen({
     return () => clearInterval(id);
   }, [activeChasse]);
 
+  // ── Couleurs CTA dérivées du halo ─────────────────────────────────────────
+  const [r, g, b]   = parseColor(haloColor ?? "#00FFB7");
+  const ctaStart    = toHex(r, g, b);
+  const ctaEnd      = toHex(lighten(r, 0.38), lighten(g, 0.38), lighten(b, 0.38));
+  const ctaGlow     = `rgba(${r},${g},${b},0.45)`;
+  const ctaGlowSoft = `rgba(${r},${g},${b},0.28)`;
+  const ctaGlowHot  = `rgba(${r},${g},${b},0.65)`;
+  const luminance   = 0.299 * r + 0.587 * g + 0.114 * b;
+  const ctaText     = luminance > 150
+    ? toHex(Math.round(r * 0.08), Math.round(g * 0.08), Math.round(b * 0.08))
+    : "rgba(255,255,255,0.95)";
+
+  const glowCSS = `
+@keyframes landingGlowBreath {
+  0%, 100% { box-shadow: 0 0 18px ${ctaGlow}, 0 4px 24px ${ctaGlowSoft}; }
+  50%       { box-shadow: 0 0 30px ${ctaGlowHot}, 0 4px 36px ${ctaGlow}; }
+}`;
+
   return (
     <div style={{
-      height: "100dvh",
+      height: "80dvh",
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
       position: "relative",
     }}>
       <style>{CSS}</style>
+      <style>{glowCSS}</style>
 
       {/* ── Ornement mystique (z-0, no pointer) ── */}
       <MysticOrnament accentColor={haloColor} />
@@ -276,9 +313,9 @@ export function LandingScreen({
               height: 64,
               borderRadius: 32,
               border: "none",
-              background: "linear-gradient(135deg, #00FFB7 0%, #5CFF8F 100%)",
-              boxShadow: "0 0 18px rgba(0,255,170,0.35), 0 4px 24px rgba(0,255,184,0.25)",
-              color: "#001A0F",
+              background: `linear-gradient(135deg, ${ctaStart} 0%, ${ctaEnd} 100%)`,
+              boxShadow: `0 0 18px ${ctaGlow}, 0 4px 24px ${ctaGlowSoft}`,
+              color: ctaText,
               fontSize: 17,
               fontWeight: 700,
               cursor: "pointer",
