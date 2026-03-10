@@ -31,6 +31,7 @@ import { IntrospectionScreen } from "../screens/IntrospectionScreen";
 import { TreasureScreen } from "../screens/TreasureScreen";
 import { TheoriesScreen } from "../screens/TheoriesScreen";
 import { AnecdotesScreen } from "../screens/AnecdotesScreen";
+import { DiversScreen } from "../screens/DiversScreen";
 import { SanteScreen } from "../screens/SanteScreen";
 import { ComingSoonScreen } from "../screens/ComingSoonScreen";
 import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
@@ -434,6 +435,7 @@ export default function App() {
               onTreasure={() => navigate("treasure", "forward")}
               onTheories={() => navigate("theories", "forward")}
               onAnecdotes={() => navigate("anecdotes", "forward")}
+              onDivers={() => navigate("divers", "forward")}
               onComingSoon={() => navigate("comingSoon", "forward")}
             />
           )}
@@ -474,6 +476,13 @@ export default function App() {
 
           {screen === "anecdotes" && (
             <AnecdotesScreen
+              haloColor={haloColor}
+              onBack={() => navigate("games", "backward")}
+            />
+          )}
+
+          {screen === "divers" && (
+            <DiversScreen
               haloColor={haloColor}
               onBack={() => navigate("games", "backward")}
             />

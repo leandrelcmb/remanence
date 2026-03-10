@@ -47,6 +47,7 @@ export function useAmbientColor({
       screen === "treasure" ||
       screen === "theories" ||
       screen === "anecdotes" ||
+      screen === "divers" ||
       screen === "sante" ||
       screen === "comingSoon"
     ) {

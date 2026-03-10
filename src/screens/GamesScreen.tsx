@@ -12,6 +12,7 @@ type Props = {
   onTreasure: () => void;
   onTheories: () => void;
   onAnecdotes: () => void;
+  onDivers: () => void;
   onComingSoon: () => void;
 };
 
@@ -27,7 +28,7 @@ type GameCard = {
   emoji: string;
   title: string;
   sub: string;
-  active: "introspection" | "treasure" | "theories" | "anecdotes";
+  active: "introspection" | "treasure" | "theories" | "anecdotes" | "divers";
 } | {
   id: string;
   emoji: string;
@@ -42,6 +43,7 @@ const GAMES: GameCard[] = [
   { id: "theories",     emoji: "🃏", title: "Théories Absurdes",   sub: "60 cartes absurdes — gratte pour révéler",           active: "theories"                                 },
   { id: "introspection",emoji: "💭", title: "Introspection",       sub: "Des questions douces pour célébrer notre existence", active: "introspection"                            },
   { id: "anecdotes",    emoji: "🎪", title: "Anecdotes",           sub: "150 cartes · Vrai ou Faux festival",                 active: "anecdotes"                                },
+  { id: "divers",       emoji: "🎲", title: "Divers",              sub: "~150 cartes · Camping, Rencontres, Défis…",          active: "divers"                                   },
 ];
 
 function formatDate(iso: string): string {
@@ -49,7 +51,7 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onTheories, onAnecdotes, onComingSoon }: Props) {
+export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onTheories, onAnecdotes, onDivers, onComingSoon }: Props) {
   const [history, setHistory] = useState<ChasseHistoryEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<ChasseHistoryEntry | null>(null);
 
@@ -114,6 +116,7 @@ export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onT
               game.active === "treasure"      ? onTreasure :
               game.active === "theories"      ? onTheories :
               game.active === "anecdotes"     ? onAnecdotes :
+              game.active === "divers"        ? onDivers :
               onComingSoon;
 
             return (
