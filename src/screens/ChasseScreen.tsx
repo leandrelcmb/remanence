@@ -12,7 +12,7 @@ export const WHEEL_CONTENT: Record<ChasseType, WheelItem[]> = {
     { label: "Orange", color: "#FF9500", icon: "🟠", challenge: "21 nuances d'orange capturées avant que le timer s'arrête" },
     { label: "Jaune",  color: "#FFD60A", icon: "🟡", challenge: "Capture 21 éclats jaunes : lumières, tenues, décors" },
     { label: "Vert",   color: "#34C759", icon: "🟢", challenge: "21 teintes vertes dans la nature ou la scénographie" },
-    { label: "Cyan",   color: "#00C7BE", icon: "🩵", challenge: "Photographie 21 touches cyan autour de toi" },
+    { label: "Cyan",   color: "#00C7BE", icon: "Ⓜ️", challenge: "Photographie 21 touches cyan autour de toi" },
     { label: "Bleu",   color: "#0A84FF", icon: "🔵", challenge: "21 bleus — ciel, tenues, light shows — en 1 heure" },
     { label: "Indigo", color: "#5E5CE6", icon: "💜", challenge: "Traque 21 nuances indigo & violet dans le camp" },
     { label: "Violet", color: "#BF5AF2", icon: "🟣", challenge: "21 instants violets : magie, mystère, lumières" },
