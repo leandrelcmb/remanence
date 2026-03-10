@@ -28,21 +28,27 @@ export const WHEEL_CONTENT: Record<ChasseType, WheelItem[]> = {
     { label: "Croix",    color: "#FF3B30", icon: "✚",  challenge: "Photographie 21 formes en croix ou intersection" },
   ],
   personnages: [
-    { label: "Mystique",   color: "#5E5CE6", icon: "🔮", challenge: "Capte 21 âmes mystiques — capes, cristaux, signes" },
-    { label: "Solaire",    color: "#FFD60A", icon: "☀️", challenge: "21 personnes solaires — sourires, couleurs vives, joie" },
-    { label: "Tribal",     color: "#FF9500", icon: "🥁", challenge: "Photographie 21 présences tribales — peintures, plumes" },
-    { label: "Électro",    color: "#0A84FF", icon: "⚡", challenge: "Capture 21 âmes électro — néons, cyberpunk, lasers" },
-    { label: "Hippie",     color: "#34C759", icon: "🌸", challenge: "21 esprits hippies — fleurs, tie-dye, paix & amour" },
-    { label: "Chamanique", color: "#BF5AF2", icon: "🌿", challenge: "Photographie 21 personnages chamaniques — plantes, rituels" },
-    { label: "Guerrier",   color: "#FF3B30", icon: "🛡️", challenge: "Capture 21 guerriers du festival — forts, déterminés" },
-    { label: "Fée",        color: "#00C7BE", icon: "🧚", challenge: "Immortalise 21 fées du camp — ailes, paillettes, magie" },
+    { label: "Corps peint",    color: "#FF3B30", icon: "🎨", challenge: "Capture 21 festivaliers avec peinture corporelle ou body art visible" },
+    { label: "Ailes & plumes", color: "#BF5AF2", icon: "🦋", challenge: "Photographie 21 porteurs d'ailes, plumes ou ornements de tête élaborés" },
+    { label: "Tatouage",       color: "#5E5CE6", icon: "💉", challenge: "Trouve 21 tatouages remarquables — grande surface, style unique, emplacement inattendu" },
+    { label: "Déguisement",    color: "#FF9500", icon: "🎭", challenge: "21 déguisements complets — animal, créature, personnage ou univers" },
+    { label: "Accessoire fou", color: "#FFD60A", icon: "🎩", challenge: "Photographie 21 accessoires impossibles — coiffes, lunettes, bijoux, objets" },
+    { label: "UV & néon",      color: "#00C7BE", icon: "🌟", challenge: "21 tenues ou éléments qui brillent ou brilleraient sous les UV de la nuit" },
+    { label: "Masque & fard",  color: "#34C759", icon: "👺", challenge: "Capture 21 visages masqués ou fardés avec une intention artistique" },
+    { label: "Tribu & clan",   color: "#0A84FF", icon: "⚡", challenge: "21 groupes coordonnés — même couleur, style, symbole ou univers partagé" },
   ],
 };
 
 export const CHASSE_TITLES: Record<ChasseType, string> = {
-  chromatic: "Chasse Chromatique 🎨",
-  formes: "Chasse des Formes 🔷",
-  personnages: "Chasse des Persos 🧑",
+  chromatic:   "Chasse Chromatique 🎨",
+  formes:      "Chasse des Formes 🔷",
+  personnages: "Créatures 🦋",
+};
+
+const TAB_LABELS: Record<ChasseType, string> = {
+  chromatic:   "Chromatique",
+  formes:      "Formes",
+  personnages: "Créatures",
 };
 
 // ── Compression photo ─────────────────────────────────────────────────────────
@@ -78,9 +84,12 @@ type Props = {
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
-  const segments = WHEEL_CONTENT[chasseType];
-
   const isResuming = !!resumeSession && resumeSession.timerExpiresAt > Date.now();
+
+  const [activeType, setActiveType] = useState<ChasseType>(
+    isResuming ? resumeSession!.chasseType : chasseType
+  );
+  const segments = WHEEL_CONTENT[activeType];
 
   const [phase, setPhase]     = useState<Phase>(isResuming ? "challenge" : "spin");
   const [rotation, setRotation] = useState(0);
@@ -116,7 +125,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
   useEffect(() => {
     if (phase !== "challenge" || !result) return;
     const session: ChasseActiveSession = {
-      chasseType,
+      chasseType: activeType,
       result,
       photos,
       timerExpiresAt: Date.now() + timer * 1000,
@@ -138,7 +147,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
       setPhase("challenge");
       // Persister dès le début du challenge
       const session: ChasseActiveSession = {
-        chasseType,
+        chasseType: activeType,
         result: segments[idx],
         photos: Array(21).fill(null),
         timerExpiresAt: Date.now() + 3600 * 1000,
@@ -208,6 +217,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
     setResult(null);
     setPhotos(Array(21).fill(null));
     setTimer(3600);
+    setActiveType(chasseType);
     setEditMode(false);
     setSelectedIndex(null);
     setShowCancelConfirm(false);
@@ -218,7 +228,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
     if (!result) return;
     const entry: ChasseHistoryEntry = {
       id: uuid(),
-      chasseType,
+      chasseType: activeType,
       result,
       photos: nonNull,
       savedAt: nowISO(),
@@ -271,7 +281,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
         flexShrink: 0,
       }}>
         <div style={{ fontSize: 16, fontWeight: 700 }}>
-          {CHASSE_TITLES[chasseType]}
+          {CHASSE_TITLES[activeType]}
         </div>
         <button
           onClick={onBack}
@@ -357,6 +367,43 @@ export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
                 boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
               }} />
             </div>
+          </div>
+
+          {/* ── Onglets de type (désactivés si en cours ou animation) ── */}
+          <div style={{
+            display: "flex",
+            gap: 8,
+            justifyContent: "center",
+          }}>
+            {(Object.keys(TAB_LABELS) as ChasseType[]).map((type) => {
+              const active = type === activeType;
+              return (
+                <button
+                  key={type}
+                  onClick={() => { if (!isResuming && phase === "spin") setActiveType(type); }}
+                  disabled={isResuming || phase !== "spin"}
+                  style={{
+                    borderRadius: 999,
+                    padding: "8px 16px",
+                    fontSize: 13,
+                    fontWeight: active ? 700 : 400,
+                    fontFamily: "inherit",
+                    cursor: (isResuming || phase !== "spin") ? "default" : "pointer",
+                    border: active
+                      ? "1px solid rgba(255,255,255,0.40)"
+                      : "1px solid rgba(255,255,255,0.12)",
+                    background: active
+                      ? "rgba(255,255,255,0.16)"
+                      : "rgba(255,255,255,0.05)",
+                    color: active ? "white" : "rgba(255,255,255,0.50)",
+                    transition: "all 0.2s",
+                    opacity: (isResuming || phase !== "spin") && !active ? 0.4 : 1,
+                  }}
+                >
+                  {TAB_LABELS[type]}
+                </button>
+              );
+            })}
           </div>
 
           {/* Bouton spin */}

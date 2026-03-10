@@ -36,12 +36,10 @@ type GameCard = {
 };
 
 const GAMES: GameCard[] = [
-  { id: "chromatic",      emoji: "🎨", title: "Chasse Chromatique", sub: "Traque une couleur au festival",                              active: true,            chasseType: "chromatic"   },
-  { id: "formes",         emoji: "🔷", title: "Chasse des Formes",   sub: "Capture des formes géométriques",                            active: true,            chasseType: "formes"      },
-  { id: "perso",          emoji: "🧑", title: "Chasse des Persos",   sub: "Immortalise des archétypes du camp",                         active: true,            chasseType: "personnages" },
-  { id: "introspection",  emoji: "💭", title: "Introspection",       sub: "Des questions douces pour célébrer notre existence",         active: "introspection"                            },
-  { id: "treasure",       emoji: "🗺️", title: "Chasse au Trésor",   sub: "30 secrets à révéler dans le festival",                      active: "treasure"                                 },
-  { id: "theories",       emoji: "🃏", title: "Théories Absurdes",   sub: "60 cartes absurdes — gratte pour révéler",                   active: "theories"                                 },
+  { id: "tableau",       emoji: "📸", title: "Tableau du festival", sub: "Chromatique · Formes · Créatures",                   active: true,            chasseType: "chromatic"   },
+  { id: "treasure",     emoji: "🗺️", title: "Chasse au Trésor",   sub: "30 secrets à révéler dans le festival",              active: "treasure"                                 },
+  { id: "theories",     emoji: "🃏", title: "Théories Absurdes",   sub: "60 cartes absurdes — gratte pour révéler",           active: "theories"                                 },
+  { id: "introspection",emoji: "💭", title: "Introspection",       sub: "Des questions douces pour célébrer notre existence", active: "introspection"                            },
 ];
 
 function formatDate(iso: string): string {
