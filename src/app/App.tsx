@@ -29,6 +29,7 @@ import { GamesScreen } from "../screens/GamesScreen";
 import { ChasseScreen } from "../screens/ChasseScreen";
 import { IntrospectionScreen } from "../screens/IntrospectionScreen";
 import { TreasureScreen } from "../screens/TreasureScreen";
+import { TheoriesScreen } from "../screens/TheoriesScreen";
 import { ComingSoonScreen } from "../screens/ComingSoonScreen";
 import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
 import { getActiveChasse, clearActiveChasse } from "../core/store/repo";
@@ -250,7 +251,7 @@ export default function App() {
       haloFilterTransition={haloFilterTransition}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
-      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "chasse" || screen === "comingSoon") ? 0 : "40px 12px" }}>
+      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "chasse" || screen === "comingSoon") ? 0 : "40px 12px" }}>
 
         {/* Header : uniquement sur la landing */}
         {screen === "landing" && (
@@ -427,6 +428,7 @@ export default function App() {
               onChasse={(type) => { setChasseType(type); navigate("chasse", "forward"); }}
               onIntrospection={() => navigate("introspection", "forward")}
               onTreasure={() => navigate("treasure", "forward")}
+              onTheories={() => navigate("theories", "forward")}
               onComingSoon={() => navigate("comingSoon", "forward")}
             />
           )}
@@ -437,6 +439,10 @@ export default function App() {
 
           {screen === "treasure" && (
             <TreasureScreen onBack={() => navigate("games", "backward")} />
+          )}
+
+          {screen === "theories" && (
+            <TheoriesScreen onBack={() => navigate("games", "backward")} />
           )}
 
           {screen === "chasse" && (
