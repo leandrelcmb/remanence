@@ -528,16 +528,19 @@ export function JournalScreen({
               onClick={handleExportPhotos}
               disabled={exporting}
               style={{
-                background: "none",
-                border: "1px solid rgba(255,255,255,0.12)",
+                width: "100%",
                 borderRadius: 999,
-                padding: "10px 18px",
-                fontSize: 13,
-                color: exporting ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.55)",
+                padding: "16px 20px",
+                border: "none",
+                background: `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+                boxShadow: `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
+                color: "rgba(0,0,0,0.85)",
+                fontSize: 16,
+                fontWeight: 600,
                 cursor: exporting ? "not-allowed" : "pointer",
                 fontFamily: "inherit",
-                letterSpacing: "0.04em",
-                textAlign: "center",
+                letterSpacing: "0.03em",
+                opacity: exporting ? 0.45 : 1,
               }}
             >
               {exporting ? "Export en cours…" : "Exporter mes photos 📸"}
