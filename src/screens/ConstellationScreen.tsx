@@ -1,7 +1,6 @@
 import { useRef, useState, useMemo, type ReactNode, type TouchEvent as ReactTouchEvent } from "react";
 import type { JournalItem } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
-import { RoundButton } from "../app/ui/RoundButton";
 import { formatTime } from "./utils";
 
 // ── Filtres ───────────────────────────────────────────────────────────────────
@@ -278,14 +277,52 @@ export function ConstellationScreen({
   }, [stars]);
 
   return (
-    <div style={{ display: "grid", gap: 20, minHeight: "100dvh", alignContent: "start" }}>
+    <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <style>{CSS}</style>
 
-      <h2 style={{ margin: 2, fontSize: 20}}>✨ Constellation personnalisée ✨</h2>
+      {/* ── Header fixe ── */}
+      <div style={{
+        flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "16px 16px 14px",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        backdropFilter: "blur(20px)",
+      }}>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>Constellation ✨</div>
+          <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>Ton voyage en étoiles</div>
+        </div>
+        <button
+          onClick={onBack}
+          style={{
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            borderRadius: 999,
+            padding: "8px 16px",
+            fontSize: 13,
+            color: "white",
+            cursor: "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          Home ॐ
+        </button>
+      </div>
+
+      {/* ── Corps ── */}
+      <div style={{
+        flex: 1,
+        overflow: "hidden",
+        padding: "14px 16px 16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        minHeight: 0,
+      }}>
 
       {/* ── Filtres ── */}
       {journal.length > 0 && (
-        <div style={{ display: "grid", gap: 8 }}>
+        <div style={{ display: "grid", gap: 8, flexShrink: 0 }}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {FOCUS_OPTIONS.map((f) => (
               <FilterChip
@@ -326,8 +363,9 @@ export function ConstellationScreen({
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
         style={{
+          flex: 1,
+          minHeight: 0,
           position: "relative",
-          height: "min(600px, calc(100dvh - 220px))",
           borderRadius: 20,
           overflow: "hidden",
           border: "1px solid rgba(255,255,255,0.08)",
@@ -447,9 +485,7 @@ export function ConstellationScreen({
         </div>
       </div>
 
-      <RoundButton variant="secondary" onClick={onBack}>
-        Home ॐ
-      </RoundButton>
+      </div>
     </div>
   );
 }

@@ -262,43 +262,6 @@ export function LandingScreen({
         zIndex: 1,
       }}>
 
-        {/* ── Bannière session Chasse active ── */}
-        {activeChasse && activeChasse.timerExpiresAt > Date.now() && (
-          <button
-            onClick={onResumeChasse}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              background: "rgba(255,255,255,0.07)",
-              border: `1px solid ${activeChasse.resultColor}55`,
-              borderRadius: 16,
-              padding: "12px 16px",
-              color: "white",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              width: "100%",
-              marginBottom: 4,
-            }}
-          >
-            <div style={{
-              width: 10, height: 10,
-              borderRadius: "50%",
-              background: activeChasse.resultColor,
-              boxShadow: `0 0 8px ${activeChasse.resultColor}`,
-              flexShrink: 0,
-            }} />
-            <div style={{ flex: 1, textAlign: "left" }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>
-                {activeChasse.resultIcon} {activeChasse.resultLabel} en cours
-              </div>
-              <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
-                {formatRemainingTime(activeChasse.timerExpiresAt)} restantes · Reprendre →
-              </div>
-            </div>
-          </button>
-        )}
-
         {/* ── CTA principal ── */}
         <div style={{
           display: "flex",
@@ -378,9 +341,46 @@ export function LandingScreen({
           gap: 10,
           animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.45s both",
         }}>
-          <NavCard emoji="🎮" label="Jeux"  onClick={onGames} />
           <NavCard emoji="🧠" label="Santé" onClick={onSante} />
+          <NavCard emoji="🎮" label="Jeux"  onClick={onGames} />
         </div>
+
+        {/* ── Bannière session Chasse active ── */}
+        {activeChasse && activeChasse.timerExpiresAt > Date.now() && (
+          <button
+            onClick={onResumeChasse}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              background: "rgba(255,255,255,0.07)",
+              border: `1px solid ${activeChasse.resultColor}55`,
+              borderRadius: 16,
+              padding: "12px 16px",
+              color: "white",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              width: "100%",
+              marginTop: 4,
+            }}
+          >
+            <div style={{
+              width: 10, height: 10,
+              borderRadius: "50%",
+              background: activeChasse.resultColor,
+              boxShadow: `0 0 8px ${activeChasse.resultColor}`,
+              flexShrink: 0,
+            }} />
+            <div style={{ flex: 1, textAlign: "left" }}>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>
+                {activeChasse.resultIcon} {activeChasse.resultLabel} en cours
+              </div>
+              <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+                {formatRemainingTime(activeChasse.timerExpiresAt)} restantes · Reprendre →
+              </div>
+            </div>
+          </button>
+        )}
 
       </div>
 

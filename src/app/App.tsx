@@ -384,6 +384,7 @@ export default function App() {
               onBack={() => navigate(detailBackTarget, "backward")}
               onEdit={startEditing}
               onDelete={handleDelete}
+              haloColor={haloColor}
             />
           )}
 

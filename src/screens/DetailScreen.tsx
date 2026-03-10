@@ -4,17 +4,49 @@ import { energyTint } from "../app/ui/EnergyDots";
 import { RoundButton } from "../app/ui/RoundButton";
 import { formatTime, focusEmoji } from "./utils";
 
+// ── Utilitaires couleur ───────────────────────────────────────────────────────
+
+function parseColor(color: string): [number, number, number] {
+  const v = color.trim();
+  if (v.startsWith("#")) {
+    const h = v.replace("#", "");
+    if (h.length === 6) {
+      const r = parseInt(h.slice(0, 2), 16);
+      const g = parseInt(h.slice(2, 4), 16);
+      const b = parseInt(h.slice(4, 6), 16);
+      if (![r, g, b].some(Number.isNaN)) return [r, g, b];
+    }
+  }
+  const m = v.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [0, 255, 183];
+}
+function lighten(c: number, factor: number): number {
+  return Math.min(255, Math.round(c + (255 - c) * factor));
+}
+function toHex(r: number, g: number, b: number): string {
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
 type Props = {
   item: JournalItem;
   backTarget: "journal" | "constellation";
   onBack: () => void;
   onEdit: (item: JournalItem) => void;
   onDelete: (item: JournalItem) => void;
+  haloColor?: string;
 };
 
-export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete }: Props) {
+export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloColor = "#00FFB7" }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const displayColor = energyTint(item.colorHex, item.energy);
+
+  // ── Couleurs halo ─────────────────────────────────────────────────────────
+  const [hr, hg, hb] = parseColor(haloColor);
+  const haloMain     = toHex(hr, hg, hb);
+  const haloLight    = toHex(lighten(hr, 0.22), lighten(hg, 0.22), lighten(hb, 0.22));
+  const haloGlow     = `rgba(${hr},${hg},${hb},0.40)`;
+  const haloGlowSft  = `rgba(${hr},${hg},${hb},0.22)`;
 
   return (
     <div style={{ display: "grid", gap: 30, minHeight: "85dvh", alignContent: "center" }}>
@@ -90,9 +122,25 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete }: Pro
             </div>
           </div>
 
-          <RoundButton variant="secondary" onClick={onBack}>
-            {backTarget === "constellation" ? "Retour à la constellation ✨" : "Retour au carnet 📓"}
-          </RoundButton>
+          <button
+            onClick={onBack}
+            style={{
+              width: "100%",
+              borderRadius: 999,
+              padding: "18px 20px",
+              border: "none",
+              background: `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+              boxShadow: `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
+              color: "rgba(0,0,0,0.85)",
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              letterSpacing: "0.03em",
+            }}
+          >
+            {backTarget === "constellation" ? "Revenir à la constellation ✨" : "Revenir aux vibrations 💓"}
+          </button>
         </div>
       ) : (
         <div
