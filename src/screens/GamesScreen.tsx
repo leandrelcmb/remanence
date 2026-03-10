@@ -11,6 +11,7 @@ type Props = {
   onIntrospection: () => void;
   onTreasure: () => void;
   onTheories: () => void;
+  onAnecdotes: () => void;
   onComingSoon: () => void;
 };
 
@@ -26,7 +27,7 @@ type GameCard = {
   emoji: string;
   title: string;
   sub: string;
-  active: "introspection" | "treasure" | "theories";
+  active: "introspection" | "treasure" | "theories" | "anecdotes";
 } | {
   id: string;
   emoji: string;
@@ -40,6 +41,7 @@ const GAMES: GameCard[] = [
   { id: "treasure",     emoji: "🗺️", title: "Chasse au Trésor",   sub: "30 secrets à révéler dans le festival",              active: "treasure"                                 },
   { id: "theories",     emoji: "🃏", title: "Théories Absurdes",   sub: "60 cartes absurdes — gratte pour révéler",           active: "theories"                                 },
   { id: "introspection",emoji: "💭", title: "Introspection",       sub: "Des questions douces pour célébrer notre existence", active: "introspection"                            },
+  { id: "anecdotes",    emoji: "🎪", title: "Anecdotes",           sub: "150 cartes · Vrai ou Faux festival",                 active: "anecdotes"                                },
 ];
 
 function formatDate(iso: string): string {
@@ -47,7 +49,7 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onTheories, onComingSoon }: Props) {
+export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onTheories, onAnecdotes, onComingSoon }: Props) {
   const [history, setHistory] = useState<ChasseHistoryEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<ChasseHistoryEntry | null>(null);
 
@@ -111,6 +113,7 @@ export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onT
               game.active === "introspection" ? onIntrospection :
               game.active === "treasure"      ? onTreasure :
               game.active === "theories"      ? onTheories :
+              game.active === "anecdotes"     ? onAnecdotes :
               onComingSoon;
 
             return (

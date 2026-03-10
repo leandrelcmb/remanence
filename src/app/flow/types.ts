@@ -18,6 +18,7 @@ export type FlowScreen =
   | "introspection"
   | "treasure"
   | "theories"
+  | "anecdotes"
   | "sante"
   | "comingSoon";
 

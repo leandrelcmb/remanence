@@ -30,6 +30,7 @@ import { ChasseScreen } from "../screens/ChasseScreen";
 import { IntrospectionScreen } from "../screens/IntrospectionScreen";
 import { TreasureScreen } from "../screens/TreasureScreen";
 import { TheoriesScreen } from "../screens/TheoriesScreen";
+import { AnecdotesScreen } from "../screens/AnecdotesScreen";
 import { SanteScreen } from "../screens/SanteScreen";
 import { ComingSoonScreen } from "../screens/ComingSoonScreen";
 import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
@@ -432,6 +433,7 @@ export default function App() {
               onIntrospection={() => navigate("introspection", "forward")}
               onTreasure={() => navigate("treasure", "forward")}
               onTheories={() => navigate("theories", "forward")}
+              onAnecdotes={() => navigate("anecdotes", "forward")}
               onComingSoon={() => navigate("comingSoon", "forward")}
             />
           )}
@@ -461,6 +463,10 @@ export default function App() {
                 navigate("games", "backward");
               }}
             />
+          )}
+
+          {screen === "anecdotes" && (
+            <AnecdotesScreen onBack={() => navigate("games", "backward")} />
           )}
 
           {screen === "sante" && (
