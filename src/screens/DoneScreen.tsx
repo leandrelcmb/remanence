@@ -1,7 +1,24 @@
 import { useEffect, useState, useMemo } from "react";
-import { RoundButton } from "../app/ui/RoundButton";
 import { energyTint } from "../app/ui/EnergyDots";
 import { focusEmoji } from "./utils";
+
+// ── Utilitaires couleur ───────────────────────────────────────────────────────
+
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    const n = parseInt(color.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [255, 255, 255];
+}
+function lighten(c: number, factor: number): number {
+  return Math.round(c + (255 - c) * factor);
+}
+function toHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+}
 
 export type LastSavedEntry = {
   artistName: string;
@@ -72,7 +89,12 @@ function ParticleField({ color }: { color: string }) {
 // ── Écran principal ──────────────────────────────────────────────────────────
 
 export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
-  const accentColor = lastSavedColor ?? "white";
+  const accentColor  = lastSavedColor ?? "#00FFB7";
+  const [r, g, b]   = parseColor(accentColor);
+  const haloMain    = toHex(r, g, b);
+  const haloLight   = toHex(lighten(r, 0.22), lighten(g, 0.22), lighten(b, 0.22));
+  const haloGlow    = `rgba(${r},${g},${b},0.22)`;
+  const haloGlowSft = `rgba(${r},${g},${b},0.16)`;
   const [glowing, setGlowing] = useState(false);
 
   useEffect(() => {
@@ -192,9 +214,26 @@ export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
           boxShadow: glowing ? `0 0 40px ${accentColor}88, 0 0 80px ${accentColor}44` : "none",
           transform: glowing ? "scale(1.03)" : "scale(1)",
         }}>
-          <RoundButton variant="primary" onClick={onHome}>
+          <button
+            onClick={onHome}
+            className="remanence-btn"
+            style={{
+              width: "100%",
+              borderRadius: 999,
+              padding: "18px 20px",
+              border: "none",
+              background: `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+              boxShadow: `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
+              color: "rgba(0,0,0,0.85)",
+              cursor: "pointer",
+              fontSize: 17,
+              fontWeight: 600,
+              fontFamily: "inherit",
+              letterSpacing: "0.03em",
+            }}
+          >
             Se reconnecter à l'instant 🍀
-          </RoundButton>
+          </button>
         </div>
 
       </div>

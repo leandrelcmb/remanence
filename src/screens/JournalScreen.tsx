@@ -2,8 +2,25 @@ import { useState, useMemo, useCallback, type ReactNode } from "react";
 import type { JournalItem } from "../core/store/service";
 import { getEntriesWithPhotos } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
-import { RoundButton } from "../app/ui/RoundButton";
 import { formatTime, focusEmoji } from "./utils";
+
+// ── Utilitaires couleur ───────────────────────────────────────────────────────
+
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    const n = parseInt(color.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [0, 255, 183];
+}
+function lighten(c: number, factor: number): number {
+  return Math.round(c + (255 - c) * factor);
+}
+function toHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,7 +29,6 @@ type Props = {
   latestJournalColor: string;
   userName: string;
   festivalId: string;
-  onNewEntry: () => void;
   onSelectItem: (item: JournalItem) => void;
   onHome: () => void;
   onSavePseudo: (name: string) => void;
@@ -218,12 +234,18 @@ export function JournalScreen({
   latestJournalColor,
   userName,
   festivalId,
-  onNewEntry,
   onSelectItem,
   onHome,
   onSavePseudo,
   onRecap,
 }: Props) {
+  // ── Palette dynamique depuis la dernière couleur du journal ────────────────
+  const [r, g, b]   = parseColor(latestJournalColor);
+  const haloMain    = toHex(r, g, b);
+  const haloLight   = toHex(lighten(r, 0.22), lighten(g, 0.22), lighten(b, 0.22));
+  const haloGlow    = `rgba(${r},${g},${b},0.22)`;
+  const haloGlowSft = `rgba(${r},${g},${b},0.16)`;
+
   const [activeFocus, setActiveFocus] = useState<string[]>([]);
   const [exporting, setExporting] = useState(false);
 
@@ -318,17 +340,51 @@ export function JournalScreen({
         style={{
           position: "relative",
           zIndex: 1,
-          display: "grid",
-          gap: 0,
-          minHeight: "100dvh",
-          paddingBottom: 40,
+          height: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         }}
       >
-        {/* ── En-tête ── */}
-        <div style={{ padding: "40px 12px 20px", display: "grid", gap: 20 }}>
-          {/* Titre avec édition du pseudo */}
+        {/* ── Header fixe ── */}
+        <div style={{
+          flexShrink: 0,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "16px 16px 14px",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          backdropFilter: "blur(20px)",
+        }}>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>
+              Vibrations 💓
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>
+              {journal.length} souvenir{journal.length !== 1 ? "s" : ""}
+            </div>
+          </div>
+          <button
+            onClick={onHome}
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              borderRadius: 999,
+              padding: "8px 16px",
+              fontSize: 13,
+              color: "white",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            Home ॐ
+          </button>
+        </div>
+
+        {/* ── Corps scrollable ── */}
+        <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "20px 12px 60px" }}>
+
+          {/* Pseudo discret + édition */}
           {editingPseudo ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
               <input
                 value={pseudoDraft}
                 onChange={(e) => setPseudoDraft(e.target.value)}
@@ -360,63 +416,43 @@ export function JournalScreen({
                 ✗
               </button>
             </div>
-          ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <h2 style={{ margin: 0, fontWeight: 650, fontSize: 20, flex: 1 }}>
-                📓 Carnet de Rémanence{userName ? ` de ${userName}` : ""}
-              </h2>
+          ) : userName ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+              <div style={{ fontSize: 13, opacity: 0.5, flex: 1 }}>✨ {userName}</div>
               <button
                 onClick={() => { setPseudoDraft(userName); setEditingPseudo(true); }}
                 title="Modifier le pseudo"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  opacity: 0.4,
-                  fontSize: 16,
-                  padding: 4,
-                  lineHeight: 1,
-                }}
+                style={{ background: "none", border: "none", cursor: "pointer", opacity: 0.35, fontSize: 15, padding: 4, lineHeight: 1 }}
               >
                 ✏️
               </button>
             </div>
-          )}
+          ) : null}
 
-          <div style={{ display: "grid", gap: 12 }}>
-            <RoundButton variant="primary" onClick={onNewEntry}>
-              Nouvelle vibration 💓
-            </RoundButton>
-            <RoundButton variant="secondary" onClick={onHome}>
-              Home ॐ
-            </RoundButton>
-          </div>
-        </div>
-
-        {/* ── Mini-stats ── */}
-        <MiniStats journal={journal} />
-
-        {/* ── Récap festival ── */}
-        <div style={{ padding: "10px 12px 0" }}>
+          {/* ── Récap du festival — glow halo ── */}
           <button
             onClick={onRecap}
             style={{
               width: "100%",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.12)",
               borderRadius: 999,
-              padding: "11px 18px",
-              fontSize: 14,
-              color: "rgba(255,255,255,0.75)",
+              padding: "16px 20px",
+              border: "none",
+              background: `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+              boxShadow: `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
+              color: "rgba(0,0,0,0.85)",
+              fontSize: 16,
+              fontWeight: 600,
               cursor: "pointer",
               fontFamily: "inherit",
-              letterSpacing: "0.04em",
-              textAlign: "center",
+              letterSpacing: "0.03em",
+              marginBottom: 24,
             }}
           >
             Récap du festival 🎇
           </button>
-        </div>
+
+          {/* ── Mini-stats ── */}
+          <MiniStats journal={journal} />
 
         {/* ── Filtres ── */}
         {journal.length > 0 && (
@@ -508,6 +544,8 @@ export function JournalScreen({
             </button>
           </div>
         )}
+
+        </div>{/* fin corps scrollable */}
       </div>
     </>
   );
