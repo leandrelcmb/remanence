@@ -23,7 +23,7 @@ type Secret = {
 const FILTERS: { key: Filter; label: string; hint: string }[] = [
   { key: "tous",        label: "Tous",           hint: "30 secrets"                       },
   { key: "rencontres",  label: "🤝 Rencontres",  hint: "Si tu veux rencontrer des gens"   },
-  { key: "découvertes", label: "🔭 Découvertes",  hint: "Explorer seul·e, yeux grand ouverts" },
+  { key: "découvertes", label: "👀 Découvertes",  hint: "Explorer seul·e, yeux grand ouverts" },
   { key: "nature",      label: "🌿 Nature",       hint: "Ciel, feu, lumière & animaux"    },
 ];
 
