@@ -274,6 +274,7 @@ export default function App() {
           {screen === "landing" && (
             <LandingScreen
               festivalName={festival?.name ?? ""}
+              haloColor={haloColor}
               onStart={() => startNewRemanence(false)}
               onExpressStart={() => startNewRemanence(true)}
               onJournal={() => navigate("journal", "forward")}

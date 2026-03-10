@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { RoundButton } from "../app/ui/RoundButton";
 import type { ChasseType } from "../core/models/chasseTypes";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type ActiveChasseInfo = {
   chasseType: ChasseType;
@@ -19,6 +20,7 @@ function formatRemainingTime(expiresAt: number): string {
 
 type Props = {
   festivalName: string;
+  haloColor?: string;
   onStart: () => void;
   onExpressStart: () => void;
   onJournal: () => void;
@@ -31,8 +33,143 @@ type Props = {
   onResumeChasse: () => void;
 };
 
+// ── CSS animations ─────────────────────────────────────────────────────────────
+
+const CSS = `
+@keyframes landingGlowBreath {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(0,255,170,0.35), 0 4px 24px rgba(0,255,184,0.25);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0,255,170,0.55), 0 4px 36px rgba(0,255,184,0.42);
+  }
+}
+@keyframes landingOrnamentSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg);   }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes landingOrnamentSpinRev {
+  from { transform: translate(-50%, -50%) rotate(0deg);    }
+  to   { transform: translate(-50%, -50%) rotate(-360deg); }
+}
+@keyframes landingDotPulse {
+  0%, 100% { opacity: 0.18; transform: scale(1);   }
+  50%       { opacity: 0.65; transform: scale(1.5); }
+}
+@keyframes landingQuoteFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 0.45; transform: translateY(0); }
+}
+@keyframes landingCtaFade {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes landingGridFade {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+`;
+
+// ── Ornement mystique ──────────────────────────────────────────────────────────
+
+const DOT_POSITIONS: {
+  top: number; left: number; size: number; blur: number;
+  opacity: number; dur: number; delay: number;
+}[] = [
+  { top:  8, left: 15, size: 2, blur: 5, opacity: 0.28, dur: 3.5, delay: 0   },
+  { top: 12, left: 78, size: 3, blur: 7, opacity: 0.22, dur: 4.2, delay: 0.8 },
+  { top: 22, left:  5, size: 2, blur: 4, opacity: 0.18, dur: 3.8, delay: 1.5 },
+  { top: 28, left: 90, size: 2, blur: 5, opacity: 0.25, dur: 5.0, delay: 0.3 },
+  { top: 42, left:  2, size: 2, blur: 3, opacity: 0.14, dur: 5.5, delay: 2.8 },
+  { top: 58, left: 94, size: 2, blur: 3, opacity: 0.14, dur: 4.1, delay: 3.0 },
+  { top: 70, left:  8, size: 3, blur: 6, opacity: 0.20, dur: 4.5, delay: 2.1 },
+  { top: 78, left: 86, size: 2, blur: 4, opacity: 0.22, dur: 3.2, delay: 1.2 },
+  { top: 88, left: 30, size: 2, blur: 5, opacity: 0.18, dur: 4.8, delay: 0.6 },
+  { top: 92, left: 66, size: 3, blur: 7, opacity: 0.16, dur: 3.9, delay: 1.9 },
+];
+
+function MysticOrnament({ accentColor }: { accentColor: string }) {
+  return (
+    <div style={{
+      position: "absolute", inset: 0,
+      pointerEvents: "none", overflow: "hidden", zIndex: 0,
+    }}>
+      {/* Arc intérieur — rotation lente */}
+      <div style={{
+        position: "absolute",
+        top: "50%", left: "50%",
+        width: 340, height: 340,
+        borderRadius: "50%",
+        border: `1px solid ${accentColor}1A`,
+        animation: "landingOrnamentSpin 45s linear infinite",
+      }} />
+      {/* Arc extérieur — contre-rotation très lente */}
+      <div style={{
+        position: "absolute",
+        top: "50%", left: "50%",
+        width: 560, height: 560,
+        borderRadius: "50%",
+        border: `1px solid ${accentColor}0D`,
+        animation: "landingOrnamentSpinRev 70s linear infinite",
+      }} />
+      {/* Micro-points lumineux */}
+      {DOT_POSITIONS.map((d, i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            top: `${d.top}%`, left: `${d.left}%`,
+            width: d.size, height: d.size,
+            borderRadius: "50%",
+            background: accentColor,
+            boxShadow: `0 0 ${d.blur}px ${accentColor}`,
+            opacity: d.opacity,
+            animation: `landingDotPulse ${d.dur}s ease-in-out infinite`,
+            animationDelay: `${d.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── NavCard ────────────────────────────────────────────────────────────────────
+
+function NavCard({ emoji, label, onClick }: { emoji: string; label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="remanence-btn"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        padding: "14px 6px",
+        borderRadius: 18,
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.09)",
+        backdropFilter: "blur(10px)",
+        color: "rgba(255,255,255,0.86)",
+        cursor: "pointer",
+        fontFamily: "inherit",
+        fontSize: 12,
+        fontWeight: 500,
+        letterSpacing: "0.03em",
+      }}
+    >
+      <span style={{ fontSize: 22 }}>{emoji}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+// ── Composant principal ────────────────────────────────────────────────────────
+
 export function LandingScreen({
-  festivalName, onStart, onExpressStart, onJournal,
+  festivalName, haloColor = "#00FFB7",
+  onStart, onExpressStart, onJournal,
   onConstellation, onFestivalPicker, onContacts, onGames, onSante,
   activeChasse, onResumeChasse,
 }: Props) {
@@ -45,12 +182,48 @@ export function LandingScreen({
   }, [activeChasse]);
 
   return (
-    <div style={{ display: "grid", gap: 60, minHeight: "85dvh", alignContent: "center" }}>
-      <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
-        🧘 "Ancre l'instant"
-      </p>
+    <div style={{
+      height: "100dvh",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden",
+      position: "relative",
+    }}>
+      <style>{CSS}</style>
 
-      <div style={{ display: "grid", gap: 15 }}>
+      {/* ── Ornement mystique (z-0, no pointer) ── */}
+      <MysticOrnament accentColor={haloColor} />
+
+      {/* ── Zone header — quote ── */}
+      <div style={{
+        flexShrink: 0,
+        padding: "52px 24px 0",
+        textAlign: "center",
+        zIndex: 1,
+      }}>
+        <p style={{
+          margin: 0,
+          fontSize: 13,
+          fontStyle: "italic",
+          opacity: 0.45,
+          letterSpacing: "0.10em",
+          lineHeight: 1.6,
+          animation: "landingQuoteFade 1.2s ease both",
+        }}>
+          ❝ Ancre l'instant ❞
+        </p>
+      </div>
+
+      {/* ── Zone body — navigation ── */}
+      <div style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        gap: 14,
+        padding: "0 24px",
+        zIndex: 1,
+      }}>
 
         {/* ── Bannière session Chasse active ── */}
         {activeChasse && activeChasse.timerExpiresAt > Date.now() && (
@@ -89,113 +262,117 @@ export function LandingScreen({
           </button>
         )}
 
-        {/* Parcours complet */}
-        <RoundButton variant="primary" onClick={onStart}>
-          Entrer en rémanence 🌱
-        </RoundButton>
+        {/* ── CTA principal ── */}
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          animation: "landingCtaFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s both",
+        }}>
+          <button
+            onClick={onStart}
+            className="remanence-btn"
+            style={{
+              width: "80%",
+              height: 64,
+              borderRadius: 32,
+              border: "none",
+              background: "linear-gradient(135deg, #00FFB7 0%, #5CFF8F 100%)",
+              boxShadow: "0 0 18px rgba(0,255,170,0.35), 0 4px 24px rgba(0,255,184,0.25)",
+              color: "#001A0F",
+              fontSize: 17,
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              letterSpacing: "0.03em",
+              animation: "landingCtaFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s both, landingGlowBreath 3.5s ease-in-out 0.8s infinite",
+            }}
+          >
+            Entrer en rémanence 🌱
+          </button>
+        </div>
 
-        {/* Mode express */}
-        <button
-          onClick={onExpressStart}
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: 999,
-            padding: "15px 20px",
-            fontSize: 15,
-            color: "rgba(255,255,255,0.9)",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            letterSpacing: "0.05em",
-          }}
-        >
-          Trace éclair ⚡
-        </button>
+        {/* ── Trace éclair ── */}
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          animation: "landingCtaFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.22s both",
+        }}>
+          <button
+            onClick={onExpressStart}
+            className="remanence-btn"
+            style={{
+              width: "58%",
+              height: 46,
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              backdropFilter: "blur(10px)",
+              color: "rgba(255,255,255,0.72)",
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              letterSpacing: "0.04em",
+            }}
+          >
+            Trace éclair ⚡
+          </button>
+        </div>
 
-        <div style={{ height: 25 }} />
+        {/* ── Séparateur ── */}
+        <div style={{ height: 6 }} />
 
-        <RoundButton variant="secondary" onClick={onJournal}>
-          Vibrations 💓
-        </RoundButton>
+        {/* ── Grille souvenirs — 3 colonnes ── */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 10,
+          animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s both",
+        }}>
+          <NavCard emoji="💓" label="Vibrations"    onClick={onJournal}       />
+          <NavCard emoji="✨" label="Constellations" onClick={onConstellation} />
+          <NavCard emoji="🤝" label="Rencontres"    onClick={onContacts}      />
+        </div>
 
-        <RoundButton variant="secondary" onClick={onConstellation}>
-          Constellations ✨
-        </RoundButton>
-
-        {/* Rencontres */}
-        <button
-          onClick={onContacts}
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: 999,
-            padding: "15px 20px",
-            fontSize: 15,
-            color: "rgba(255,255,255,0.9)",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            letterSpacing: "0.05em",
-          }}
-        >
-          Rencontres 🤝
-        </button>
-
-        {/* Jeux */}
-        <button
-          onClick={onGames}
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: 999,
-            padding: "15px 20px",
-            fontSize: 15,
-            color: "rgba(255,255,255,0.9)",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            letterSpacing: "0.05em",
-          }}
-        >
-          Jeux 🎮
-        </button>
-
-        {/* Santé */}
-        <button
-          onClick={onSante}
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: 999,
-            padding: "15px 20px",
-            fontSize: 15,
-            color: "rgba(255,255,255,0.9)",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            letterSpacing: "0.05em",
-          }}
-        >
-          Santé 🧠
-        </button>
+        {/* ── Grille expériences — 2 colonnes ── */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: 10,
+          animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.45s both",
+        }}>
+          <NavCard emoji="🎮" label="Jeux"  onClick={onGames} />
+          <NavCard emoji="🧠" label="Santé" onClick={onSante} />
+        </div>
 
       </div>
 
-      {/* Festival actif — discret, en bas */}
-      <button
-        onClick={onFestivalPicker}
-        style={{
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          color: "inherit",
-          opacity: 0.7,
-          fontSize: 15,
-          letterSpacing: "0.08em",
-          textAlign: "center",
-          padding: "1px 0",
-          fontFamily: "inherit",
-        }}
-      >
-        {festivalName} · changer
-      </button>
+      {/* ── Zone footer — festival picker ── */}
+      <div style={{
+        flexShrink: 0,
+        padding: "0 24px 36px",
+        textAlign: "center",
+        zIndex: 1,
+      }}>
+        <button
+          onClick={onFestivalPicker}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "inherit",
+            opacity: 0.40,
+            fontSize: 12,
+            letterSpacing: "0.10em",
+            textAlign: "center",
+            padding: "8px 16px",
+            fontFamily: "inherit",
+          }}
+        >
+          {festivalName} · changer
+        </button>
+      </div>
+
     </div>
   );
 }
