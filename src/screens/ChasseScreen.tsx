@@ -4,6 +4,24 @@ import { uuid, nowISO } from "../core/models/utils";
 import { setActiveChasse, clearActiveChasse, addChasseHistory } from "../core/store/repo";
 import type { ChasseType, WheelItem, ChasseActiveSession, ChasseHistoryEntry } from "../core/models/chasseTypes";
 
+// ── Utilitaires couleur ───────────────────────────────────────────────────────
+
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    const n = parseInt(color.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [0, 255, 183];
+}
+function lighten(c: number, factor: number): number {
+  return Math.round(c + (255 - c) * factor);
+}
+function toHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+
 // ── Contenu des 3 roues ───────────────────────────────────────────────────────
 
 export const WHEEL_CONTENT: Record<ChasseType, WheelItem[]> = {
@@ -79,11 +97,17 @@ type Props = {
   chasseType: ChasseType;
   onBack: () => void;
   resumeSession?: ChasseActiveSession;
+  haloColor?: string;
 };
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
+export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: Props) {
+  const [r, g, b]   = parseColor(haloColor ?? "#00FFB7");
+  const haloMain    = toHex(r, g, b);
+  const haloLight   = toHex(lighten(r, 0.22), lighten(g, 0.22), lighten(b, 0.22));
+  const haloGlow    = `rgba(${r},${g},${b},0.22)`;
+  const haloGlowSft = `rgba(${r},${g},${b},0.16)`;
   const isResuming = !!resumeSession && resumeSession.timerExpiresAt > Date.now();
 
   const [activeType, setActiveType] = useState<ChasseType>(
@@ -416,12 +440,13 @@ export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
                 width: "100%",
                 borderRadius: 999,
                 padding: "18px 20px",
-                border: "1px solid rgba(255,255,255,0.18)",
+                border: phase === "spinning" ? "1px solid rgba(255,255,255,0.18)" : "none",
                 background: phase === "spinning"
                   ? "rgba(255,255,255,0.06)"
-                  : "rgba(255,255,255,0.15)",
-                backdropFilter: "blur(10px)",
-                color: "white",
+                  : `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+                backdropFilter: phase === "spinning" ? "blur(10px)" : undefined,
+                boxShadow: phase === "spinning" ? undefined : `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
+                color: phase === "spinning" ? "white" : "rgba(0,0,0,0.85)",
                 cursor: phase === "spinning" ? "not-allowed" : "pointer",
                 opacity: phase === "spinning" ? 0.5 : 1,
                 fontSize: 17,
@@ -633,10 +658,10 @@ export function ChasseScreen({ chasseType, onBack, resumeSession }: Props) {
               style={{
                 borderRadius: 999,
                 padding: "16px 20px",
-                border: "1px solid rgba(255,255,255,0.18)",
-                background: "rgba(255,255,255,0.15)",
-                backdropFilter: "blur(10px)",
-                color: "white",
+                border: "none",
+                background: `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+                boxShadow: `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
+                color: "rgba(0,0,0,0.85)",
                 cursor: "pointer",
                 fontSize: 16,
                 fontWeight: 600,

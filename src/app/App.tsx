@@ -439,7 +439,10 @@ export default function App() {
           )}
 
           {screen === "introspection" && (
-            <IntrospectionScreen onBack={() => navigate("games", "backward")} />
+            <IntrospectionScreen
+              haloColor={haloColor}
+              onBack={() => navigate("games", "backward")}
+            />
           )}
 
           {screen === "treasure" && (
@@ -457,6 +460,7 @@ export default function App() {
             <ChasseScreen
               chasseType={chasseType}
               resumeSession={activeChasse ?? undefined}
+              haloColor={haloColor}
               onBack={() => {
                 // Rafraîchir l'état de la session active après annulation/sauvegarde
                 setActiveChasse(null);

@@ -73,13 +73,37 @@ function pickRandom(current: string): string {
   return others[Math.floor(Math.random() * others.length)];
 }
 
+// ── Utilitaires couleur ───────────────────────────────────────────────────────
+
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    const n = parseInt(color.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [0, 255, 183];
+}
+function lighten(c: number, factor: number): number {
+  return Math.round(c + (255 - c) * factor);
+}
+function toHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 type Props = {
   onBack: () => void;
+  haloColor?: string;
 };
 
-export function IntrospectionScreen({ onBack }: Props) {
+export function IntrospectionScreen({ onBack, haloColor }: Props) {
+  const [r, g, b]   = parseColor(haloColor ?? "#00FFB7");
+  const haloMain    = toHex(r, g, b);
+  const haloLight   = toHex(lighten(r, 0.22), lighten(g, 0.22), lighten(b, 0.22));
+  const haloGlow    = `rgba(${r},${g},${b},0.22)`;
+  const haloGlowSft = `rgba(${r},${g},${b},0.16)`;
   const [question, setQuestion] = useState<string>(
     () => QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)]
   );
@@ -196,15 +220,17 @@ export function IntrospectionScreen({ onBack }: Props) {
             display: "flex",
             alignItems: "center",
             gap: 10,
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.18)",
+            background: `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+            border: "none",
             borderRadius: 999,
             padding: "14px 28px",
             fontSize: 15,
-            color: "white",
+            fontWeight: 600,
+            color: "rgba(0,0,0,0.85)",
             cursor: "pointer",
             fontFamily: "inherit",
             letterSpacing: "0.03em",
+            boxShadow: `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
             transition: "opacity 0.15s ease, transform 0.1s ease",
           }}
           onPointerDown={(e) => (e.currentTarget.style.opacity = "0.65")}
