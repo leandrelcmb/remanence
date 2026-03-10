@@ -17,6 +17,7 @@ export type FlowScreen =
   | "chasse"
   | "introspection"
   | "treasure"
+  | "theories"
   | "comingSoon";
 
 export type Draft = {

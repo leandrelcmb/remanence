@@ -45,6 +45,7 @@ export function useAmbientColor({
       screen === "chasse" ||
       screen === "introspection" ||
       screen === "treasure" ||
+      screen === "theories" ||
       screen === "comingSoon"
     ) {
       return latestJournalColor;
