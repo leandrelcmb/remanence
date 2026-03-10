@@ -24,7 +24,7 @@ type Exercise = {
 // ── Suggestions par humeur ─────────────────────────────────────────────────────
 
 const SUGGESTED: Record<CheckinMood, SanteSection[]> = {
-  "super":   ["inspiration", "mantras"],
+  "super":   ["inspiration"],
   "bof":     ["mantras", "inspiration", "reconnexion"],
   "pas-top": ["mantras", "reconnexion", "nuit"],
 };
@@ -609,36 +609,6 @@ function HubView({ mood, onSection }: HubProps) {
         </div>
       </div>
 
-      {/* Si pas de mood : 4 sections directement */}
-      {suggested.length === 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginTop: -20 }}>
-          {SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => onSection(s.id)}
-              style={{
-                aspectRatio: "1",
-                borderRadius: 18,
-                padding: 16,
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.11)",
-                color: "white",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                textAlign: "left",
-                display: "flex", flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ fontSize: 28, lineHeight: 1 }}>{s.emoji}</div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{s.title}</div>
-                <div style={{ fontSize: 11, opacity: 0.50, lineHeight: 1.4 }}>{s.desc}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -881,7 +851,7 @@ export function SanteScreen({ onBack }: Props) {
     view === "reconnexion" ? "15 techniques de grounding" :
     view === "nuit"      ? `${NUIT_PHRASES.length} phrases pour la nuit` : "";
 
-  const backLabel = (view === "checkin" || view === "hub") ? "Retour" : "← Hub";
+  const backLabel = (view === "checkin" || view === "hub") ? "Home ॐ" : "← Retour";
 
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
