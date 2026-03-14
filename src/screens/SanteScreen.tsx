@@ -475,9 +475,10 @@ function CheckInView({ onMood }: CheckInProps) {
 type HubProps = {
   mood: CheckinMood | null;
   onSection: (s: SanteSection) => void;
+  onRisques: () => void;
 };
 
-function HubView({ mood, onSection }: HubProps) {
+function HubView({ mood, onSection, onRisques }: HubProps) {
   const suggested = mood ? SUGGESTED[mood] : [];
 
   const moodEmoji: Record<CheckinMood, string> = {
@@ -606,6 +607,34 @@ function HubView({ mood, onSection }: HubProps) {
               </div>
             </button>
           ))}
+
+          {/* ── Réduction des risques ── */}
+          <button
+            onClick={onRisques}
+            style={{
+              aspectRatio: "1",
+              borderRadius: 18,
+              padding: 16,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,59,48,0.22)",
+              color: "white",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              textAlign: "left",
+              display: "flex", flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ fontSize: 28, lineHeight: 1 }}>⛑️</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, lineHeight: 1.3 }}>
+                Réduction des risques
+              </div>
+              <div style={{ fontSize: 11, opacity: 0.50, lineHeight: 1.4 }}>
+                Infos & repères
+              </div>
+            </div>
+          </button>
         </div>
       </div>
 
@@ -816,9 +845,9 @@ function ModeNuitView() {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-type Props = { onBack: () => void };
+type Props = { onBack: () => void; onRisques: () => void };
 
-export function SanteScreen({ onBack }: Props) {
+export function SanteScreen({ onBack, onRisques }: Props) {
   // check-in persisté au niveau module (survit aux navigations sans rechargement)
   const [view, setView] = useState<SanteView>(
     _sessionMood !== null ? "hub" : "checkin"
@@ -894,7 +923,7 @@ export function SanteScreen({ onBack }: Props) {
 
       {/* ── Corps ── */}
       {view === "checkin"    && <CheckInView onMood={handleMood} />}
-      {view === "hub"        && <HubView mood={mood} onSection={(s) => setView(s)} />}
+      {view === "hub"        && <HubView mood={mood} onSection={(s) => setView(s)} onRisques={onRisques} />}
       {view === "mantras"    && <MantraView />}
       {view === "inspiration"&& <InspirationView />}
       {view === "reconnexion"&& <ReconnexionView />}
