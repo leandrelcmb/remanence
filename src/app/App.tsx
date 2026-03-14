@@ -35,6 +35,7 @@ import { TheoriesScreen } from "../screens/TheoriesScreen";
 import { AnecdotesScreen } from "../screens/AnecdotesScreen";
 import { DiversScreen } from "../screens/DiversScreen";
 import { SanteScreen } from "../screens/SanteScreen";
+import { ProgrammationScreen } from "../screens/ProgrammationScreen";
 import { ComingSoonScreen } from "../screens/ComingSoonScreen";
 import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
 import { getActiveChasse, clearActiveChasse } from "../core/store/repo";
@@ -257,7 +258,7 @@ export default function App() {
       haloFilterTransition={haloFilterTransition}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
-      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "sante" || screen === "chasse" || screen === "comingSoon" || screen === "divers" || screen === "anecdotes" || screen === "constellation" || screen === "scenePicker") ? 0 : "40px 12px" }}>
+      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "sante" || screen === "chasse" || screen === "comingSoon" || screen === "divers" || screen === "anecdotes" || screen === "constellation" || screen === "scenePicker" || screen === "programmation") ? 0 : "40px 12px" }}>
 
         {/* Indicateur de progression dans le flux de capture */}
         {isFlowScreen && <FlowProgress screen={screen} express={expressMode} />}
@@ -279,6 +280,7 @@ export default function App() {
               onContacts={() => navigate("contacts", "forward")}
               onGames={() => navigate("games", "forward")}
               onSante={() => navigate("sante", "forward")}
+              onProgrammation={() => navigate("programmation", "forward")}
               activeChasse={activeChasse ? {
                 chasseType: activeChasse.chasseType,
                 timerExpiresAt: activeChasse.timerExpiresAt,
@@ -504,6 +506,10 @@ export default function App() {
 
           {screen === "sante" && (
             <SanteScreen onBack={() => navigate("landing", "backward")} />
+          )}
+
+          {screen === "programmation" && (
+            <ProgrammationScreen onBack={() => navigate("landing", "backward")} />
           )}
 
           {screen === "comingSoon" && (

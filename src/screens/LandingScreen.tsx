@@ -29,6 +29,7 @@ type Props = {
   onContacts: () => void;
   onGames: () => void;
   onSante: () => void;
+  onProgrammation: () => void;
   activeChasse?: ActiveChasseInfo;
   onResumeChasse: () => void;
 };
@@ -59,6 +60,13 @@ const CSS = `
 @keyframes landingGridFade {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes navCardNeon {
+  0%   { box-shadow: 0 0 0 1px rgba(0,199,190,0.30), 0 4px 16px rgba(0,199,190,0.10); }
+  25%  { box-shadow: 0 0 0 1px rgba(10,132,255,0.30), 0 4px 16px rgba(10,132,255,0.10); }
+  50%  { box-shadow: 0 0 0 1px rgba(191,90,242,0.30), 0 4px 16px rgba(191,90,242,0.10); }
+  75%  { box-shadow: 0 0 0 1px rgba(52,199,89,0.30), 0 4px 16px rgba(52,199,89,0.10); }
+  100% { box-shadow: 0 0 0 1px rgba(0,199,190,0.30), 0 4px 16px rgba(0,199,190,0.10); }
 }
 `;
 
@@ -153,7 +161,14 @@ function MysticOrnament({ accentColor }: { accentColor: string }) {
 
 // ── NavCard ────────────────────────────────────────────────────────────────────
 
-function NavCard({ emoji, label, onClick }: { emoji: string; label: string; onClick: () => void }) {
+function NavCard({
+  emoji, label, onClick, animDelay = 0,
+}: {
+  emoji: string;
+  label: string;
+  onClick: () => void;
+  animDelay?: number;
+}) {
   return (
     <button
       onClick={onClick}
@@ -167,7 +182,7 @@ function NavCard({ emoji, label, onClick }: { emoji: string; label: string; onCl
         padding: "14px 6px",
         borderRadius: 18,
         background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.09)",
+        border: "none",
         backdropFilter: "blur(10px)",
         color: "rgba(255,255,255,0.86)",
         cursor: "pointer",
@@ -175,6 +190,7 @@ function NavCard({ emoji, label, onClick }: { emoji: string; label: string; onCl
         fontSize: 12,
         fontWeight: 500,
         letterSpacing: "0.03em",
+        animation: `navCardNeon 10s ease-in-out ${animDelay}s infinite`,
       }}
     >
       <span style={{ fontSize: 22 }}>{emoji}</span>
@@ -188,7 +204,7 @@ function NavCard({ emoji, label, onClick }: { emoji: string; label: string; onCl
 export function LandingScreen({
   festivalName, haloColor = "#00FFB7",
   onStart, onExpressStart, onJournal,
-  onConstellation, onFestivalPicker, onContacts, onGames, onSante,
+  onConstellation, onFestivalPicker, onContacts, onGames, onSante, onProgrammation,
   activeChasse, onResumeChasse,
 }: Props) {
   // Timer live : se met à jour chaque seconde quand une session est active
@@ -240,11 +256,11 @@ export function LandingScreen({
       }}>
         <p style={{
           margin: 0,
-          fontSize: 13,
+          fontSize: 20,
           fontStyle: "italic",
           opacity: 0.45,
-          letterSpacing: "0.10em",
-          lineHeight: 1.6,
+          letterSpacing: "0.15em",
+          lineHeight: 1.2,
           animation: "landingQuoteFade 1.2s ease both",
         }}>
           ❝ Ancre l'instant ❞
@@ -329,20 +345,21 @@ export function LandingScreen({
           gap: 10,
           animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s both",
         }}>
-          <NavCard emoji="💓" label="Vibrations"    onClick={onJournal}       />
-          <NavCard emoji="✨" label="Constellations" onClick={onConstellation} />
-          <NavCard emoji="🤝" label="Rencontres"    onClick={onContacts}      />
+          <NavCard emoji="💓" label="Vibrations"    onClick={onJournal}       animDelay={0}   />
+          <NavCard emoji="✨" label="Constellations" onClick={onConstellation} animDelay={3.5} />
+          <NavCard emoji="🤝" label="Rencontres"    onClick={onContacts}      animDelay={7}   />
         </div>
 
-        {/* ── Grille expériences — 2 colonnes ── */}
+        {/* ── Grille expériences — 3 colonnes ── */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: 10,
           animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.45s both",
         }}>
-          <NavCard emoji="🧠" label="Santé" onClick={onSante} />
-          <NavCard emoji="🎮" label="Jeux"  onClick={onGames} />
+          <NavCard emoji="🧠" label="Santé"        onClick={onSante}         animDelay={1.5} />
+          <NavCard emoji="🎵" label="Programme"    onClick={onProgrammation} animDelay={5}   />
+          <NavCard emoji="🎮" label="Jeux"         onClick={onGames}         animDelay={8.5} />
         </div>
 
         {/* ── Bannière session Chasse active ── */}
@@ -404,6 +421,7 @@ export function LandingScreen({
             textAlign: "center",
             padding: "8px 16px",
             fontFamily: "inherit",
+	    fontStyle: "italic",
           }}
         >
           {festivalName} · changer

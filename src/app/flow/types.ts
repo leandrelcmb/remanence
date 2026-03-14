@@ -26,6 +26,7 @@ export type FlowScreen =
   | "anecdotes"
   | "divers"
   | "sante"
+  | "programmation"
   | "comingSoon";
 
 export type Draft = {
