@@ -475,10 +475,9 @@ function CheckInView({ onMood }: CheckInProps) {
 type HubProps = {
   mood: CheckinMood | null;
   onSection: (s: SanteSection) => void;
-  onRisques: () => void;
 };
 
-function HubView({ mood, onSection, onRisques }: HubProps) {
+function HubView({ mood, onSection }: HubProps) {
   const suggested = mood ? SUGGESTED[mood] : [];
 
   const moodEmoji: Record<CheckinMood, string> = {
@@ -608,33 +607,6 @@ function HubView({ mood, onSection, onRisques }: HubProps) {
             </button>
           ))}
 
-          {/* ── Réduction des risques ── */}
-          <button
-            onClick={onRisques}
-            style={{
-              aspectRatio: "1",
-              borderRadius: 18,
-              padding: 16,
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,59,48,0.22)",
-              color: "white",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              textAlign: "left",
-              display: "flex", flexDirection: "column",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ fontSize: 28, lineHeight: 1 }}>⛑️</div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, lineHeight: 1.3 }}>
-                Réduction des risques
-              </div>
-              <div style={{ fontSize: 11, opacity: 0.50, lineHeight: 1.4 }}>
-                Infos & repères
-              </div>
-            </div>
-          </button>
         </div>
       </div>
 
@@ -845,9 +817,9 @@ function ModeNuitView() {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-type Props = { onBack: () => void; onRisques: () => void };
+type Props = { onBack: () => void; onRisques: () => void; haloColor?: string };
 
-export function SanteScreen({ onBack, onRisques }: Props) {
+export function SanteScreen({ onBack, onRisques, haloColor = "#00FFB7" }: Props) {
   // check-in persisté au niveau module (survit aux navigations sans rechargement)
   const [view, setView] = useState<SanteView>(
     _sessionMood !== null ? "hub" : "checkin"
@@ -923,11 +895,46 @@ export function SanteScreen({ onBack, onRisques }: Props) {
 
       {/* ── Corps ── */}
       {view === "checkin"    && <CheckInView onMood={handleMood} />}
-      {view === "hub"        && <HubView mood={mood} onSection={(s) => setView(s)} onRisques={onRisques} />}
+      {view === "hub"        && <HubView mood={mood} onSection={(s) => setView(s)} />}
       {view === "mantras"    && <MantraView />}
       {view === "inspiration"&& <InspirationView />}
       {view === "reconnexion"&& <ReconnexionView />}
       {view === "nuit"       && <ModeNuitView />}
+
+      {/* ── Footer fixe — Réduction des risques ── */}
+      <div style={{
+        flexShrink: 0,
+        padding: "10px 16px 28px",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+      }}>
+        <button
+          onClick={onRisques}
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 5,
+            padding: "14px 16px",
+            borderRadius: 18,
+            background: "rgba(255,255,255,0.04)",
+            border: `1px solid ${haloColor}44`,
+            boxShadow: `0 0 12px ${haloColor}14`,
+            cursor: "pointer",
+            fontFamily: "inherit",
+            color: "white",
+            transition: "border-color 0.3s, box-shadow 0.3s",
+          }}
+        >
+          <span style={{ fontSize: 22, lineHeight: 1 }}>⛑️</span>
+          <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: "0.02em" }}>
+            Réduction des risques
+          </span>
+          <span style={{ fontSize: 11, opacity: 0.45 }}>
+            Infos & repères · Conseils festival · Simulateur
+          </span>
+        </button>
+      </div>
     </div>
   );
 }

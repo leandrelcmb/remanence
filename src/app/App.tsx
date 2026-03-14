@@ -509,6 +509,7 @@ export default function App() {
             <SanteScreen
               onBack={() => navigate("landing", "backward")}
               onRisques={() => navigate("risques", "forward")}
+              haloColor={haloColor}
             />
           )}
 
