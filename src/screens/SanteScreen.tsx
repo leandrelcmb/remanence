@@ -619,7 +619,7 @@ function MantraView() {
   const items = useMemo(() => shuffle(MANTRAS), []);
 
   return (
-    <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "20px 16px 48px" }}>
+    <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "20px 16px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       <SwipeCard
         items={items.map((m) => m.text)}
         renderCard={(text, index) => {
@@ -663,7 +663,7 @@ function InspirationView() {
   const items = useMemo(() => shuffle(INSPIRATIONS), []);
 
   return (
-    <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "20px 16px 48px" }}>
+    <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "20px 16px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       <SwipeCard
         items={items}
         renderCard={(text) => (
@@ -793,7 +793,7 @@ function ModeNuitView() {
   const items = useMemo(() => shuffle(NUIT_PHRASES), []);
 
   return (
-    <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "20px 16px 48px" }}>
+    <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "20px 16px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       <SwipeCard
         items={items}
         nightMode

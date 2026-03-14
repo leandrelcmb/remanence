@@ -368,12 +368,13 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
       <div
         className="no-scrollbar"
         style={{
-          flex:           1,
-          overflowY:      "auto",
-          padding:        "20px 16px 40px",
-          display:        "flex",
-          flexDirection:  "column",
-          gap:            12,
+          flex:            1,
+          overflowY:       "auto",
+          padding:         "20px 16px 40px",
+          display:         "flex",
+          flexDirection:   "column",
+          justifyContent:  "center",
+          gap:             12,
         }}
       >
 
@@ -388,19 +389,39 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
           Carte {cardNumber} / {displayCards.length}
         </div>
 
-        {/* Instruction (première carte uniquement) */}
-        {score.total === 0 && !revealed && (
+        {/* Contexte révélé — toujours dans le DOM, au-dessus des options */}
+        <div style={{
+          borderRadius:    16,
+          padding:         "16px",
+          background:      isCorrect
+            ? "rgba(52,199,89,0.08)"
+            : "rgba(255,59,48,0.07)",
+          border:          isCorrect
+            ? "1px solid rgba(52,199,89,0.25)"
+            : "1px solid rgba(255,59,48,0.20)",
+          display:         "flex",
+          flexDirection:   "column",
+          gap:             8,
+          visibility:      revealed ? "visible" : "hidden",
+          animation:       revealed ? "anecdotesReveal 0.4s cubic-bezier(0.22,1,0.36,1) both" : undefined,
+        }}>
           <div style={{
-            textAlign:    "center",
-            fontSize:     13,
-            opacity:      0.50,
-            lineHeight:   1.5,
-            padding:      "4px 8px 8px",
-            fontStyle:    "italic",
+            fontSize:      13,
+            fontWeight:    700,
+            color:         isCorrect ? GREEN_CORRECT : RED_WRONG,
+            letterSpacing: "0.04em",
           }}>
-            Quelle affirmation est vraie ?
+            {isCorrect ? "✓ Bonne réponse !" : "✗ Pas tout à fait…"}
           </div>
-        )}
+          <p style={{
+            margin:     0,
+            fontSize:   13,
+            lineHeight: 1.65,
+            opacity:    0.80,
+          }}>
+            {card.ctx}
+          </p>
+        </div>
 
         {/* Option 1 */}
         <button
@@ -433,65 +454,30 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
           <span>{opt2}</span>
         </button>
 
-        {/* Contexte révélé */}
-        {revealed && (
-          <div style={{
-            borderRadius:    16,
-            padding:         "16px",
-            background:      isCorrect
-              ? "rgba(52,199,89,0.08)"
-              : "rgba(255,59,48,0.07)",
-            border:          isCorrect
-              ? "1px solid rgba(52,199,89,0.25)"
-              : "1px solid rgba(255,59,48,0.20)",
-            animation:       "anecdotesReveal 0.4s cubic-bezier(0.22,1,0.36,1) both",
-            display:         "flex",
-            flexDirection:   "column",
-            gap:             8,
-          }}>
-            <div style={{
-              fontSize:      13,
-              fontWeight:    700,
-              color:         isCorrect ? GREEN_CORRECT : RED_WRONG,
-              letterSpacing: "0.04em",
-            }}>
-              {isCorrect ? "✓ Bonne réponse !" : "✗ Pas tout à fait…"}
-            </div>
-            <p style={{
-              margin:     0,
-              fontSize:   13,
-              lineHeight: 1.65,
-              opacity:    0.80,
-            }}>
-              {card.ctx}
-            </p>
-          </div>
-        )}
-
-        {/* Bouton suivant */}
-        {revealed && (
-          <button
-            onClick={handleNext}
-            className="remanence-btn"
-            style={{
-              width:         "100%",
-              borderRadius:  999,
-              padding:       "16px 20px",
-              border:        "none",
-              background:    `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
-              boxShadow:     `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
-              color:         "white",
-              fontSize:      16,
-              fontWeight:    600,
-              cursor:        "pointer",
-              fontFamily:    "inherit",
-              letterSpacing: "0.03em",
-              animation:     "anecdotesReveal 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both, anecdotesPulse 2.2s ease-in-out 0.55s infinite",
-            }}
-          >
-            Carte suivante →
-          </button>
-        )}
+        {/* Bouton suivant — toujours dans le DOM, invisible tant que pas révélé */}
+        <button
+          onClick={handleNext}
+          className="remanence-btn"
+          style={{
+            width:         "100%",
+            borderRadius:  999,
+            padding:       "16px 20px",
+            border:        "none",
+            background:    `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
+            boxShadow:     `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
+            color:         "white",
+            fontSize:      16,
+            fontWeight:    600,
+            cursor:        revealed ? "pointer" : "default",
+            fontFamily:    "inherit",
+            letterSpacing: "0.03em",
+            visibility:    revealed ? "visible" : "hidden",
+            pointerEvents: revealed ? "auto" : "none",
+            animation:     revealed ? "anecdotesReveal 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both, anecdotesPulse 2.2s ease-in-out 0.55s infinite" : undefined,
+          }}
+        >
+          Carte suivante →
+        </button>
 
       </div>
     </div>
