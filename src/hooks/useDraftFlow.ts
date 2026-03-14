@@ -7,6 +7,7 @@ function createEmptyDraft(): Draft {
     artistName: "",
     stageName: "",
     style: "",
+    ephemeral: false,
     energy: 5,
     focus: "body",
     colorHex: "#5E5CE6",

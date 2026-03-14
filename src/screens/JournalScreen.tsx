@@ -1,6 +1,5 @@
-import { useState, useMemo, useCallback, type ReactNode } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import type { JournalItem } from "../core/store/service";
-import { getEntriesWithPhotos } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
 import { formatTime, focusEmoji } from "./utils";
 
@@ -233,7 +232,7 @@ export function JournalScreen({
   journal,
   latestJournalColor,
   userName,
-  festivalId,
+  festivalId: _festivalId,  // conservé dans les props pour compatibilité ascendante
   onSelectItem,
   onHome,
   onSavePseudo,
@@ -247,44 +246,6 @@ export function JournalScreen({
   const haloGlowSft = `rgba(${r},${g},${b},0.16)`;
 
   const [activeFocus, setActiveFocus] = useState<string[]>([]);
-  const [exporting, setExporting] = useState(false);
-
-  const handleExportPhotos = useCallback(async () => {
-    setExporting(true);
-    try {
-      const photos = await getEntriesWithPhotos(festivalId);
-      if (photos.length === 0) {
-        alert("Aucune photo à exporter dans ce festival.");
-        return;
-      }
-
-      // Convertir les base64 en Blob/File
-      const files: File[] = photos.map((p, i) => {
-        const base64 = p.photo.includes(",") ? p.photo.split(",")[1] : p.photo;
-        const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-        const name = `${(p.artistName || "artiste").replace(/[^a-z0-9]/gi, "_")}-${(p.stageName || "scene").replace(/[^a-z0-9]/gi, "_")}-${i + 1}.jpg`;
-        return new File([bytes], name, { type: "image/jpeg" });
-      });
-
-      // Web Share API (iOS/mobile)
-      if (navigator.canShare?.({ files })) {
-        await navigator.share({ files, title: "Mes souvenirs Rémanence" });
-      } else {
-        // Fallback desktop : téléchargements individuels
-        for (const file of files) {
-          const url = URL.createObjectURL(file);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = file.name;
-          a.click();
-          URL.revokeObjectURL(url);
-          await new Promise((r) => setTimeout(r, 200));
-        }
-      }
-    } finally {
-      setExporting(false);
-    }
-  }, [festivalId]);
   const [activeStage, setActiveStage] = useState<string[]>([]);
   const [editingPseudo, setEditingPseudo] = useState(false);
   const [pseudoDraft, setPseudoDraft] = useState(userName);
@@ -515,38 +476,7 @@ export function JournalScreen({
         </div>
 
         {/* ── Section gestion discrète en bas ── */}
-        {journal.length > 0 && (
-          <div style={{
-            marginTop: 32,
-            paddingTop: 20,
-            borderTop: "1px solid rgba(255,255,255,0.07)",
-            display: "grid",
-            gap: 10,
-            padding: "20px 12px 40px",
-          }}>
-            <button
-              onClick={handleExportPhotos}
-              disabled={exporting}
-              style={{
-                width: "100%",
-                borderRadius: 999,
-                padding: "16px 20px",
-                border: "none",
-                background: `linear-gradient(135deg, ${haloMain} 0%, ${haloLight} 100%)`,
-                boxShadow: `0 0 18px ${haloGlow}, 0 4px 20px ${haloGlowSft}`,
-                color: "rgba(0,0,0,0.85)",
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: exporting ? "not-allowed" : "pointer",
-                fontFamily: "inherit",
-                letterSpacing: "0.03em",
-                opacity: exporting ? 0.45 : 1,
-              }}
-            >
-              {exporting ? "Export en cours…" : "Exporter mes photos 📸"}
-            </button>
-          </div>
-        )}
+        {/* Bouton export photos déplacé dans RecapScreen */}
 
         </div>{/* fin corps scrollable */}
       </div>

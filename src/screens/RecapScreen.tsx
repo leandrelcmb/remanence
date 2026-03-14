@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { JournalItem } from "../core/store/service";
 import type { Festival, UserProfile } from "../core/models/types";
-import { listFestivalContacts } from "../core/store/service";
+import { listFestivalContacts, getEntriesWithPhotos } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
 import { formatTime } from "./utils";
 
@@ -110,6 +110,39 @@ function StatCard({ value, label }: { value: string; label: string }) {
 
 export function RecapScreen({ journal, festival, user, festivalId, onBack }: Props) {
   const [contactCount, setContactCount] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPhotos = useCallback(async () => {
+    setExporting(true);
+    try {
+      const photos = await getEntriesWithPhotos(festivalId);
+      if (photos.length === 0) {
+        alert("Aucune photo à exporter dans ce festival.");
+        return;
+      }
+      const files: File[] = photos.map((p, i) => {
+        const base64 = p.photo.includes(",") ? p.photo.split(",")[1] : p.photo;
+        const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+        const name = `${(p.artistName || "artiste").replace(/[^a-z0-9]/gi, "_")}-${(p.stageName || "scene").replace(/[^a-z0-9]/gi, "_")}-${i + 1}.jpg`;
+        return new File([bytes], name, { type: "image/jpeg" });
+      });
+      if (navigator.canShare?.({ files })) {
+        await navigator.share({ files, title: "Mes souvenirs Rémanence" });
+      } else {
+        for (const file of files) {
+          const url = URL.createObjectURL(file);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = file.name;
+          a.click();
+          URL.revokeObjectURL(url);
+          await new Promise((r) => setTimeout(r, 200));
+        }
+      }
+    } finally {
+      setExporting(false);
+    }
+  }, [festivalId]);
 
   // Fetch du nombre de contacts (lecture seule)
   useEffect(() => {
@@ -312,6 +345,29 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
         {photos.length > 0 && (
           <section>
             <p style={SECTION_TITLE}>Instants capturés</p>
+
+            {/* Bouton export */}
+            <button
+              onClick={handleExportPhotos}
+              disabled={exporting}
+              style={{
+                width: "100%",
+                borderRadius: 999,
+                padding: "14px 20px",
+                border: "none",
+                background: exporting ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.88)",
+                color: "rgba(0,0,0,0.85)",
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: exporting ? "not-allowed" : "pointer",
+                fontFamily: "inherit",
+                letterSpacing: "0.03em",
+                opacity: exporting ? 0.55 : 1,
+                marginBottom: 12,
+              }}
+            >
+              {exporting ? "Export en cours…" : "Exporter mes photos 📸"}
+            </button>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {photos.map((item) => (
                 <div key={item.id}>
@@ -332,7 +388,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
 
         {/* Signature discrète */}
         {user && (
-          <p style={{ textAlign: "center", fontSize: 13, opacity: 0.25, margin: 0 }}>
+          <p style={{ textAlign: "center", fontSize: 13, opacity: 0.25, margin: 0, fontStyle: "italic" }}>
             Journal de {user.displayName} · {festival?.name ?? "Festival"}
           </p>
         )}

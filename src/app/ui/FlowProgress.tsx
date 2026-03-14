@@ -1,7 +1,7 @@
 import type { FlowScreen } from "../flow/types";
 
-const FULL_STEPS: FlowScreen[]    = ["capture", "setInfo", "color", "energy", "focus", "text"];
-const EXPRESS_STEPS: FlowScreen[] = ["capture", "setInfo", "color", "energy", "focus"];
+const FULL_STEPS: FlowScreen[]    = ["capture", "scenePicker", "colorEnergy", "focus", "text"];
+const EXPRESS_STEPS: FlowScreen[] = ["capture", "scenePicker", "colorEnergy", "focus"];
 
 export function FlowProgress({ screen, express = false }: { screen: FlowScreen; express?: boolean }) {
   const steps = express ? EXPRESS_STEPS : FULL_STEPS;

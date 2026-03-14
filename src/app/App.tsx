@@ -10,6 +10,8 @@ import { useDraftFlow } from "../hooks/useDraftFlow";
 import { useAmbientColor } from "../hooks/useAmbientColor";
 
 import { LandingScreen } from "../screens/LandingScreen";
+import { ScenePickerScreen } from "../screens/ScenePickerScreen";
+import { ColorEnergyScreen } from "../screens/ColorEnergyScreen";
 import { SetInfoScreen } from "../screens/SetInfoScreen";
 import { ColorScreen } from "../screens/ColorScreen";
 import { EnergyScreen } from "../screens/EnergyScreen";
@@ -40,8 +42,8 @@ import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
 
-const FULL_FLOW_SCREENS: FlowScreen[]    = ["capture", "setInfo", "color", "energy", "focus", "text"];
-const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["capture", "setInfo", "color", "energy", "focus"];
+const FULL_FLOW_SCREENS: FlowScreen[]    = ["capture", "scenePicker", "colorEnergy", "focus", "text"];
+const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["capture", "scenePicker", "colorEnergy", "focus"];
 
 // Données préservées lors d'une édition (non modifiables)
 type EditingEntry = {
@@ -137,6 +139,7 @@ export default function App() {
       artistName: item.artistName,
       stageName: item.stageName,
       style: item.style ?? "",
+      ephemeral: false,
       energy: item.energy,
       focus: item.focus,
       colorHex: item.colorHex,
@@ -149,7 +152,7 @@ export default function App() {
       startTime: item.startTime,
       createdAt: item.createdAt,
     });
-    navigate("setInfo", "forward");
+    navigate("scenePicker", "forward");
   }
 
   async function handleDelete(item: JournalItem) {
@@ -254,16 +257,7 @@ export default function App() {
       haloFilterTransition={haloFilterTransition}
     >
       {/* Journal : pleine largeur (pas de padding horizontal) */}
-      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "sante" || screen === "chasse" || screen === "comingSoon" || screen === "divers" || screen === "anecdotes" || screen === "constellation") ? 0 : "40px 12px" }}>
-
-        {/* Header : uniquement sur la landing */}
-        {screen === "landing" && (
-          <div style={{ marginBottom: 25 }}>
-            <h1 style={{ fontSize: 20, fontWeight: 300, margin: 0 }}>
-              Pour des souvenirs uniques ♫⋆｡♪ ₊˚♬ ﾟ.
-            </h1>
-          </div>
-        )}
+      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "sante" || screen === "chasse" || screen === "comingSoon" || screen === "divers" || screen === "anecdotes" || screen === "constellation" || screen === "scenePicker") ? 0 : "40px 12px" }}>
 
         {/* Indicateur de progression dans le flux de capture */}
         {isFlowScreen && <FlowProgress screen={screen} express={expressMode} />}
@@ -300,12 +294,41 @@ export default function App() {
             />
           )}
 
+          {/* ── Nouveau flux de capture ── */}
+          {screen === "scenePicker" && (
+            <ScenePickerScreen
+              draft={draft}
+              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+              onNext={() => navigate("colorEnergy", "forward")}
+              onBack={() => editingEntry ? navigate("detail", "backward") : navigate("capture", "backward")}
+            />
+          )}
+
+          {screen === "colorEnergy" && (
+            <ColorEnergyScreen
+              draft={draft}
+              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+              onNext={() => navigate("focus", "forward")}
+              onBack={() => navigate("scenePicker", "backward")}
+            />
+          )}
+
+          {screen === "focus" && (
+            <FocusScreen
+              focus={draft.focus}
+              onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
+              onNext={() => (expressMode || draft.ephemeral) ? finish() : navigate("text", "forward")}
+              onBack={() => navigate("colorEnergy", "backward")}
+            />
+          )}
+
+          {/* ── Anciens écrans (conservés pour rétrocompatibilité) ── */}
           {screen === "setInfo" && (
             <SetInfoScreen
               draft={draft}
               artistSuggestions={artistSuggestions}
               onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-              onNext={() => navigate("color", "forward")}
+              onNext={() => navigate("colorEnergy", "forward")}
               onBack={() => editingEntry ? navigate("detail", "backward") : navigate("capture", "backward")}
             />
           )}
@@ -314,8 +337,8 @@ export default function App() {
             <ColorScreen
               selectedColor={draft.colorHex}
               onSelect={(c) => setDraft((d) => ({ ...d, colorHex: c }))}
-              onNext={() => navigate("energy", "forward")}
-              onBack={() => navigate("setInfo", "backward")}
+              onNext={() => navigate("colorEnergy", "forward")}
+              onBack={() => navigate("scenePicker", "backward")}
             />
           )}
 
@@ -324,16 +347,7 @@ export default function App() {
               draft={draft}
               onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
               onNext={() => navigate("focus", "forward")}
-              onBack={() => navigate("color", "backward")}
-            />
-          )}
-
-          {screen === "focus" && (
-            <FocusScreen
-              focus={draft.focus}
-              onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
-              onNext={() => expressMode ? finish() : navigate("text", "forward")}
-              onBack={() => navigate("energy", "backward")}
+              onBack={() => navigate("colorEnergy", "backward")}
             />
           )}
 
@@ -352,7 +366,7 @@ export default function App() {
               photo={draft.photo}
               onPhoto={handlePhoto}
               onClearPhoto={() => setDraft((d) => ({ ...d, photo: undefined }))}
-              onFinish={() => navigate("setInfo", "forward")}
+              onFinish={() => navigate("scenePicker", "forward")}
               onBack={() => navigate("landing", "backward")}
             />
           )}
