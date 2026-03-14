@@ -1,5 +1,24 @@
 import { useState, useRef, useMemo } from "react";
 
+// ── Utilitaire couleur ────────────────────────────────────────────────────────
+// energyTint() renvoie du rgb(...) → on convertit en rgba() pour les CSS inline
+function toRgba(color: string, alpha: number): string {
+  const v = color.trim();
+  if (v.startsWith("rgb(")) {
+    return v.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
+  }
+  if (v.startsWith("#")) {
+    const h = v.replace("#", "");
+    if (h.length === 6) {
+      const r = parseInt(h.slice(0, 2), 16);
+      const g = parseInt(h.slice(2, 4), 16);
+      const b = parseInt(h.slice(4, 6), 16);
+      if (![r, g, b].some(Number.isNaN)) return `rgba(${r},${g},${b},${alpha})`;
+    }
+  }
+  return `rgba(0,255,183,${alpha})`; // fallback
+}
+
 // ── Session mood (persist tant que l'app est ouverte, pas par session de composant) ─
 let _sessionMood: CheckinMood | null = null;
 
@@ -918,8 +937,8 @@ export function SanteScreen({ onBack, onRisques, haloColor = "#00FFB7" }: Props)
             padding: "14px 16px",
             borderRadius: 18,
             background: "rgba(255,255,255,0.04)",
-            border: `1px solid ${haloColor}44`,
-            boxShadow: `0 0 12px ${haloColor}14`,
+            border: `1px solid ${toRgba(haloColor, 0.40)}`,
+            boxShadow: `0 0 14px ${toRgba(haloColor, 0.12)}`,
             cursor: "pointer",
             fontFamily: "inherit",
             color: "white",
