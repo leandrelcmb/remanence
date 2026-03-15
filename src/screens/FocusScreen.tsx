@@ -19,31 +19,14 @@ const FOCUSES: [FocusKey, string, string][] = [
   ["body", "🕺", "Corps"],
 ];
 
-function hexToRgbStr(hex: string): string {
-  const m = hex.replace("#", "").match(/.{2}/g);
-  if (!m || m.length < 3) return "200,180,255";
-  return m.slice(0, 3).map((h) => parseInt(h, 16)).join(",");
-}
-
-export function FocusScreen({ haloColor, onSelect, onNext, onBack, onFocusFlare }: Props) {
+// Note: haloColor est toujours passé en prop pour rester cohérent avec le reste
+// du flux, mais les animations CSS utilisent désormais la CSS var --halo-rgb
+// publiée par App.tsx — ce qui garantit leur fiabilité sur iOS Safari PWA.
+export function FocusScreen({ onSelect, onNext, onBack, onFocusFlare }: Props) {
   const btnRefs = useRef<Record<FocusKey, HTMLButtonElement | null>>({} as Record<FocusKey, HTMLButtonElement | null>);
   // État local : null au montage (aucun bouton pré-sélectionné visuellement)
   // Initialisé à null → évite la pré-sélection à chaque visite du composant
   const [localFocus, setLocalFocus] = useState<FocusKey | null>(null);
-
-  const rgb = hexToRgbStr(haloColor);
-
-  const burstCSS = `
-    @keyframes focus-burst {
-      0%   { transform: scale(1);    box-shadow: 0 0 0px 0px rgba(${rgb},0); }
-      22%  { transform: scale(1.07); box-shadow: 0 0 22px 10px rgba(${rgb},0.55); }
-      100% { transform: scale(1);    box-shadow: 0 0 10px 4px rgba(${rgb},0.20); }
-    }
-    @keyframes focusGlowPulse {
-      0%, 100% { box-shadow: inset 0 0 0 1px rgba(${rgb},0.35), 0 0 20px 8px rgba(${rgb},0.30), 0 0 5px 2px rgba(${rgb},0.55); }
-      50%       { box-shadow: inset 0 0 0 1px rgba(${rgb},0.50), 0 0 28px 12px rgba(${rgb},0.45), 0 0 8px 3px rgba(${rgb},0.70); }
-    }
-  `;
 
   function handleSelect(f: FocusKey) {
     // Supprimer le pulse du bouton précédemment actif
@@ -68,7 +51,6 @@ export function FocusScreen({ haloColor, onSelect, onNext, onBack, onFocusFlare 
 
   return (
     <div style={{ display: "grid", gap: 120, minHeight: "85dvh", alignContent: "center" }}>
-      <style>{burstCSS}</style>
 
       <p style={{ opacity: 0.86, fontSize: 23, margin: 0, textAlign: "center" }}>
         🎭 Où cela s'est joué ?
@@ -86,13 +68,13 @@ export function FocusScreen({ haloColor, onSelect, onNext, onBack, onFocusFlare 
                 borderRadius: 22,
                 padding: "20px",
                 border: active
-                  ? `2px solid rgba(${rgb},0.70)`
+                  ? "2px solid rgba(var(--halo-rgb, 100,200,200), 0.70)"
                   : "1px solid rgba(255,255,255,0.15)",
                 background: active
-                  ? `rgba(${rgb},0.15)`
+                  ? "rgba(var(--halo-rgb, 100,200,200), 0.15)"
                   : "rgba(255,255,255,0.05)",
                 boxShadow: active
-                  ? `inset 0 0 0 1px rgba(${rgb},0.35), 0 0 20px 8px rgba(${rgb},0.30), 0 0 5px 2px rgba(${rgb},0.55)`
+                  ? "inset 0 0 0 1px rgba(var(--halo-rgb, 100,200,200), 0.35), 0 0 20px 8px rgba(var(--halo-rgb, 100,200,200), 0.30), 0 0 5px 2px rgba(var(--halo-rgb, 100,200,200), 0.55)"
                   : undefined,
                 color: "white",
                 cursor: "pointer",
