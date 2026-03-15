@@ -122,8 +122,10 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
       preserveAspectRatio="none"
       style={{
         position: "fixed",
-        inset: 0,
-        width: "100vw",
+        top: 0,
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: "min(100vw, 430px)",
         height: "100dvh",
         pointerEvents: "none",
         zIndex: 2,
