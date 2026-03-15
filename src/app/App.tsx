@@ -1,568 +1,1210 @@
-import { useState, useEffect } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type TouchEvent as ReactTouchEvent,
+} from "react";
 import { RootLayout } from "./RootLayout";
-import { createSetEntry, updateJournalItem, deleteJournalItem } from "../core/store/service";
+import { ensureBootstrap, createSetEntry, listJournalItems } from "../core/store/service";
+import type { FlowScreen, Draft } from "./flow/types";
 import type { JournalItem } from "../core/store/service";
-import { energyTint } from "./ui/EnergyDots";
-import type { FlowScreen } from "./flow/types";
+import { softHaptic } from "./flow/haptics";
+import { EnergyDots, energyTint } from "./ui/EnergyDots";
+import { RoundButton } from "./ui/RoundButton";
+import { ARTISTS } from "./data/artists";
 
-import { useJournal } from "../hooks/useJournal";
-import { useDraftFlow } from "../hooks/useDraftFlow";
-import { useAmbientColor } from "../hooks/useAmbientColor";
+const RGB_COLORS = [
+  "#FF3B30",
+  "#FF9500",
+  "#FFD60A",
+  "#34C759",
+  "#00C7BE",
+  "#0A84FF",
+  "#5E5CE6",
+  "#BF5AF2",
+  "#FF2D55",
+  "#FFFFFF",
+];
 
-import { LandingScreen } from "../screens/LandingScreen";
-import { ScenePickerScreen } from "../screens/ScenePickerScreen";
-import { ColorEnergyScreen } from "../screens/ColorEnergyScreen";
-import { SetInfoScreen } from "../screens/SetInfoScreen";
-import { ColorScreen } from "../screens/ColorScreen";
-import { EnergyScreen } from "../screens/EnergyScreen";
-import { FocusScreen } from "../screens/FocusScreen";
-import { TextScreen } from "../screens/TextScreen";
-import { CaptureScreen } from "../screens/CaptureScreen";
-import { DoneScreen } from "../screens/DoneScreen";
-import type { LastSavedEntry } from "../screens/DoneScreen";
-import { JournalScreen } from "../screens/JournalScreen";
-import { DetailScreen } from "../screens/DetailScreen";
-import { ConstellationScreen } from "../screens/ConstellationScreen";
-import { OnboardingScreen } from "../screens/OnboardingScreen";
-import { FestivalPickerScreen } from "../screens/FestivalPickerScreen";
-import { ContactsScreen } from "../screens/ContactsScreen";
-import { RecapScreen } from "../screens/RecapScreen";
-import { GamesScreen } from "../screens/GamesScreen";
-import { ChasseScreen } from "../screens/ChasseScreen";
-import { IntrospectionScreen } from "../screens/IntrospectionScreen";
-import { TreasureScreen } from "../screens/TreasureScreen";
-import { TheoriesScreen } from "../screens/TheoriesScreen";
-import { AnecdotesScreen } from "../screens/AnecdotesScreen";
-import { DiversScreen } from "../screens/DiversScreen";
-import { SanteScreen } from "../screens/SanteScreen";
-import { ReductionRisquesScreen } from "../screens/ReductionRisquesScreen";
-import { ProgrammationScreen } from "../screens/ProgrammationScreen";
-import { ComingSoonScreen } from "../screens/ComingSoonScreen";
-import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
-import { getActiveChasse, clearActiveChasse } from "../core/store/repo";
-import { FlowProgress } from "./ui/FlowProgress";
-import { ScreenTransition } from "./ui/ScreenTransition";
-import type { AnimDir } from "./ui/ScreenTransition";
+const STAGES = [
+  { name: "Main Stage", emoji: "🌞" },
+  { name: "Dragon Nest", emoji: "🐉" },
+  { name: "Chill Out Dome", emoji: "🌙" },
+  { name: "Pumpui", emoji: "🎪" },
+];
 
-const FULL_FLOW_SCREENS: FlowScreen[]    = ["capture", "scenePicker", "colorEnergy", "focus", "text"];
-const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["capture", "scenePicker", "colorEnergy", "focus"];
+type ExtraScreen = "detail" | "constellation";
+type DetailBackTarget = "journal" | "constellation";
 
-// Dérive les valeurs RGB d'une couleur hex ou rgb() — utilisé pour la CSS var --halo-rgb
-function parseHaloColor(color: string): [number, number, number] {
-  const v = color.trim();
-  if (v.startsWith("#")) {
-    const h = v.replace("#", "");
-    if (h.length === 6) {
-      const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
-      if (![r, g, b].some(Number.isNaN)) return [r, g, b];
-    }
-  }
-  const m = v.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
-  if (m) return [+m[1], +m[2], +m[3]];
-  return [0, 255, 183];
+function createEmptyDraft(): Draft {
+  return {
+    artistName: "",
+    stageName: "",
+    style: "",
+    energy: 5,
+    focus: null,
+    colorHex: "#5E5CE6",
+    feelingText: "",
+    learningText: "",
+    photo: undefined,
+  };
 }
 
-// Données préservées lors d'une édition (non modifiables)
-type EditingEntry = {
-  id: string;
-  startTime: string;
-  createdAt: string;
-};
-
 export default function App() {
-  const [screen, setScreen] = useState<FlowScreen>("landing");
-  const [animDir, setAnimDir] = useState<AnimDir>("neutral");
+  const [screen, setScreen] = useState<FlowScreen | ExtraScreen>("landing");
+  const [detailBackTarget, setDetailBackTarget] = useState<DetailBackTarget>("journal");
+
+  const [status, setStatus] = useState("Boot…");
+  const [festivalId, setFestivalId] = useState<string>("");
+
+  const [journal, setJournal] = useState<JournalItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<JournalItem | null>(null);
-  const [detailBackTarget, setDetailBackTarget] = useState<"journal" | "constellation">("journal");
-  const [lastSavedColor, setLastSavedColor] = useState<string | null>(null);
-  const [lastSavedEntry, setLastSavedEntry] = useState<LastSavedEntry | null>(null);
-  const [transitioning, setTransitioning] = useState(false);
-  const [fadingOut, setFadingOut] = useState(false);
-  const [haloFilter, setHaloFilter] = useState("brightness(1)");
-  const [haloFilterTransition, setHaloFilterTransition] = useState("filter 1.5s ease-in-out");
 
-  // null = mode création, objet = mode édition
-  const [editingEntry, setEditingEntry] = useState<EditingEntry | null>(null);
+const [lastSavedColor, setLastSavedColor] = useState<string | null>(null);
 
-  // true = parcours raccourci (capture → setInfo → color → energy → focus → done)
-  const [expressMode, setExpressMode] = useState(false);
+const [constellationZoom, setConstellationZoom] = useState(1);
+const pinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
 
-  // Type de chasse sélectionné depuis GamesScreen
-  const [chasseType, setChasseType] = useState<ChasseType>("chromatic");
+  const [draft, setDraft] = useState<Draft>(createEmptyDraft());
+  // Garde l'affichage "actif" du focus isolé de draft.focus pour éviter la pré-sélection à l'arrivée
+  const [focusDisplayed, setFocusDisplayed] = useState<Draft["focus"]>(null);
 
-  // Session de chasse active (persistée dans IndexedDB)
-  const [activeChasse, setActiveChasse] = useState<ChasseActiveSession | null>(null);
+  const artistSuggestions = useMemo(() => {
+    const value = draft.artistName.trim().toLowerCase();
+    if (!value) return [];
 
-  const { draft, setDraft, resetDraft, artistSuggestions, handleCameraPhoto, handleGalleryPhoto } = useDraftFlow();
-  const { booting, profileReady, saveProfile, user, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
-  const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
-    screen,
-    draft,
-    journal,
-    selectedItem,
-    lastSavedColor,
-  });
+    return ARTISTS
+      .filter((a) => a.toLowerCase().includes(value))
+      .filter((a) => a.toLowerCase() !== value)
+      .slice(0, 5);
+  }, [draft.artistName]);
 
-  // Expose la couleur du halo en CSS custom property pour les RoundButton primaires
-  useEffect(() => {
-    const [r, g, b] = parseHaloColor(haloColor);
-    document.documentElement.style.setProperty("--halo-rgb", `${r}, ${g}, ${b}`);
-  }, [haloColor]);
-
-  // Charger la session de chasse active au montage
-  useEffect(() => {
-    getActiveChasse().then((s) => {
-      if (s && s.timerExpiresAt > Date.now()) {
-        setActiveChasse(s);
-      } else if (s) {
-        clearActiveChasse(); // expirée → nettoyer silencieusement
-      }
-    });
-  }, []);
-
-  /** Navigation avec direction d'animation */
-  function navigate(target: FlowScreen, dir: AnimDir = "neutral") {
-    setAnimDir(dir);
-    setScreen(target);
+  function resetDraft() {
+    setDraft(createEmptyDraft());
   }
 
-  /** Navigation avec cross-fade + flambée du halo — pour les CTA principaux */
-  function navigateWithFlare(target: FlowScreen, dir: AnimDir = "flare") {
-    // Spike instantané : saturate + brightness pour garder la couleur vivante (pas de blanc)
-    setHaloFilterTransition("filter 0.08s ease");
-    setHaloFilter("saturate(2.5) brightness(2.0)");
-    setTransitioning(true); // scale boost
-    setFadingOut(true);     // écran courant s'efface (0.55s)
-    setTimeout(() => {
-      setFadingOut(false);
-      navigate(target, dir); // nouvel écran apparaît en bloom (0.75s)
-      // Fade-back long et doux : léger au début, effilochement à la fin
-      setHaloFilterTransition("filter 2.5s ease-in-out");
-      setHaloFilter("brightness(1)");
-      setTimeout(() => setTransitioning(false), 900);
-    }, 550);
-  }
-
-  /** Éclat doux du halo au tap sur un choix Focus (moins intense que navigateWithFlare) */
-  function triggerFocusFlare() {
-    setHaloFilterTransition("filter 0.08s ease");
-    setHaloFilter("saturate(1.8) brightness(1.5)");
-    setTimeout(() => {
-      setHaloFilterTransition("filter 2s ease-in-out");
-      setHaloFilter("brightness(1)");
-    }, 200);
-  }
-
-  function startNewRemanence(express = false) {
+  function startNewRemanence() {
     resetDraft();
     setSelectedItem(null);
-    setEditingEntry(null);
-    setExpressMode(express);
-    navigateWithFlare("capture"); // "flare" par défaut → bloom cinématique
+    setScreen("setInfo");
   }
 
-  function openDetail(item: JournalItem, from: "journal" | "constellation") {
-    setSelectedItem(item);
-    setDetailBackTarget(from);
-    navigate("detail", "forward");
-  }
+  function handlePhoto(e: ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-  function startEditing(item: JournalItem) {
-    setDraft({
-      artistName: item.artistName,
-      stageName: item.stageName,
-      style: item.style ?? "",
-      ephemeral: false,
-      energy: item.energy,
-      focus: item.focus,
-      colorHex: item.colorHex,
-      feelingText: item.feelingText,
-      learningText: item.learningText,
-      photo: item.photo,
-    });
-    setEditingEntry({
-      id: item.id,
-      startTime: item.startTime,
-      createdAt: item.createdAt,
-    });
-    navigate("scenePicker", "forward");
-  }
+  const reader = new FileReader();
 
-  async function handleDelete(item: JournalItem) {
-    if (!festivalId) return;
-    await deleteJournalItem(item.id);
-    await refreshJournal(festivalId);
-    navigate(detailBackTarget === "constellation" ? "constellation" : "journal", "backward");
-  }
+  reader.onload = () => {
+    setDraft((d) => ({
+      ...d,
+      photo: reader.result as string,
+    }));
+  };
 
-  async function finish() {
-    if (!festivalId) return;
+  reader.readAsDataURL(file);
+}
 
-    if (editingEntry) {
-      await updateJournalItem({
-        id: editingEntry.id,
-        festivalId,
-        artistName: draft.artistName,
-        style: draft.style,
-        stageName: draft.stageName,
-        energy: draft.energy,
-        focus: draft.focus ?? "body",
-        colorHex: draft.colorHex,
-        feelingText: draft.feelingText,
-        learningText: draft.learningText,
-        photo: draft.photo,
-        originalStartTime: editingEntry.startTime,
-        originalCreatedAt: editingEntry.createdAt,
-      });
+function handleConstellationTouchStart(e: ReactTouchEvent<HTMLDivElement>) {
+  if (e.touches.length !== 2) return;
 
-      await refreshJournal(festivalId);
-      setEditingEntry(null);
-      resetDraft();
-      navigate("journal", "forward");
-    } else {
-      // On capture les infos AVANT de réinitialiser le draft
-      const savedColor = energyTint(draft.colorHex, draft.energy);
-      const savedEntry: LastSavedEntry = {
-        artistName: draft.artistName,
-        stageName: draft.stageName,
-        energy: draft.energy,
-        colorHex: draft.colorHex,
-        focus: draft.focus ?? "body",
-        photo: draft.photo,
+  pinchStartRef.current = {
+    distance: getTouchDistance(e.touches),
+    zoom: constellationZoom,
+  };
+}
+
+function handleConstellationTouchMove(e: ReactTouchEvent<HTMLDivElement>) {
+  if (e.touches.length !== 2 || !pinchStartRef.current) return;
+
+  e.preventDefault();
+
+  const currentDistance = getTouchDistance(e.touches);
+  if (!currentDistance) return;
+
+  const nextZoom =
+    pinchStartRef.current.zoom *
+    (currentDistance / pinchStartRef.current.distance);
+
+  setConstellationZoom(clamp(nextZoom, 1, 3));
+}
+
+function handleConstellationTouchEnd() {
+  pinchStartRef.current = null;
+}
+
+  const displayDraftColor = useMemo(() => {
+    return energyTint(draft.colorHex, draft.energy);
+  }, [draft.colorHex, draft.energy]);
+
+const latestJournalColor = useMemo(() => {
+  if (journal.length === 0) return displayDraftColor;
+
+  const latest = [...journal].sort(
+    (a, b) =>
+      new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+  )[0];
+
+  return energyTint(latest.colorHex, latest.energy);
+}, [journal, displayDraftColor]);
+
+  const constellationBounds = useMemo(() => {
+    if (journal.length === 0) return null;
+
+    const times = journal.map((item) => new Date(item.startTime).getTime());
+    return {
+      min: Math.min(...times),
+      max: Math.max(...times),
+    };
+  }, [journal]);
+
+  const constellationStars = useMemo(() => {
+    return journal.map((item, index) => {
+      const displayColor = energyTint(item.colorHex, item.energy);
+      const x = 8 + ((item.energy - 1) / 9) * 84;
+
+      const time = new Date(item.startTime).getTime();
+
+      let y = 50;
+      if (constellationBounds && constellationBounds.max !== constellationBounds.min) {
+        const ratio =
+          (time - constellationBounds.min) /
+          (constellationBounds.max - constellationBounds.min);
+
+        y = 92 - ratio * 84;
+      }
+
+      const wobbleX = ((index % 3) - 1) * 2.2;
+      const wobbleY = ((index % 4) - 1.5) * 1.8;
+      const starSize = 16 + item.energy * 1.35;
+      const glowSize = 18 + item.energy * 2.8;
+
+      return {
+        item,
+        displayColor,
+        x: x + wobbleX,
+        y: y + wobbleY,
+        starSize,
+        glowSize,
       };
+    });
+  }, [journal, constellationBounds]);
 
-      await createSetEntry({
-        festivalId,
-        artistName: draft.artistName,
-        style: draft.style,
-        stageName: draft.stageName,
-        energy: draft.energy,
-        focus: draft.focus ?? "body",
-        colorHex: draft.colorHex,
-        feelingText: draft.feelingText,
-        learningText: draft.learningText,
-        photo: draft.photo,
-        startTime: draft.photoTime, // EXIF galerie → timestamp réel ; undefined → nowISO()
-      });
+  const constellationLinks = useMemo(() => {
+    const links: Array<{
+      a: (typeof constellationStars)[number];
+      b: (typeof constellationStars)[number];
+      opacity: number;
+      duration: number;
+    }> = [];
 
-      await refreshJournal(festivalId);
-      setLastSavedColor(savedColor);
-      setLastSavedEntry(savedEntry);
-      resetDraft();
-      navigate("done", "forward");
+    for (let i = 0; i < constellationStars.length; i++) {
+      for (let j = i + 1; j < constellationStars.length; j++) {
+        const a = constellationStars[i];
+        const b = constellationStars[j];
+
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const maxDistance = 18;
+
+        if (distance < maxDistance) {
+          const ratio = 1 - distance / maxDistance;
+          const opacity = 0.03 + ratio * 0.24;
+          const duration = 3.4 + ((i + j) % 4) * 0.7;
+
+          links.push({ a, b, opacity, duration });
+        }
+      }
     }
+
+    return links;
+  }, [constellationStars]);
+
+  const haloOpacity = useMemo(() => {
+    if (screen === "focus" && !draft.focus) return 0.07; // halo discret avant le choix
+    if (screen === "energy") return 0.12 + draft.energy * 0.02;
+    if (screen === "color") return 0.28;
+    if (screen === "done") return 0.22;
+    if (screen === "journal") return 0.12;
+    if (screen === "constellation") return 0.1;
+    if (screen === "detail" && selectedItem) {
+      return 0.16 + selectedItem.energy * 0.015;
+    }
+    return 0.16;
+  }, [screen, draft.focus, draft.energy, selectedItem]);
+
+  const haloScale = useMemo(() => {
+    if (screen === "landing") return 1.1;
+    if (screen === "focus" && !draft.focus) return 0.72; // petit avant le choix
+    if (screen === "energy") {
+      return 1 + (draft.energy / 10) * 0.5;
+    }
+
+    if (screen === "color") return 1.35;
+    if (screen === "done") return 1.25;
+    if (screen === "journal") return 1.08;
+    if (screen === "constellation") return 1.04;
+    if (screen === "detail" && selectedItem) {
+      return 1 + (selectedItem.energy / 10) * 0.35;
+    }
+
+    return 1.15;
+  }, [screen, draft.focus, draft.energy, selectedItem]);
+
+  const haloCenterY = useMemo(() => {
+    if (screen === "detail" && selectedItem) {
+      if (selectedItem.focus === "mental") return 35;
+      if (selectedItem.focus === "emotion") return 50;
+      return 75;
+    }
+
+    if (draft.focus === "mental") return 35;
+    if (draft.focus === "emotion") return 50;
+    if (draft.focus === "body") return 75;
+    return 50; // null → centré, en attente du choix
+  }, [screen, draft.focus, selectedItem]);
+
+  const haloColor = useMemo(() => {
+  if (screen === "detail" && selectedItem) {
+    return energyTint(selectedItem.colorHex, selectedItem.energy);
   }
 
-  // ── Pendant le boot initial : juste le halo ──
-  if (booting) {
-    return (
-      <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
-        <div />
-      </RootLayout>
-    );
+  if (screen === "done" && lastSavedColor) {
+    return lastSavedColor;
   }
 
-  // ── Première visite : onboarding ──
-  if (!profileReady) {
-    return (
-      <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
-        <div style={{ position: "relative", zIndex: 1, padding: "40px 12px" }}>
-          <ScreenTransition screenKey="onboarding" direction="neutral">
-            <OnboardingScreen onSave={saveProfile} />
-          </ScreenTransition>
-        </div>
-      </RootLayout>
-    );
+  if (
+    screen === "landing" ||
+    screen === "journal" ||
+    screen === "constellation"
+  ) {
+    return latestJournalColor;
   }
 
-  const flowScreens = expressMode ? EXPRESS_FLOW_SCREENS : FULL_FLOW_SCREENS;
-  const isFlowScreen = flowScreens.includes(screen);
+  return displayDraftColor;
+}, [screen, selectedItem, displayDraftColor, latestJournalColor, lastSavedColor]);
 
-  // Scale boost pendant la transition (le brightness est géré via filter dans Halo)
-  const effectiveScale = transitioning ? haloScale * 1.6 : haloScale;
+  const canContinueSetInfo = draft.artistName.trim().length > 0;
+
+  const constellationCss = `
+    @keyframes starPulse {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.82;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.16);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.82;
+      }
+    }
+
+    @keyframes linkBreath {
+      0% {
+        opacity: 0.45;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.45;
+      }
+    }
+  `;
+
+  // Réinitialiser l'affichage sélectionné à chaque entrée sur l'écran focus
+  // useLayoutEffect : fire AVANT le paint → pas de flash d'un bouton actif
+  useLayoutEffect(() => {
+    if (screen === "focus") setFocusDisplayed(null);
+  }, [screen]);
+
+  useEffect(() => {
+    (async () => {
+      const { festival } = await ensureBootstrap();
+
+      setFestivalId(festival.id);
+
+      const items = await listJournalItems(festival.id);
+      setJournal(items);
+
+      setStatus(`Prêt (Festival: ${festival.name})`);
+    })().catch((e) => setStatus(`Erreur: ${String(e)}`));
+  }, []);
+
+    async function finish() {
+    if (!festivalId) return;
+
+    await createSetEntry({
+      festivalId,
+      artistName: draft.artistName,
+      style: draft.style,
+      stageName: draft.stageName,
+      energy: draft.energy,
+      focus: draft.focus ?? "body",
+      colorHex: draft.colorHex,
+      feelingText: draft.feelingText,
+      learningText: draft.learningText,
+      photo: draft.photo,
+    });
+
+    const items = await listJournalItems(festivalId);
+setJournal(items);
+
+setLastSavedColor(energyTint(draft.colorHex, draft.energy));
+resetDraft();
+setScreen("done");
+  }
 
   return (
     <RootLayout
       haloColor={haloColor}
       haloOpacity={haloOpacity}
-      haloScale={effectiveScale}
+      haloScale={haloScale}
       haloCenterY={haloCenterY}
-      haloFilter={haloFilter}
-      haloFilterTransition={haloFilterTransition}
     >
-      {/* Journal : pleine largeur (pas de padding horizontal) */}
-      <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "sante" || screen === "chasse" || screen === "comingSoon" || screen === "divers" || screen === "anecdotes" || screen === "constellation" || screen === "scenePicker" || screen === "programmation" || screen === "risques") ? 0 : "40px 12px" }}>
+      <style>{constellationCss}</style>
 
-        {/* Indicateur de progression dans le flux de capture */}
-        {isFlowScreen && <FlowProgress screen={screen} express={expressMode} />}
+{screen === "journal" && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: latestJournalColor,
+      opacity: 0.12,
+      pointerEvents: "none",
+      zIndex: 0,
+    }}
+  />
+)}
 
-        {/* ── Écran actif avec animation ── */}
-        {/* Le div extérieur porte le fade-out (cross-fade) ; ScreenTransition porte le fade-in */}
-        <div style={{ animation: fadingOut ? "screenFadeOut 0.55s ease-in-out both" : undefined }}>
-        <ScreenTransition screenKey={screen} direction={animDir}>
-
-          {screen === "landing" && (
-            <LandingScreen
-              festivalName={festival?.name ?? ""}
-              haloColor={haloColor}
-              onStart={() => startNewRemanence(false)}
-              onExpressStart={() => startNewRemanence(true)}
-              onJournal={() => navigate("journal", "forward")}
-              onConstellation={() => navigateWithFlare("constellation", "forward")}
-              onFestivalPicker={() => navigate("festivalPicker", "forward")}
-              onContacts={() => navigate("contacts", "forward")}
-              onGames={() => navigate("games", "forward")}
-              onSante={() => navigate("sante", "forward")}
-              onProgrammation={() => navigate("programmation", "forward")}
-              activeChasse={activeChasse ? {
-                chasseType: activeChasse.chasseType,
-                timerExpiresAt: activeChasse.timerExpiresAt,
-                resultLabel: activeChasse.result.label,
-                resultColor: activeChasse.result.color,
-                resultIcon: activeChasse.result.icon,
-              } : undefined}
-              onResumeChasse={() => {
-                if (!activeChasse) return;
-                setChasseType(activeChasse.chasseType);
-                navigate("chasse", "forward");
-              }}
-            />
-          )}
-
-          {/* ── Nouveau flux de capture ── */}
-          {screen === "scenePicker" && (
-            <ScenePickerScreen
-              draft={draft}
-              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-              onNext={() => navigate("colorEnergy", "forward")}
-              onBack={() => editingEntry ? navigate("detail", "backward") : navigate("capture", "backward")}
-            />
-          )}
-
-          {screen === "colorEnergy" && (
-            <ColorEnergyScreen
-              draft={draft}
-              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-              onNext={() => navigate("focus", "forward")}
-              onBack={() => navigate("scenePicker", "backward")}
-            />
-          )}
-
-          {screen === "focus" && (
-            <FocusScreen
-              focus={draft.focus}
-              haloColor={haloColor}
-              onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
-              onNext={() => (expressMode || draft.ephemeral) ? finish() : navigate("text", "forward")}
-              onBack={() => navigate("colorEnergy", "backward")}
-              onFocusFlare={triggerFocusFlare}
-            />
-          )}
-
-          {/* ── Anciens écrans (conservés pour rétrocompatibilité) ── */}
-          {screen === "setInfo" && (
-            <SetInfoScreen
-              draft={draft}
-              artistSuggestions={artistSuggestions}
-              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-              onNext={() => navigate("colorEnergy", "forward")}
-              onBack={() => editingEntry ? navigate("detail", "backward") : navigate("capture", "backward")}
-            />
-          )}
-
-          {screen === "color" && (
-            <ColorScreen
-              selectedColor={draft.colorHex}
-              onSelect={(c) => setDraft((d) => ({ ...d, colorHex: c }))}
-              onNext={() => navigate("colorEnergy", "forward")}
-              onBack={() => navigate("scenePicker", "backward")}
-            />
-          )}
-
-          {screen === "energy" && (
-            <EnergyScreen
-              draft={draft}
-              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-              onNext={() => navigate("focus", "forward")}
-              onBack={() => navigate("colorEnergy", "backward")}
-            />
-          )}
-
-          {screen === "text" && (
-            <TextScreen
-              feelingText={draft.feelingText}
-              learningText={draft.learningText}
-              onChangeDraft={(patch) => setDraft((d) => ({ ...d, ...patch }))}
-              onNext={finish}
-              onBack={() => navigate("focus", "backward")}
-            />
-          )}
-
-          {screen === "capture" && (
-            <CaptureScreen
-              photo={draft.photo}
-              onCameraPhoto={handleCameraPhoto}
-              onGalleryPhoto={handleGalleryPhoto}
-              onClearPhoto={() => setDraft((d) => ({ ...d, photo: undefined, photoTime: undefined }))}
-              onFinish={() => navigate("scenePicker", "forward")}
-              onBack={() => navigate("landing", "backward")}
-            />
-          )}
-
-          {screen === "done" && (
-            <DoneScreen
-              lastSavedColor={lastSavedColor}
-              lastSavedEntry={lastSavedEntry}
-              onHome={() => navigate("landing", "neutral")}
-            />
-          )}
-
-          {screen === "journal" && (
-            <JournalScreen
-              journal={journal}
-              latestJournalColor={latestJournalColor}
-              userName={user?.displayName ?? ""}
-              festivalId={festivalId ?? ""}
-              onSelectItem={(item) => openDetail(item, "journal")}
-              onHome={() => navigate("landing", "backward")}
-              onSavePseudo={saveProfile}
-              onRecap={() => navigate("recap", "forward")}
-            />
-          )}
-
-          {screen === "detail" && selectedItem && (
-            <DetailScreen
-              item={selectedItem}
-              backTarget={detailBackTarget}
-              onBack={() => navigate(detailBackTarget, "backward")}
-              onEdit={startEditing}
-              onDelete={handleDelete}
-              haloColor={haloColor}
-            />
-          )}
-
-          {screen === "constellation" && (
-            <ConstellationScreen
-              journal={journal}
-              festivalStart={festival?.startDate ?? ""}
-              festivalEnd={festival?.endDate ?? ""}
-              onSelectStar={(item) => openDetail(item, "constellation")}
-              onBack={() => navigate("landing", "backward")}
-            />
-          )}
-
-          {screen === "festivalPicker" && (
-            <FestivalPickerScreen
-              festivals={festivals}
-              activeFestivalId={festivalId}
-              onSwitch={(id) => { switchFestival(id); navigate("landing", "backward"); }}
-              onCreate={createFestival}
-              onBack={() => navigate("landing", "backward")}
-            />
-          )}
-
-          {screen === "contacts" && (
-            <ContactsScreen
-              festivalId={festivalId ?? ""}
-              festivalName={festival?.name ?? ""}
-              onBack={() => navigate("landing", "backward")}
-            />
-          )}
-
-          {screen === "recap" && (
-            <RecapScreen
-              journal={journal}
-              festival={festival}
-              user={user}
-              festivalId={festivalId ?? ""}
-              onBack={() => navigate("landing", "backward")}
-            />
-          )}
-
-          {screen === "games" && (
-            <GamesScreen
-              onBack={() => navigate("landing", "backward")}
-              onChasse={(type) => { setChasseType(type); navigate("chasse", "forward"); }}
-              onIntrospection={() => navigate("introspection", "forward")}
-              onTreasure={() => navigate("treasure", "forward")}
-              onTheories={() => navigate("theories", "forward")}
-              onAnecdotes={() => navigate("anecdotes", "forward")}
-              onDivers={() => navigate("divers", "forward")}
-              onComingSoon={() => navigate("comingSoon", "forward")}
-            />
-          )}
-
-          {screen === "introspection" && (
-            <IntrospectionScreen
-              haloColor={haloColor}
-              onBack={() => navigate("games", "backward")}
-            />
-          )}
-
-          {screen === "treasure" && (
-            <TreasureScreen onBack={() => navigate("games", "backward")} />
-          )}
-
-          {screen === "theories" && (
-            <TheoriesScreen
-              haloColor={haloColor}
-              onBack={() => navigate("games", "backward")}
-            />
-          )}
-
-          {screen === "chasse" && (
-            <ChasseScreen
-              chasseType={chasseType}
-              resumeSession={activeChasse ?? undefined}
-              haloColor={haloColor}
-              onBack={() => {
-                // Rafraîchir l'état de la session active après annulation/sauvegarde
-                setActiveChasse(null);
-                getActiveChasse().then((s) =>
-                  setActiveChasse(s && s.timerExpiresAt > Date.now() ? s : null)
-                );
-                navigate("games", "backward");
-              }}
-            />
-          )}
-
-          {screen === "anecdotes" && (
-            <AnecdotesScreen
-              haloColor={haloColor}
-              onBack={() => navigate("games", "backward")}
-            />
-          )}
-
-          {screen === "divers" && (
-            <DiversScreen
-              haloColor={haloColor}
-              onBack={() => navigate("games", "backward")}
-            />
-          )}
-
-          {screen === "sante" && (
-            <SanteScreen
-              onBack={() => navigate("landing", "backward")}
-              onRisques={() => navigate("risques", "forward")}
-              haloColor={haloColor}
-            />
-          )}
-
-          {screen === "risques" && (
-            <ReductionRisquesScreen onBack={() => navigate("sante", "backward")} />
-          )}
-
-          {screen === "programmation" && (
-            <ProgrammationScreen onBack={() => navigate("landing", "backward")} />
-          )}
-
-          {screen === "comingSoon" && (
-            <ComingSoonScreen onBack={() => navigate("games", "backward")} />
-          )}
-
-        </ScreenTransition>
+<div
+  style={{
+    position: "relative",
+    zIndex: 1,
+    padding: 50,
+    maxWidth: 460,
+    margin: "0 auto",
+  }}
+>
+        <div style={{ marginBottom: 25 }}>
+          <h1 style={{ fontSize: 30, fontWeight: 300, margin: 0 }}>
+            Pour des souvenirs uniques ✩ ♬ ₊.🎧⋆☾⋆⁺₊✧
+          </h1>
+          <p style={{ opacity: 0.6, marginTop: 8, fontSize: 13 }}>{status}</p>
         </div>
+
+        {screen === "landing" && (
+          <div style={{ display: "grid", gap: 60, minHeight: "70dvh", alignContent: "center" }}>
+            <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
+              🧘 “Ancre l'instant”
+            </p>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              <RoundButton variant="primary" onClick={startNewRemanence}>
+                Entrer en rémanence 🌱
+              </RoundButton>
+
+              <RoundButton variant="secondary" onClick={() => setScreen("journal")}>
+                Vibrations 💓
+              </RoundButton>
+
+              <RoundButton
+  variant="secondary"
+  onClick={() => {
+    setConstellationZoom(1);
+    setScreen("constellation");
+  }}
+>
+  Constellations ✨
+</RoundButton>
+            </div>
+          </div>
+        )}
+
+        {screen === "setInfo" && (
+          <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
+            <p style={{ opacity: 0.86, fontSize: 20, margin: 0, textAlign: "center" }}>
+              🎧 Quel set viens-tu de vivre ?
+            </p>
+
+            <input
+              value={draft.artistName}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, artistName: e.target.value }))
+              }
+              placeholder="Artiste (ex : Astrix)"
+              style={{
+                width: "100%",
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                padding: 14,
+                color: "white",
+                outline: "none",
+              }}
+            />
+
+            {artistSuggestions.length > 0 && (
+              <div
+                style={{
+                  marginTop: 8,
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  overflow: "hidden",
+                }}
+              >
+                {artistSuggestions.map((artist) => (
+                  <div
+                    key={artist}
+                    onClick={() =>
+                      setDraft((d) => ({
+                        ...d,
+                        artistName: artist,
+                      }))
+                    }
+                    style={{
+                      padding: "10px 14px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    {artist}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <p style={{ opacity: 0.6, fontSize: 12 }}>
+              Si tu ne sais pas : demande autour de toi. Le nom est le sceau du souvenir ✨
+            </p>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              <p style={{ opacity: 0.72, fontSize: 13, margin: 0 }}>
+                📍 Choisis une scène
+              </p>
+
+              <div
+                style={{
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  overflow: "hidden",
+                }}
+              >
+                {STAGES.map((stage) => {
+                  const active = draft.stageName === stage.name;
+
+                  return (
+                    <div
+                      key={stage.name}
+                      onClick={() =>
+                        setDraft((d) => ({
+                          ...d,
+                          stageName: d.stageName === stage.name ? "" : stage.name,
+                        }))
+                      }
+                      style={{
+                        padding: "12px 14px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        background: active ? "rgba(255,255,255,0.12)" : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>
+                        {stage.emoji} {stage.name}
+                      </span>
+
+                      {active ? (
+                        <span style={{ opacity: 0.8, fontSize: 12 }}>✓ sélectionnée</span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <input
+              value={draft.style}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, style: e.target.value }))
+              }
+              placeholder="Style (ex : psytrance / ambient)"
+              style={{
+                width: "100%",
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                padding: 14,
+                color: "white",
+                outline: "none",
+              }}
+            />
+
+            <RoundButton
+              variant="primary"
+              disabled={!canContinueSetInfo}
+              onClick={() => {
+                if (!canContinueSetInfo) {
+                  softHaptic();
+                  return;
+                }
+                setScreen("color");
+              }}
+            >
+              Valider ✔️
+            </RoundButton>
+          </div>
+        )}
+
+        {/* COLOR */}
+{screen === "color" && (
+  <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
+    <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
+      🌈 Couleur instinctive 🦄
+    </p>
+
+    <div style={{ display: "flex", gap: 23, flexWrap: "wrap", justifyContent: "center" }}>
+      {RGB_COLORS.map((c) => {
+        const active = draft.colorHex === c;
+        return (
+          <button
+            key={c}
+            onClick={() => {
+              softHaptic();
+              setDraft((d) => ({ ...d, colorHex: c }));
+            }}
+            aria-label={c}
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 999,
+              border: active ? "2px solid rgba(255,255,255,0.7)" : "1px solid rgba(255,255,255,0.14)",
+              background: c,
+              cursor: "pointer",
+              boxShadow: active ? `0 0 26px ${c}66` : "none",
+            }}
+          />
+        );
+      })}
+    </div>
+
+    <div style={{ display: "flex", gap: 22 }}>
+      <div style={{ flex: 1 }}>
+        <RoundButton variant="secondary" onClick={() => setScreen("setInfo")}>
+          ↪️ Retour
+        </RoundButton>
+      </div>
+      <div style={{ flex: 1 }}>
+        <RoundButton variant="primary" onClick={() => setScreen("energy")}>
+          Je valide 🖖
+        </RoundButton>
+      </div>
+    </div>
+  </div>
+)}
+
+        {screen === "energy" && (
+          <div style={{ display: "grid", gap: 20, minHeight: "70dvh", alignContent: "center" }}>
+            <p style={{ opacity: 0.86, fontSize: 18, margin: 0, textAlign: "center" }}>
+              ⚡ Intensité
+            </p>
+
+            <EnergyDots
+              value={draft.energy}
+              color={draft.colorHex}
+              onChange={(n) =>
+                setDraft((d) => ({
+                  ...d,
+                  energy: n,
+                }))
+              }
+            />
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="secondary" onClick={() => setScreen("color")}>
+                  ↪️ Retour
+                </RoundButton>
+              </div>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="primary" onClick={() => setScreen("focus")}>
+                  Je valide 🖖
+                </RoundButton>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {screen === "focus" && (
+          <div style={{ display: "grid", gap: 120, minHeight: "70dvh", alignContent: "center" }}>
+            <p style={{ opacity: 0.86, fontSize: 20, margin: 0, textAlign: "center" }}>
+              🎭 Où cela s’est joué ?
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+              {[
+                ["mental", "🧠", "Mental"],
+                ["emotion", "❤️", "Émotions"],
+                ["body", "🕺", "Corps"],
+              ].map(([key, emoji, label]) => {
+                const active = focusDisplayed === key;
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      const f = key as Draft["focus"];
+                      setFocusDisplayed(f);
+                      setDraft((d) => ({ ...d, focus: f }));
+                    }}
+                    style={{
+                      borderRadius: 22,
+                      padding: "20px",
+                      border: active
+                        ? "1px solid rgba(255,255,255,0.4)"
+                        : "1px solid rgba(255,255,255,0.15)",
+                      background: active
+                        ? "rgba(255,255,255,0.15)"
+                        : "rgba(255,255,255,0.05)",
+                      color: "white",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ fontSize: 26 }}>{emoji}</div>
+                    <div style={{ marginTop: 8, fontSize: 13 }}>{label}</div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="secondary" onClick={() => setScreen("energy")}>
+                  ↪️ Retour
+                </RoundButton>
+              </div>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="primary" onClick={() => setScreen("text")}>
+                  Continuer ✨
+                </RoundButton>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {screen === "text" && (
+          <div style={{ display: "grid", gap: 45, minHeight: "70dvh", alignContent: "center" }}>
+            <div style={{ display: "grid", gap: 10 }}>
+              <p style={{ opacity: 0.86, fontSize: 20, margin: 0 }}>Ce que j’ai ressenti ☮</p>
+              <textarea
+                value={draft.feelingText}
+                onChange={(e) => setDraft((d) => ({ ...d, feelingText: e.target.value }))}
+                style={{
+                  width: "100%",
+                  borderRadius: 18,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  padding: 14,
+                  color: "white",
+                  outline: "none",
+                  minHeight: 120,
+                  resize: "vertical",
+                }}
+                placeholder="Pose une trace… "
+              />
+            </div>
+
+            <div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+              <p style={{ opacity: 0.86, fontSize: 20, margin: 0 }}>
+                Ce que cet artiste m’a appris 🧙🏼
+              </p>
+              <textarea
+                value={draft.learningText}
+                onChange={(e) => setDraft((d) => ({ ...d, learningText: e.target.value }))}
+                style={{
+                  width: "100%",
+                  borderRadius: 18,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  padding: 14,
+                  color: "white",
+                  outline: "none",
+                  minHeight: 96,
+                  resize: "vertical",
+                }}
+                placeholder="Un détail, une évidence…"
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="secondary" onClick={() => setScreen("focus")}>
+                  ↪️ Retour
+                </RoundButton>
+              </div>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="primary" onClick={() => setScreen("capture")}>
+                  Je valide 🖖
+                </RoundButton>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {screen === "capture" && (
+          <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
+            <p style={{ opacity: 0.86, fontSize: 25, margin: 0, textAlign: "center" }}>
+              Capture du moment 📸
+            </p>
+
+            {!draft.photo && (
+              <label
+                style={{
+                  padding: "80px",
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  textAlign: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <p style={{ fontSize: 45, margin: 0, textAlign: "center" }}>
+                  📤
+                </p>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhoto}
+                  style={{ display: "none" }}
+                />
+              </label>
+            )}
+
+            {draft.photo && (
+              <>
+                <img
+                  src={draft.photo}
+                  alt="Capture du moment"
+                  style={{
+                    width: "100%",
+                    borderRadius: 16,
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}
+                />
+
+                <RoundButton
+                  variant="secondary"
+                  onClick={() =>
+                    setDraft((d) => ({
+                      ...d,
+                      photo: undefined,
+                    }))
+                  }
+                >
+                  🔄
+                </RoundButton>
+              </>
+            )}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="secondary" onClick={() => setScreen("text")}>
+                  ↪️ Retour
+                </RoundButton>
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <RoundButton variant="primary" onClick={finish}>
+                  Ancrer 💌
+                </RoundButton>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {screen === "done" && (
+  <div style={{ display: "grid", gap: 36, minHeight: "70dvh", alignContent: "center" }}>
+    <p
+      style={{
+        opacity: 0.92,
+        fontSize: 34,
+        margin: 0,
+        textAlign: "center",
+        color: lastSavedColor ?? "white",
+        textShadow: lastSavedColor ? `0 0 24px ${lastSavedColor}66` : "none",
+      }}
+    >
+      “Ta trace est ancrée 🎁”
+    </p>
+
+    <div
+      style={{
+        borderRadius: 20,
+        padding: 18,
+        textAlign: "center",
+        background: lastSavedColor ? `${lastSavedColor}18` : "rgba(255,255,255,0.05)",
+        border: lastSavedColor
+          ? `1px solid ${lastSavedColor}44`
+          : "1px solid rgba(255,255,255,0.1)",
+        boxShadow: lastSavedColor ? `0 0 30px ${lastSavedColor}22` : "none",
+        color: "white",
+        opacity: 0.9,
+      }}
+    >
+      Le souvenir a rejoint ta constellation ✨
+    </div>
+
+    <RoundButton variant="primary" onClick={() => setScreen("landing")}>
+      Se reconnecter à l'instant 🍀
+    </RoundButton>
+  </div>
+)}
+
+        {screen === "journal" && (
+  <div style={{ display: "grid", gap: 22, minHeight: "70dvh" }}>
+    <div style={{ display: "grid", gap: 12 }}>
+      <h2 style={{ margin: 0, fontWeight: 650 }}>
+        📓 Carnet de rémanence
+      </h2>
+
+      <div style={{ display: "grid", gap: 12 }}>
+        <RoundButton variant="primary" onClick={startNewRemanence}>
+          Nouvelle vibration 💓
+        </RoundButton>
+
+        <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
+          Home ॐ
+        </RoundButton>
+      </div>
+    </div>
+
+    {journal.length === 0 && (
+      <p style={{ opacity: 0.6 }}>
+        Aucun souvenir enregistré pour le moment.
+      </p>
+    )}
+
+    {journal.map((item) => {
+      const itemDisplayColor = energyTint(item.colorHex, item.energy);
+
+      return (
+        <div
+          key={item.id}
+          onClick={() => {
+            setSelectedItem(item);
+            setDetailBackTarget("journal");
+            setScreen("detail");
+          }}
+          style={{
+            borderRadius: 18,
+            padding: 16,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            display: "grid",
+            gap: 10,
+            cursor: "pointer",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "grid", gap: 4 }}>
+              <strong style={{ fontSize: 20 }}>{item.artistName}</strong>
+
+              <div style={{ opacity: 0.65, fontSize: 15 }}>
+                {formatTime(item.startTime)} · {item.stageName || "Scène inconnue"}
+              </div>
+            </div>
+
+            <div
+              style={{
+                fontSize: 14,
+                padding: "5px 8px",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {focusEmoji(item.focus)} ⚡ {item.energy}/10
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: 999,
+                background: itemDisplayColor,
+                boxShadow: `0 0 18px ${itemDisplayColor}88`,
+                flexShrink: 0,
+              }}
+            />
+            <div style={{ opacity: 0.7, fontSize: 13 }}>
+              {item.style?.trim() ? item.style : "Style non renseigné"}
+            </div>
+          </div>
+
+          {item.feelingText?.trim() && (
+            <div
+              style={{
+                opacity: 0.88,
+                lineHeight: 1.45,
+                fontSize: 14,
+                padding: "10px 12px",
+                borderRadius: 14,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              “{item.feelingText.trim()}”
+            </div>
+          )}
+
+          {item.learningText?.trim() && (
+            <div style={{ opacity: 0.62, fontSize: 13, lineHeight: 1.4 }}>
+              🧙🏼 {item.learningText.trim()}
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
+
+        {screen === "constellation" && (
+          <div style={{ display: "grid", gap: 20, minHeight: "70dvh" }}>
+            <h2 style={{ margin: 0 }}>
+              ✨ Ta constellation personnalisée
+            </h2>
+
+            <div
+  onTouchStart={handleConstellationTouchStart}
+  onTouchMove={handleConstellationTouchMove}
+  onTouchEnd={handleConstellationTouchEnd}
+  onTouchCancel={handleConstellationTouchEnd}
+  style={{
+    position: "relative",
+    height: 500,
+    borderRadius: 20,
+    overflow: "hidden",
+    border: "1px solid rgba(255,255,255,0.08)",
+    backgroundImage:
+      "linear-gradient(rgba(7,0,20,0.55), rgba(7,0,20,0.78)), url('/images/space-bg.jpg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    touchAction: "none",
+  }}
+>
+              {journal.length === 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "grid",
+                    placeItems: "center",
+                    opacity: 0.6,
+                    textAlign: "center",
+                    padding: 20,
+                  }}
+                >
+                  Ta constellation apparaîtra ici après tes premiers souvenirs ✨
+                </div>
+              )}
+
+              <div
+  style={{
+    position: "absolute",
+    inset: 0,
+    transform: `scale(${constellationZoom})`,
+    transformOrigin: "center center",
+    transition: pinchStartRef.current ? "none" : "transform 0.18s ease-out",
+  }}
+>
+  <svg
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+    style={{
+      position: "absolute",
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      pointerEvents: "none",
+    }}
+  >
+    {constellationLinks.map((link, index) => (
+      <line
+        key={`${link.a.item.id}-${link.b.item.id}-${index}`}
+        x1={link.a.x}
+        y1={link.a.y}
+        x2={link.b.x}
+        y2={link.b.y}
+        stroke={link.a.displayColor}
+        strokeOpacity={link.opacity}
+        strokeWidth="0.22"
+        style={{
+          animation: `linkBreath ${link.duration}s ease-in-out infinite`,
+        }}
+      />
+    ))}
+  </svg>
+
+  {constellationStars.map((star) => (
+    <div
+      key={star.item.id}
+      onClick={() => {
+        setSelectedItem(star.item);
+        setDetailBackTarget("constellation");
+        setScreen("detail");
+      }}
+      style={{
+        position: "absolute",
+        left: `${star.x}%`,
+        top: `${star.y}%`,
+        transform: "translate(-50%, -50%)",
+        color: star.displayColor,
+        fontSize: star.starSize,
+        lineHeight: 1,
+        textShadow: `0 0 ${star.glowSize}px ${star.displayColor}, 0 0 ${
+          star.glowSize * 1.7
+        }px ${star.displayColor}`,
+        cursor: "pointer",
+        userSelect: "none",
+        animation: `starPulse ${2.6 - star.item.energy * 0.12}s ease-in-out infinite`,
+        filter: `drop-shadow(0 0 ${Math.max(
+          6,
+          star.item.energy * 1.4
+        )}px ${star.displayColor})`,
+      }}
+      title={`${star.item.artistName} · ${formatTime(star.item.startTime)}`}
+    >
+      ✦
+    </div>
+  ))}
+</div>
+            </div>
+
+            <RoundButton variant="secondary" onClick={() => setScreen("landing")}>
+              Home ॐ
+            </RoundButton>
+          </div>
+        )}
+
+        {screen === "detail" && selectedItem && (
+          <div style={{ display: "grid", gap: 30, minHeight: "70dvh", alignContent: "center" }}>
+            <div style={{ display: "grid", gap: 6, textAlign: "center" }}>
+              <h2 style={{ margin: 0, fontWeight: 600 }}>
+                {selectedItem.artistName}
+              </h2>
+
+              <div style={{ opacity: 0.6 }}>
+                {formatTime(selectedItem.startTime)} · {selectedItem.stageName || "Scène inconnue"}
+              </div>
+            </div>
+
+            <div
+              style={{
+                borderRadius: 20,
+                padding: 18,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                display: "grid",
+                gap: 16,
+              }}
+            >
+              {selectedItem.photo && (
+                <img
+                  src={selectedItem.photo}
+                  alt="Souvenir du moment"
+                  style={{
+                    width: "100%",
+                    borderRadius: 14,
+                    marginBottom: 10,
+                  }}
+                />
+              )}
+
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{focusEmoji(selectedItem.focus)}</span>
+                <span>⚡ {selectedItem.energy}/10</span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 999,
+                    background: energyTint(selectedItem.colorHex, selectedItem.energy),
+                    boxShadow: `0 0 18px ${energyTint(selectedItem.colorHex, selectedItem.energy)}`,
+                  }}
+                />
+                <span>{selectedItem.style?.trim() ? selectedItem.style : "Style inconnu"}</span>
+              </div>
+
+              {selectedItem.feelingText?.trim() && (
+                <div style={{ opacity: 0.88, lineHeight: 1.5 }}>
+                  “{selectedItem.feelingText.trim()}”
+                </div>
+              )}
+
+              {selectedItem.learningText?.trim() && (
+                <div style={{ opacity: 0.62, lineHeight: 1.45 }}>
+                  🧙 {selectedItem.learningText.trim()}
+                </div>
+              )}
+            </div>
+
+            <RoundButton
+              variant="secondary"
+              onClick={() => setScreen(detailBackTarget)}
+            >
+              {detailBackTarget === "constellation" ? "Retour à la constellation ✨" : "Retour au carnet 📓"}
+            </RoundButton>
+          </div>
+        )}
       </div>
     </RootLayout>
   );
+}
+ 
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function getTouchDistance(touches: ReactTouchEvent<HTMLDivElement>["touches"]) {
+  if (touches.length < 2) return 0;
+
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function formatTime(iso: string) {
+  const d = new Date(iso);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function focusEmoji(focus: "mental" | "emotion" | "body") {
+  if (focus === "mental") return "🧠";
+  if (focus === "emotion") return "❤️";
+  return "🕺";
 }
