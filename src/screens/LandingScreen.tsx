@@ -249,69 +249,69 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
       {/* ── Croix ✦ (rotation lente) ── */}
       <g transform="translate(70, 8)" filter="url(#og2)">
         <path d={SP_CROSS} fill={cL(0.85)}
-          style={{ animation: "ornamentSparkleRotate 8s ease-in-out 0s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkleRotate 14s ease-in-out 0s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(310, 8)" filter="url(#og2)">
         <path d={SP_CROSS} fill={c(0.85)}
-          style={{ animation: "ornamentSparkleRotate 9.5s ease-in-out 1.2s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkleRotate 16s ease-in-out 1.2s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(367, 180)" filter="url(#og2)">
         <path d={SP_CROSS} fill={c(0.85)}
-          style={{ animation: "ornamentSparkleRotate 7.5s ease-in-out 2.1s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkleRotate 13s ease-in-out 2.1s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(367, 660)" filter="url(#og2)">
         <path d={SP_CROSS} fill={cL(0.80)}
-          style={{ animation: "ornamentSparkleRotate 10s ease-in-out 0.5s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkleRotate 17s ease-in-out 0.5s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(65, 804)" filter="url(#og2)">
         <path d={SP_CROSS} fill={cLL(0.80)}
-          style={{ animation: "ornamentSparkleRotate 8.5s ease-in-out 3.0s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkleRotate 14s ease-in-out 3.0s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(305, 804)" filter="url(#og2)">
         <path d={SP_CROSS} fill={c(0.85)}
-          style={{ animation: "ornamentSparkleRotate 9s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkleRotate 15s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(8, 200)" filter="url(#og2)">
         <path d={SP_CROSS} fill={cL(0.85)}
-          style={{ animation: "ornamentSparkleRotate 7s ease-in-out 0.8s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkleRotate 12s ease-in-out 0.8s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(8, 620)" filter="url(#og2)">
         <path d={SP_CROSS} fill={c(0.80)}
-          style={{ animation: "ornamentSparkleRotate 9s ease-in-out 2.5s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkleRotate 15s ease-in-out 2.5s infinite", transformOrigin: "0 0" }}/>
       </g>
 
-      {/* ── Losanges ◇ (pulse rapide) ── */}
+      {/* ── Losanges ◇ (pulse doux) ── */}
       <g transform="translate(120, 8)">
         <path d={SP_DIAMOND} fill={c(0.75)}
-          style={{ animation: "ornamentSparkle 3.5s ease-in-out 0.6s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkle 6.5s ease-in-out 0.6s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(255, 8)">
         <path d={SP_DIAMOND} fill={cL(0.70)}
-          style={{ animation: "ornamentSparkle 4.2s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkle 8s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(367, 360)">
         <path d={SP_DIAMOND} fill={cL(0.70)}
-          style={{ animation: "ornamentSparkle 3.8s ease-in-out 0.3s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkle 7s ease-in-out 0.3s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(367, 500)">
         <path d={SP_DIAMOND} fill={c(0.75)}
-          style={{ animation: "ornamentSparkle 5s ease-in-out 2.4s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkle 9s ease-in-out 2.4s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(130, 804)">
         <path d={SP_DIAMOND} fill={cLL(0.70)}
-          style={{ animation: "ornamentSparkle 4s ease-in-out 1.1s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkle 7.5s ease-in-out 1.1s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(248, 804)">
         <path d={SP_DIAMOND} fill={c(0.70)}
-          style={{ animation: "ornamentSparkle 3.2s ease-in-out 0.9s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkle 6s ease-in-out 0.9s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(8, 320)">
         <path d={SP_DIAMOND} fill={cL(0.70)}
-          style={{ animation: "ornamentSparkle 4.5s ease-in-out 3.2s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkle 8.5s ease-in-out 3.2s infinite", transformOrigin: "0 0" }}/>
       </g>
       <g transform="translate(8, 500)">
         <path d={SP_DIAMOND} fill={cLL(0.65)}
-          style={{ animation: "ornamentSparkle 3.7s ease-in-out 1.5s infinite", transformOrigin: "0 0" }}/>
+          style={{ animation: "ornamentSparkle 7s ease-in-out 1.5s infinite", transformOrigin: "0 0" }}/>
       </g>
 
       {/* ── Bursts + (rayons radiants) ── */}
@@ -338,7 +338,7 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
       <g filter="url(#og2)">
         <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-base)" strokeWidth="1.8"/>
         <path d={SP_MOBILE} fill={c(0.92)}/>
-        <animateMotion dur="22s" repeatCount="indefinite" rotate="auto">
+        <animateMotion dur="50s" repeatCount="indefinite" rotate="auto">
           <mpath href="#lp-orbit"/>
         </animateMotion>
       </g>
@@ -347,7 +347,7 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
       <g filter="url(#og2)">
         <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-light)" strokeWidth="1.8"/>
         <path d={SP_MOBILE} fill={cL(0.88)}/>
-        <animateMotion dur="22s" begin="-7.33s" repeatCount="indefinite" rotate="auto">
+        <animateMotion dur="50s" begin="-16.67s" repeatCount="indefinite" rotate="auto">
           <mpath href="#lp-orbit"/>
         </animateMotion>
       </g>
@@ -356,7 +356,7 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
       <g filter="url(#og2)">
         <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-vlight)" strokeWidth="1.8"/>
         <path d={SP_MOBILE} fill={cLL(0.85)}/>
-        <animateMotion dur="22s" begin="-14.67s" repeatCount="indefinite" rotate="auto">
+        <animateMotion dur="50s" begin="-33.33s" repeatCount="indefinite" rotate="auto">
           <mpath href="#lp-orbit"/>
         </animateMotion>
       </g>
