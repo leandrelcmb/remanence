@@ -1,28 +1,28 @@
 html, body, #root { height: 100%; background: #000; }
 
 /* ── Transitions entre écrans ── */
+/* IMPORTANT : utiliser transform:none dans "to" (pas translateY(0) ni translateX(0))
+   car toute valeur transform non-none crée un stacking context résiduel qui piège
+   les éléments position:fixed (OrnamentBorder, modals…) à l'intérieur du wrapper. */
 @keyframes screenFadeIn {
   from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes screenFadeOut {
   from { opacity: 1; }
   to   { opacity: 0; }
 }
-/* Bloom : entrée après cross-fade halo (scale + drift vertical + fondu) */
-/* transform:none dans "to" → évite de créer un stacking context résiduel   */
-/* (position:fixed des modals fonctionne correctement après la fin de l'anim) */
 @keyframes screenBloomIn {
   from { opacity: 0; transform: scale(0.96) translateY(8px); }
   to   { opacity: 1; transform: none; }
 }
 @keyframes screenSlideFromRight {
   from { opacity: 0; transform: translateX(28px); }
-  to   { opacity: 1; transform: translateX(0); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes screenSlideFromLeft {
   from { opacity: 0; transform: translateX(-28px); }
-  to   { opacity: 1; transform: translateX(0); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* Particules DoneScreen — --particle-dy injecté en inline style par élément */
