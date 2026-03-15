@@ -121,10 +121,10 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
       viewBox="0 0 375 812"
       preserveAspectRatio="none"
       style={{
-        position: "absolute",
+        position: "fixed",
         inset: 0,
-        width: "100%",
-        height: "100%",
+        width: "100vw",
+        height: "100dvh",
         pointerEvents: "none",
         zIndex: 2,
       }}
@@ -441,8 +441,7 @@ export function LandingScreen({
 
   return (
     <div style={{
-      height: "100dvh",
-      paddingBottom: "10dvh",
+      height: "90dvh",
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
