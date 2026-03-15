@@ -47,6 +47,21 @@ import type { AnimDir } from "./ui/ScreenTransition";
 const FULL_FLOW_SCREENS: FlowScreen[]    = ["capture", "scenePicker", "colorEnergy", "focus", "text"];
 const EXPRESS_FLOW_SCREENS: FlowScreen[] = ["capture", "scenePicker", "colorEnergy", "focus"];
 
+// Dérive les valeurs RGB d'une couleur hex ou rgb() — utilisé pour la CSS var --halo-rgb
+function parseHaloColor(color: string): [number, number, number] {
+  const v = color.trim();
+  if (v.startsWith("#")) {
+    const h = v.replace("#", "");
+    if (h.length === 6) {
+      const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+      if (![r, g, b].some(Number.isNaN)) return [r, g, b];
+    }
+  }
+  const m = v.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [0, 255, 183];
+}
+
 // Données préservées lors d'une édition (non modifiables)
 type EditingEntry = {
   id: string;
@@ -87,6 +102,12 @@ export default function App() {
     selectedItem,
     lastSavedColor,
   });
+
+  // Expose la couleur du halo en CSS custom property pour les RoundButton primaires
+  useEffect(() => {
+    const [r, g, b] = parseHaloColor(haloColor);
+    document.documentElement.style.setProperty("--halo-rgb", `${r}, ${g}, ${b}`);
+  }, [haloColor]);
 
   // Charger la session de chasse active au montage
   useEffect(() => {

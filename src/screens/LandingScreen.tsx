@@ -441,7 +441,8 @@ export function LandingScreen({
 
   return (
     <div style={{
-      height: "90dvh",
+      height: "100dvh",
+      paddingBottom: "10dvh",
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",

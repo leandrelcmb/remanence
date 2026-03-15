@@ -39,17 +39,27 @@ export function FocusScreen({ haloColor, onSelect, onNext, onBack, onFocusFlare 
       22%  { transform: scale(1.07); box-shadow: 0 0 22px 10px rgba(${rgb},0.55); }
       100% { transform: scale(1);    box-shadow: 0 0 10px 4px rgba(${rgb},0.20); }
     }
+    @keyframes focusGlowPulse {
+      0%, 100% { box-shadow: inset 0 0 0 1px rgba(${rgb},0.35), 0 0 20px 8px rgba(${rgb},0.30), 0 0 5px 2px rgba(${rgb},0.55); }
+      50%       { box-shadow: inset 0 0 0 1px rgba(${rgb},0.50), 0 0 28px 12px rgba(${rgb},0.45), 0 0 8px 3px rgba(${rgb},0.70); }
+    }
   `;
 
   function handleSelect(f: FocusKey) {
+    // Supprimer le pulse du bouton précédemment actif
+    if (localFocus && localFocus !== f) {
+      const prevEl = btnRefs.current[localFocus];
+      if (prevEl) prevEl.style.animation = "";
+    }
     setLocalFocus(f);
     const el = btnRefs.current[f];
     if (el) {
       el.style.animation = "none";
       void el.offsetHeight; // force reflow → redémarre l'animation proprement
       el.style.animation = "focus-burst 0.65s cubic-bezier(0.22,1,0.36,1) forwards";
+      // Après le burst, enchaîner le pulse continu
       setTimeout(() => {
-        if (el) el.style.animation = "";
+        if (el) el.style.animation = "focusGlowPulse 2.5s ease-in-out infinite";
       }, 700);
     }
     onFocusFlare();
@@ -76,13 +86,13 @@ export function FocusScreen({ haloColor, onSelect, onNext, onBack, onFocusFlare 
                 borderRadius: 22,
                 padding: "20px",
                 border: active
-                  ? `1px solid rgba(${rgb},0.45)`
+                  ? `2px solid rgba(${rgb},0.70)`
                   : "1px solid rgba(255,255,255,0.15)",
                 background: active
-                  ? `rgba(${rgb},0.12)`
+                  ? `rgba(${rgb},0.15)`
                   : "rgba(255,255,255,0.05)",
                 boxShadow: active
-                  ? `inset 0 0 0 1px rgba(${rgb},0.25), 0 0 10px 3px rgba(${rgb},0.18)`
+                  ? `inset 0 0 0 1px rgba(${rgb},0.35), 0 0 20px 8px rgba(${rgb},0.30), 0 0 5px 2px rgba(${rgb},0.55)`
                   : undefined,
                 color: "white",
                 cursor: "pointer",

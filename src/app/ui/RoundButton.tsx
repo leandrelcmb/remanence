@@ -24,9 +24,16 @@ export function RoundButton({
         width: "100%",
         borderRadius: 999,
         padding: "18px 20px",
-        border: `1px solid ${isPrimary ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.12)"}`,
-        background: isPrimary ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.04)",
+        border: isPrimary
+          ? "1px solid rgba(var(--halo-rgb, 100,200,200), 0.30)"
+          : "1px solid rgba(255,255,255,0.12)",
+        background: isPrimary
+          ? "linear-gradient(135deg, rgba(var(--halo-rgb, 100,200,200), 0.72) 0%, rgba(var(--halo-rgb, 100,200,200), 0.50) 100%)"
+          : "rgba(255,255,255,0.04)",
         backdropFilter: "blur(10px)",
+        boxShadow: isPrimary
+          ? "0 0 16px rgba(var(--halo-rgb, 100,200,200), 0.35), 0 4px 20px rgba(var(--halo-rgb, 100,200,200), 0.15)"
+          : undefined,
         color: "white",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
