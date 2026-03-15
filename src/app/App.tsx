@@ -78,7 +78,7 @@ export default function App() {
   // Session de chasse active (persistée dans IndexedDB)
   const [activeChasse, setActiveChasse] = useState<ChasseActiveSession | null>(null);
 
-  const { draft, setDraft, resetDraft, artistSuggestions, handlePhoto } = useDraftFlow();
+  const { draft, setDraft, resetDraft, artistSuggestions, handleCameraPhoto, handleGalleryPhoto } = useDraftFlow();
   const { booting, profileReady, saveProfile, user, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
   const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
     screen,
@@ -120,6 +120,16 @@ export default function App() {
       setHaloFilter("brightness(1)");
       setTimeout(() => setTransitioning(false), 900);
     }, 550);
+  }
+
+  /** Éclat doux du halo au tap sur un choix Focus (moins intense que navigateWithFlare) */
+  function triggerFocusFlare() {
+    setHaloFilterTransition("filter 0.08s ease");
+    setHaloFilter("saturate(1.8) brightness(1.5)");
+    setTimeout(() => {
+      setHaloFilterTransition("filter 2s ease-in-out");
+      setHaloFilter("brightness(1)");
+    }, 200);
   }
 
   function startNewRemanence(express = false) {
@@ -175,7 +185,7 @@ export default function App() {
         style: draft.style,
         stageName: draft.stageName,
         energy: draft.energy,
-        focus: draft.focus,
+        focus: draft.focus ?? "body",
         colorHex: draft.colorHex,
         feelingText: draft.feelingText,
         learningText: draft.learningText,
@@ -196,7 +206,7 @@ export default function App() {
         stageName: draft.stageName,
         energy: draft.energy,
         colorHex: draft.colorHex,
-        focus: draft.focus,
+        focus: draft.focus ?? "body",
         photo: draft.photo,
       };
 
@@ -206,11 +216,12 @@ export default function App() {
         style: draft.style,
         stageName: draft.stageName,
         energy: draft.energy,
-        focus: draft.focus,
+        focus: draft.focus ?? "body",
         colorHex: draft.colorHex,
         feelingText: draft.feelingText,
         learningText: draft.learningText,
         photo: draft.photo,
+        startTime: draft.photoTime, // EXIF galerie → timestamp réel ; undefined → nowISO()
       });
 
       await refreshJournal(festivalId);
@@ -319,9 +330,11 @@ export default function App() {
           {screen === "focus" && (
             <FocusScreen
               focus={draft.focus}
+              haloColor={haloColor}
               onSelect={(f) => setDraft((d) => ({ ...d, focus: f }))}
               onNext={() => (expressMode || draft.ephemeral) ? finish() : navigate("text", "forward")}
               onBack={() => navigate("colorEnergy", "backward")}
+              onFocusFlare={triggerFocusFlare}
             />
           )}
 
@@ -367,8 +380,9 @@ export default function App() {
           {screen === "capture" && (
             <CaptureScreen
               photo={draft.photo}
-              onPhoto={handlePhoto}
-              onClearPhoto={() => setDraft((d) => ({ ...d, photo: undefined }))}
+              onCameraPhoto={handleCameraPhoto}
+              onGalleryPhoto={handleGalleryPhoto}
+              onClearPhoto={() => setDraft((d) => ({ ...d, photo: undefined, photoTime: undefined }))}
               onFinish={() => navigate("scenePicker", "forward")}
               onBack={() => navigate("landing", "backward")}
             />

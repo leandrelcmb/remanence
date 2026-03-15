@@ -9,11 +9,12 @@ function createEmptyDraft(): Draft {
     style: "",
     ephemeral: false,
     energy: 5,
-    focus: "body",
+    focus: null,
     colorHex: "#5E5CE6",
     feelingText: "",
     learningText: "",
     photo: undefined,
+    photoTime: undefined,
   };
 }
 
@@ -33,15 +34,33 @@ export function useDraftFlow() {
     setDraft(createEmptyDraft());
   }
 
-  function handlePhoto(e: ChangeEvent<HTMLInputElement>) {
+  async function handlePhoto(e: ChangeEvent<HTMLInputElement>, source: "camera" | "gallery") {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
-    reader.onload = () => {
-      setDraft((d) => ({ ...d, photo: reader.result as string }));
+    reader.onload = async () => {
+      let photoTime: string | undefined;
+
+      if (source === "gallery") {
+        try {
+          const exifr = await import("exifr");
+          const exif = await exifr.parse(file, ["DateTimeOriginal"]);
+          if (exif?.DateTimeOriginal instanceof Date) {
+            photoTime = exif.DateTimeOriginal.toISOString();
+          }
+        } catch {
+          // Pas d'EXIF ou parse échoué → photoTime reste undefined → nowISO() au save
+        }
+      }
+
+      setDraft((d) => ({ ...d, photo: reader.result as string, photoTime }));
     };
     reader.readAsDataURL(file);
   }
 
-  return { draft, setDraft, resetDraft, artistSuggestions, handlePhoto };
+  const handleCameraPhoto = (e: ChangeEvent<HTMLInputElement>) => handlePhoto(e, "camera");
+  const handleGalleryPhoto = (e: ChangeEvent<HTMLInputElement>) => handlePhoto(e, "gallery");
+
+  return { draft, setDraft, resetDraft, artistSuggestions, handleCameraPhoto, handleGalleryPhoto };
 }

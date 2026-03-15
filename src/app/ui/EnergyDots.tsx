@@ -12,15 +12,20 @@ function clamp(n: number, min: number, max: number) {
 
 export function energyTint(color: string, energy: number) {
   const safeEnergy = clamp(energy, 1, 10);
-  const factor = safeEnergy / 10;
+  // factor : 0 (énergie=1) → 1 (énergie=10)
+  const factor = (safeEnergy - 1) / 9;
 
   const r = parseInt(color.slice(1, 3), 16);
   const g = parseInt(color.slice(3, 5), 16);
   const b = parseInt(color.slice(5, 7), 16);
 
-  const newR = Math.min(255, Math.floor(r + (255 - r) * factor * 0.35));
-  const newG = Math.min(255, Math.floor(g + (255 - g) * factor * 0.35));
-  const newB = Math.min(255, Math.floor(b + (255 - b) * factor * 0.35));
+  // Énergie faible → assombrir (×0.35) | Énergie haute → vif (×1.10, cap 255)
+  // Pas de mix vers blanc : la teinte est toujours préservée
+  const brightness = 0.35 + 0.75 * factor; // énergie=1 → 0.35 | énergie=10 → 1.10
+
+  const newR = Math.min(255, Math.round(r * brightness));
+  const newG = Math.min(255, Math.round(g * brightness));
+  const newB = Math.min(255, Math.round(b * brightness));
 
   return `rgb(${newR}, ${newG}, ${newB})`;
 }

@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: { enabled: false }, // SW désactivé en dev → plus jamais de cache bloquant
 
       manifest: {
         name: 'Rémanence',

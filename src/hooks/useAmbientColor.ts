@@ -59,6 +59,7 @@ export function useAmbientColor({
   }, [screen, selectedItem, displayDraftColor, latestJournalColor, lastSavedColor]);
 
   const haloOpacity = useMemo(() => {
+    if (screen === "focus" && !draft.focus) return 0.07; // halo discret avant le choix
     if (screen === "energy") return 0.20 + draft.energy * 0.030;
     if (screen === "color") return 0.48;
     if (screen === "done") return 0.40;
@@ -70,10 +71,11 @@ export function useAmbientColor({
     if (screen === "detail" && selectedItem) return 0.26 + selectedItem.energy * 0.022;
     if (screen === "landing") return 0.30;
     return 0.28;
-  }, [screen, draft.energy, selectedItem]);
+  }, [screen, draft.focus, draft.energy, selectedItem]);
 
   const haloScale = useMemo(() => {
     if (screen === "landing") return 1.2;
+    if (screen === "focus" && !draft.focus) return 0.72; // petit avant le choix
     if (screen === "energy") return 1 + (draft.energy / 10) * 0.5;
     if (screen === "color") return 1.35;
     if (screen === "done") return 1.25;
@@ -84,17 +86,18 @@ export function useAmbientColor({
     if (screen === "constellation") return 1.10;
     if (screen === "detail" && selectedItem) return 1 + (selectedItem.energy / 10) * 0.38;
     return 1.18;
-  }, [screen, draft.energy, selectedItem]);
+  }, [screen, draft.focus, draft.energy, selectedItem]);
 
   const haloCenterY = useMemo(() => {
     if (screen === "detail" && selectedItem) {
       if (selectedItem.focus === "mental") return 35;
       if (selectedItem.focus === "emotion") return 50;
-      return 65;
+      return 75;
     }
     if (draft.focus === "mental") return 35;
     if (draft.focus === "emotion") return 50;
-    return 65;
+    if (draft.focus === "body") return 75;
+    return 50; // null → centré, en attente du choix
   }, [screen, draft.focus, selectedItem]);
 
   return { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor };

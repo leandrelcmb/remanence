@@ -37,11 +37,12 @@ export type Draft = {
   ephemeral: boolean; // true = scène éphémère (pas d'artiste, skip TextScreen)
 
   energy: number;
-  focus: "mental" | "emotion" | "body";
+  focus: "mental" | "emotion" | "body" | null;
   colorHex: string;
 
   feelingText: string;
   learningText: string;
 
   photo?: string;
+  photoTime?: string; // ISO timestamp EXIF (upload galerie) ; undefined → nowISO() au save
 };

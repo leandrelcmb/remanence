@@ -49,7 +49,7 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
   const haloGlowSft  = `rgba(${hr},${hg},${hb},0.22)`;
 
   return (
-    <div style={{ display: "grid", gap: 30, minHeight: "85dvh", alignContent: "center" }}>
+    <div style={{ display: "grid", gap: 20, minHeight: "85dvh", alignContent: "center" }}>
       <div style={{ display: "grid", gap: 6, textAlign: "center" }}>
         <h2 style={{ margin: 0, fontWeight: 600 }}>{item.artistName}</h2>
         <div style={{ opacity: 0.6 }}>
@@ -64,7 +64,7 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
           background: "rgba(255,255,255,0.05)",
           border: "1px solid rgba(255,255,255,0.1)",
           display: "grid",
-          gap: 16,
+          gap: 8,
         }}
       >
         {item.photo && (
@@ -108,8 +108,8 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
 
       {/* Actions */}
       {!confirmingDelete ? (
-        <div style={{ display: "grid", gap: 60 }}>
-          <div style={{ display: "flex", gap: 20 }}>
+        <div style={{ display: "grid", gap: 30 }}>
+          <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <RoundButton variant="secondary" onClick={() => onEdit(item)}>
                 Modifier ✏️

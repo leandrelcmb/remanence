@@ -343,47 +343,306 @@ const CONSEILS: Conseil[] = [
   },
 ];
 
-// ── Simulateur ─────────────────────────────────────────────────────────────────
+// ── Simulateur — données ──────────────────────────────────────────────────────
+
+const SIM_SUBSTANCES: { id: string; name: string; emoji: string }[] = [
+  { id: "mdma",         name: "MDMA / ecstasy",       emoji: "💊" },
+  { id: "lsd",          name: "LSD",                  emoji: "🌈" },
+  { id: "champignons",  name: "Champignons",           emoji: "🍄" },
+  { id: "dmt",          name: "DMT",                  emoji: "🌀" },
+  { id: "mescaline",    name: "Mescaline",            emoji: "🌵" },
+  { id: "amphetamines", name: "Amphétamines / speed",  emoji: "💊" },
+  { id: "cocaine",      name: "Cocaïne",              emoji: "❄️" },
+  { id: "ketamine",     name: "Kétamine",             emoji: "🧬" },
+  { id: "alcool",       name: "Alcool",               emoji: "🍺" },
+  { id: "cannabis",     name: "Cannabis",             emoji: "🌿" },
+  { id: "ghb",          name: "GHB / GBL",            emoji: "📉" },
+  { id: "benzos",       name: "Benzodiazépines",      emoji: "💊" },
+  { id: "3mmc",         name: "3-MMC",                emoji: "💊" },
+  { id: "poppers",      name: "Poppers",              emoji: "🫧" },
+];
 
 const SIM_ONSET: Record<string, number> = {
-  mdma: 45, lsd: 60, champignons: 45, cocaine: 5,
-  amphetamines: 30, ketamine: 5, alcool: 15,
-  cannabis: 30, ghb: 15, "3mmc": 30, poppers: 1,
+  mdma: 45, lsd: 60, champignons: 45, dmt: 1, mescaline: 60,
+  amphetamines: 30, cocaine: 5, ketamine: 5, alcool: 15,
+  cannabis: 30, ghb: 15, benzos: 30, "3mmc": 30, poppers: 1,
 };
 
 const SIM_DURATION: Record<string, number> = {
-  mdma: 4.5, lsd: 10, champignons: 5, cocaine: 0.75,
-  amphetamines: 6, ketamine: 1, alcool: 3,
-  cannabis: 2, ghb: 3, "3mmc": 3, poppers: 0.05,
+  mdma: 4.5, lsd: 10, champignons: 5, dmt: 0.25, mescaline: 10,
+  amphetamines: 6, cocaine: 0.75, ketamine: 1, alcool: 3,
+  cannabis: 2, ghb: 3, benzos: 6, "3mmc": 3, poppers: 0.05,
 };
 
 const TIME_OPTIONS: { label: string; value: number }[] = [
-  { label: "Moins de 20 min", value: 10 },
-  { label: "30 minutes",       value: 30 },
-  { label: "1 heure",          value: 60 },
-  { label: "2 heures",         value: 120 },
-  { label: "4 heures",         value: 240 },
-  { label: "6 heures",         value: 360 },
-  { label: "Plus de 8 heures", value: 480 },
+  { label: "Moins de 30 min", value: 15 },
+  { label: "30 min – 1 h",    value: 45 },
+  { label: "1 – 2 h",         value: 90 },
+  { label: "2 – 4 h",         value: 180 },
+  { label: "4 – 6 h",         value: 300 },
+  { label: "6 – 8 h",         value: 420 },
+  { label: "Plus de 8 h",     value: 510 },
 ];
 
-function getSimMessage(substanceId: string, elapsedMin: number): string {
-  const onset = SIM_ONSET[substanceId] ?? 30;
-  const durationMin = (SIM_DURATION[substanceId] ?? 3) * 60;
+const MOOD_OPTIONS: { id: string; emoji: string; label: string }[] = [
+  { id: "ok",      emoji: "🙂", label: "ça va bien" },
+  { id: "strange", emoji: "😐", label: "un peu étrange" },
+  { id: "intense", emoji: "😵", label: "trop intense" },
+  { id: "anxious", emoji: "😰", label: "anxieux" },
+  { id: "hot",     emoji: "🥵", label: "chaud / fatigué" },
+  { id: "tired",   emoji: "😴", label: "très fatigué" },
+];
+
+// ── Banques de messages (A=montée · B=ok · C=étrange · D=anxieux · E=chaleur · F=épuisé)
+
+const BANK_A: readonly string[] = [
+  "Les effets peuvent encore évoluer. Il peut être utile d'attendre avant de reprendre quoi que ce soit.",
+  "Certaines substances mettent du temps à se stabiliser. Laisse ton corps suivre son rythme.",
+  "Si les effets sont encore en train de monter, il est souvent préférable d'attendre avant toute décision.",
+  "Prends quelques minutes pour ressentir ce qui se passe dans ton corps.",
+  "Les sensations peuvent encore changer un peu. Laisse le temps faire son travail.",
+  "Respire doucement et observe comment tu te sens.",
+  "Les effets arrivent parfois progressivement.",
+  "Un peu de patience peut éviter de prendre trop rapidement.",
+  "Prendre le temps aide souvent à mieux vivre l'expérience.",
+  "Attendre un moment permet souvent d'y voir plus clair.",
+  "Chaque corps réagit différemment.",
+  "Les effets peuvent se stabiliser avec un peu de temps.",
+  "Écouter son corps reste le meilleur repère.",
+  "Les sensations évoluent parfois lentement.",
+  "Laisse le moment se poser tranquillement.",
+  "Tu peux simplement observer ce qui se passe.",
+  "Le temps est souvent un bon allié.",
+  "Rien ne presse.",
+  "Une pause peut aider à mieux ressentir.",
+  "Reste attentif à ton rythme.",
+  "Les effets peuvent continuer à évoluer un moment.",
+  "Attendre évite souvent les surprises.",
+  "Prends le temps de respirer.",
+  "Observe tes sensations.",
+  "Les choses se mettent souvent en place doucement.",
+];
+
+const BANK_B: readonly string[] = [
+  "Si tout va bien, continue simplement d'écouter ton corps.",
+  "Profite du moment en restant attentif à ton énergie.",
+  "Pense à boire un peu d'eau de temps en temps.",
+  "Faire des pauses aide à garder un bon équilibre.",
+  "Prendre soin de soi permet de profiter plus longtemps.",
+  "Respirer profondément peut faire du bien.",
+  "Si tu te sens bien, continue à ton rythme.",
+  "Garder un peu d'énergie pour la suite est souvent une bonne idée.",
+  "Boire de l'eau et se reposer un peu peut aider.",
+  "Un moment calme peut être agréable.",
+  "Profite de la musique et de l'ambiance.",
+  "Rester connecté à son corps est important.",
+  "Les pauses font aussi partie du festival.",
+  "Un peu d'eau peut toujours aider.",
+  "Prendre le temps de respirer peut faire du bien.",
+  "Profite de l'instant.",
+  "Ton rythme est le bon.",
+  "Rien ne presse.",
+  "Reste à l'écoute de tes sensations.",
+  "Un moment calme peut être agréable.",
+  "Tu peux simplement profiter du moment.",
+  "La musique continue.",
+  "Ton corps sait souvent ce dont il a besoin.",
+  "Respire tranquillement.",
+  "Tout semble aller bien.",
+];
+
+const BANK_C: readonly string[] = [
+  "Certaines sensations peuvent sembler inhabituelles.",
+  "Le corps et l'esprit peuvent réagir différemment selon le contexte.",
+  "Respirer lentement peut aider à se recentrer.",
+  "Prends quelques minutes pour te poser.",
+  "Boire un peu d'eau peut faire du bien.",
+  "Trouver un endroit calme peut aider.",
+  "Regarder autour de soi peut rassurer.",
+  "Les sensations évoluent souvent avec le temps.",
+  "Prendre une pause peut être utile.",
+  "S'asseoir quelques minutes peut aider.",
+  "Respirer profondément peut calmer le corps.",
+  "Observer ses sensations sans les juger peut aider.",
+  "Tout n'a pas besoin d'aller vite.",
+  "Les sensations changent souvent.",
+  "Laisse le moment passer.",
+  "Tu peux te poser un instant.",
+  "Les choses peuvent redevenir plus simples avec le temps.",
+  "Une pause peut aider.",
+  "Ralentir peut faire du bien.",
+  "Respire doucement.",
+  "Regarde la musique autour de toi.",
+  "Prends le temps.",
+  "Les sensations passent souvent.",
+  "Tu peux te poser.",
+  "Le moment va évoluer.",
+];
+
+const BANK_D: readonly string[] = [
+  "L'anxiété peut apparaître quand les sensations sont nouvelles.",
+  "Respire lentement et profondément.",
+  "Tu peux prendre quelques minutes au calme.",
+  "Les sensations passent avec le temps.",
+  "Trouver un endroit calme peut aider.",
+  "Regarder autour de soi peut rassurer.",
+  "Parler à un ami peut faire du bien.",
+  "Boire un peu d'eau peut aider.",
+  "Tu peux simplement t'asseoir.",
+  "Respire doucement.",
+  "Les sensations vont évoluer.",
+  "Tu n'es pas seul.",
+  "Prends quelques minutes.",
+  "La musique est là.",
+  "Le moment va passer.",
+  "Ton corps va retrouver son rythme.",
+  "Prends le temps.",
+  "Ralentir peut aider.",
+  "Respirer profondément peut calmer.",
+  "Un peu de repos peut faire du bien.",
+  "Tu peux fermer les yeux quelques secondes.",
+  "Les sensations passent.",
+  "Tu es en sécurité.",
+  "Prends soin de toi.",
+  "Ce moment peut se calmer.",
+];
+
+const BANK_E: readonly string[] = [
+  "La chaleur et la danse peuvent fatiguer le corps.",
+  "Boire un peu d'eau peut aider.",
+  "Prendre une pause peut faire du bien.",
+  "Se mettre à l'ombre peut aider.",
+  "Ton corps peut avoir besoin de ralentir.",
+  "Faire une pause est parfois la meilleure chose.",
+  "Respire tranquillement.",
+  "S'asseoir quelques minutes peut aider.",
+  "La fatigue peut amplifier les sensations.",
+  "Prendre soin de soi aide à profiter du festival.",
+  "Un peu de repos peut faire du bien.",
+  "Boire de l'eau peut aider.",
+  "Ton corps te parle.",
+  "Écoute-le.",
+  "Prends quelques minutes.",
+  "La musique peut attendre.",
+  "Ton bien-être est important.",
+  "Se poser peut aider.",
+  "Un peu d'ombre peut faire du bien.",
+  "Respire doucement.",
+  "Le corps peut récupérer rapidement.",
+  "Un moment calme peut aider.",
+  "Ralentir est parfois la bonne décision.",
+  "Hydrate-toi.",
+  "Prends soin de toi.",
+];
+
+const BANK_F: readonly string[] = [
+  "La fatigue peut amplifier les sensations.",
+  "Se reposer peut aider.",
+  "Dormir un peu peut faire du bien.",
+  "Boire de l'eau peut aider.",
+  "Manger quelque chose peut aider.",
+  "Le corps récupère avec le repos.",
+  "Prendre une pause peut faire la différence.",
+  "Ton corps a peut-être besoin de ralentir.",
+  "Un moment calme peut aider.",
+  "Respire tranquillement.",
+  "S'allonger un moment peut aider.",
+  "La fatigue passe avec le repos.",
+  "Ton énergie reviendra.",
+  "Prends soin de toi.",
+  "Le repos est parfois la meilleure solution.",
+  "Tu peux simplement te poser.",
+  "Le festival continue demain.",
+  "Un peu de sommeil peut aider.",
+  "Ton corps peut récupérer.",
+  "Prends quelques minutes.",
+  "Un moment calme peut faire du bien.",
+  "Ralentir peut aider.",
+  "Respire doucement.",
+  "Le repos aide souvent.",
+  "Prends soin de toi.",
+];
+
+// ── Assemblage du message simulateur ──────────────────────────────────────────
+
+type SimResult = {
+  informatif: string;
+  conseil: string;
+  securite: string;
+  rassurant: string;
+};
+
+function assembleSimMessage(substanceId: string, elapsedMin: number, mood: string): SimResult {
+  const onset      = SIM_ONSET[substanceId] ?? 30;
+  const durMin     = (SIM_DURATION[substanceId] ?? 3) * 60;
+
+  // 1. Phase temporelle → message informatif
+  type Phase = "before" | "rising" | "peak" | "declining" | "after";
+  let phase: Phase;
+  let informatif: string;
 
   if (elapsedMin < onset * 0.7) {
-    return "Les effets n'ont probablement pas encore commencé à se faire sentir pleinement. Prends le temps d'attendre avant de reprendre quoi que ce soit.";
+    phase      = "before";
+    informatif = "Les effets n'ont probablement pas encore commencé. Prends le temps d'attendre avant de reprendre quoi que ce soit.";
+  } else if (elapsedMin <= onset * 1.3) {
+    phase      = "rising";
+    informatif = "Tu es probablement dans la phase de montée. Les effets peuvent encore évoluer — attends de voir comment ton corps réagit.";
+  } else if (elapsedMin <= durMin * 0.8) {
+    phase      = "peak";
+    informatif = "Tu es dans la période principale des effets. Écoute ton corps, hydrate-toi et prends des pauses.";
+  } else if (elapsedMin <= durMin * 1.2) {
+    phase      = "declining";
+    informatif = "Les effets commencent probablement à diminuer. Le corps peut être plus fatigué qu'il n'y paraît.";
+  } else {
+    phase      = "after";
+    informatif = "Les effets sont probablement passés. Le corps continue à récupérer — c'est normal de se sentir épuisé.";
   }
-  if (elapsedMin <= onset * 1.3) {
-    return "Tu es probablement dans la phase de montée. Les effets peuvent encore évoluer pendant un moment. Attends de voir comment ton corps réagit.";
+
+  // 2. Sélection de la banque selon humeur + phase
+  const isMontee = phase === "before" || phase === "rising";
+  let bank: readonly string[];
+  if (isMontee && (mood === "ok" || mood === "")) {
+    bank = BANK_A;
+  } else if (mood === "ok" || mood === "") {
+    bank = BANK_B;
+  } else if (mood === "strange") {
+    bank = isMontee ? [...BANK_A, ...BANK_C] : BANK_C;
+  } else if (mood === "intense") {
+    bank = BANK_C;
+  } else if (mood === "anxious") {
+    bank = BANK_D;
+  } else if (mood === "hot") {
+    bank = BANK_E;
+  } else {
+    bank = BANK_F; // tired
   }
-  if (elapsedMin <= durationMin * 0.8) {
-    return "Tu es probablement dans la période principale des effets. Écoute ton corps, hydrate-toi et prends des pauses.";
-  }
-  if (elapsedMin <= durationMin * 1.2) {
-    return "Les effets commencent probablement à diminuer. Ton corps peut être fatigué — c'est normal.";
-  }
-  return "Les effets sont probablement passés. Ton corps a encore besoin de récupérer. Prends soin de toi.";
+
+  // Sélection déterministe (même entrée → même message)
+  const seed   = substanceId.charCodeAt(0) * 7 + Math.floor(elapsedMin / 15);
+  const conseil = bank[seed % bank.length];
+
+  // 3. Rappel sécurité contextuel
+  const securite =
+    mood === "anxious" || mood === "intense"
+      ? "Si les sensations sont difficiles, trouver un endroit calme et rester avec quelqu'un de confiance peut aider. Des équipes sont disponibles sans jugement."
+      : mood === "hot" || mood === "tired"
+      ? "La chaleur et la fatigue amplifient souvent les effets. Boire de l'eau, se mettre à l'ombre et faire une pause peut faire du bien."
+      : isMontee
+      ? "Attendre avant de reprendre quoi que ce soit est souvent la meilleure décision dans cette phase."
+      : "Boire régulièrement de l'eau et faire des pauses aide à garder un bon équilibre.";
+
+  // 4. Phrase rassurante selon humeur
+  const RASSURANTS: Record<string, string> = {
+    ok:      "Tout semble aller dans le bon sens. Continue d'écouter ton corps.",
+    strange: "Les sensations évoluent. Tu peux simplement les observer sans t'y accrocher.",
+    intense: "Ça peut passer. Tu n'es pas seul — les équipes du festival sont là.",
+    anxious: "Tu es en sécurité. Prendre soin de toi est la bonne chose à faire.",
+    hot:     "Ton corps va récupérer. Repose-toi et prends soin de toi.",
+    tired:   "Le repos est la meilleure chose maintenant. Le festival continue demain.",
+  };
+  const rassurant = RASSURANTS[mood] ?? "Prends soin de toi.";
+
+  return { informatif, conseil, securite, rassurant };
 }
 
 // ── Composants ────────────────────────────────────────────────────────────────
@@ -464,7 +723,8 @@ export function ReductionRisquesScreen({ onBack }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedSubstance, setSelectedSubstance] = useState<Substance | null>(null);
   const [simSubstanceId, setSimSubstanceId] = useState<string>("");
-  const [simTimeValue, setSimTimeValue] = useState<string>("");
+  const [simTimeValue, setSimTimeValue]     = useState<string>("");
+  const [simMoodId, setSimMoodId]           = useState<string>("");
 
   // ── Navigation interne ──────────────────────────────────────────────────────
   function handleBack() {
@@ -498,9 +758,10 @@ export function ReductionRisquesScreen({ onBack }: Props) {
     view === "substanceDetail" ? "← Substances" : "← Retour";
 
   // ── Simulateur ──────────────────────────────────────────────────────────────
-  const simMessage = simSubstanceId && simTimeValue
-    ? getSimMessage(simSubstanceId, Number(simTimeValue))
-    : null;
+  const simResult: SimResult | null =
+    simSubstanceId && simTimeValue && simMoodId
+      ? assembleSimMessage(simSubstanceId, Number(simTimeValue), simMoodId)
+      : null;
 
   // ── Rendu des vues ──────────────────────────────────────────────────────────
 
@@ -920,27 +1181,24 @@ export function ReductionRisquesScreen({ onBack }: Props) {
     };
 
     return (
-      <div
-        className="no-scrollbar"
-        style={{ flex: 1, overflowY: "auto", padding: "16px 16px 48px" }}
-      >
+      <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "16px 16px 48px" }}>
         <p style={{ fontSize: 13, opacity: 0.60, lineHeight: 1.65, margin: "0 0 24px" }}>
           Un repère sur le timing, basé sur des données générales.
           Chaque personne réagit différemment. Ce n'est pas un outil médical.
         </p>
 
-        {/* Substance */}
+        {/* Champ 1 — Substance */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, opacity: 0.55, display: "block", marginBottom: 6 }}>
             Substance
           </label>
           <select
             value={simSubstanceId}
-            onChange={(e) => setSimSubstanceId(e.target.value)}
+            onChange={(e) => { setSimSubstanceId(e.target.value); setSimMoodId(""); }}
             style={selectStyle}
           >
             <option value="" style={{ background: "#1a1a2e" }}>Choisir une substance…</option>
-            {SUBSTANCES.map((s) => (
+            {SIM_SUBSTANCES.map((s) => (
               <option key={s.id} value={s.id} style={{ background: "#1a1a2e" }}>
                 {s.emoji} {s.name}
               </option>
@@ -948,14 +1206,14 @@ export function ReductionRisquesScreen({ onBack }: Props) {
           </select>
         </div>
 
-        {/* Temps écoulé */}
+        {/* Champ 2 — Temps écoulé */}
         <div style={{ marginBottom: 24 }}>
           <label style={{ fontSize: 12, opacity: 0.55, display: "block", marginBottom: 6 }}>
             Temps écoulé depuis la prise
           </label>
           <select
             value={simTimeValue}
-            onChange={(e) => setSimTimeValue(e.target.value)}
+            onChange={(e) => { setSimTimeValue(e.target.value); setSimMoodId(""); }}
             style={selectStyle}
           >
             <option value="" style={{ background: "#1a1a2e" }}>Choisir…</option>
@@ -967,35 +1225,110 @@ export function ReductionRisquesScreen({ onBack }: Props) {
           </select>
         </div>
 
-        {/* Résultat */}
-        {simMessage && (
-          <div
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 18,
-              padding: "18px 20px",
-              marginBottom: 20,
-            }}
-          >
-            <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.7, opacity: 0.90 }}>
-              {simMessage}
-            </p>
-            <p style={{ margin: 0, fontSize: 12, opacity: 0.50, lineHeight: 1.5, fontStyle: "italic" }}>
-              Boire de l'eau, faire une pause si besoin, écouter ton corps.
-            </p>
+        {/* Champ 3 — Comment tu te sens (visible après les 2 premiers) */}
+        {simSubstanceId && simTimeValue && (
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ fontSize: 12, opacity: 0.55, display: "block", marginBottom: 10 }}>
+              Comment tu te sens ?
+            </label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+              {MOOD_OPTIONS.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setSimMoodId(simMoodId === m.id ? "" : m.id)}
+                  style={{
+                    borderRadius: 14,
+                    padding: "10px 6px",
+                    background: simMoodId === m.id
+                      ? "rgba(255,255,255,0.14)"
+                      : "rgba(255,255,255,0.05)",
+                    border: simMoodId === m.id
+                      ? "1px solid rgba(255,255,255,0.35)"
+                      : "1px solid rgba(255,255,255,0.10)",
+                    color: "white",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    textAlign: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>{m.emoji}</span>
+                  <span style={{ fontSize: 10, opacity: 0.75, lineHeight: 1.3 }}>{m.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Footer fixe */}
-        <div
-          style={{
-            background: "rgba(191,90,242,0.08)",
-            border: "1px solid rgba(191,90,242,0.20)",
-            borderRadius: 16,
-            padding: "14px 16px",
-          }}
-        >
+        {/* Résultat — 4 parties */}
+        {simResult && (
+          <div style={{ marginBottom: 16 }}>
+            {/* 1 — Situation probable */}
+            <div style={{
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.13)",
+              borderRadius: 16,
+              padding: "14px 16px",
+              marginBottom: 8,
+            }}>
+              <div style={{ fontSize: 10, opacity: 0.40, letterSpacing: "0.09em", textTransform: "uppercase", marginBottom: 6 }}>
+                Situation probable
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65 }}>{simResult.informatif}</p>
+            </div>
+
+            {/* 2 — Conseil */}
+            <div style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 16,
+              padding: "14px 16px",
+              marginBottom: 8,
+            }}>
+              <div style={{ fontSize: 10, opacity: 0.40, letterSpacing: "0.09em", textTransform: "uppercase", marginBottom: 6 }}>
+                Conseil
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65 }}>{simResult.conseil}</p>
+            </div>
+
+            {/* 3 — Rappel sécurité */}
+            <div style={{
+              background: "rgba(255,149,0,0.06)",
+              border: "1px solid rgba(255,149,0,0.18)",
+              borderRadius: 16,
+              padding: "14px 16px",
+              marginBottom: 8,
+            }}>
+              <div style={{ fontSize: 10, opacity: 0.40, letterSpacing: "0.09em", textTransform: "uppercase", marginBottom: 6 }}>
+                Rappel sécurité
+              </div>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65 }}>{simResult.securite}</p>
+            </div>
+
+            {/* 4 — Phrase rassurante */}
+            <div style={{
+              background: "rgba(191,90,242,0.06)",
+              border: "1px solid rgba(191,90,242,0.18)",
+              borderRadius: 16,
+              padding: "14px 16px",
+            }}>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, fontStyle: "italic" }}>
+                💟 {simResult.rassurant}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{
+          background: "rgba(191,90,242,0.08)",
+          border: "1px solid rgba(191,90,242,0.20)",
+          borderRadius: 16,
+          padding: "14px 16px",
+        }}>
           <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 600 }}>💟 Prends soin de toi.</p>
           <p style={{ margin: 0, fontSize: 12, opacity: 0.65, lineHeight: 1.55 }}>
             Si tu veux te recentrer ou ralentir, les modules de respiration et de recentrage sont disponibles dans Santé.

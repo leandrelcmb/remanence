@@ -37,18 +37,6 @@ type Props = {
 // ── CSS animations ─────────────────────────────────────────────────────────────
 
 const CSS = `
-@keyframes landingOrnamentSpin {
-  from { transform: translate(-50%, -50%) rotate(0deg);   }
-  to   { transform: translate(-50%, -50%) rotate(360deg); }
-}
-@keyframes landingOrnamentSpinRev {
-  from { transform: translate(-50%, -50%) rotate(0deg);    }
-  to   { transform: translate(-50%, -50%) rotate(-360deg); }
-}
-@keyframes landingDotPulse {
-  0%, 100% { opacity: 0.18; transform: scale(1);   }
-  50%       { opacity: 0.65; transform: scale(1.5); }
-}
 @keyframes landingQuoteFade {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 0.45; transform: translateY(0); }
@@ -61,12 +49,23 @@ const CSS = `
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0);    }
 }
-@keyframes navCardNeon {
-  0%   { box-shadow: 0 0 0 1px rgba(0,199,190,0.30), 0 4px 16px rgba(0,199,190,0.10); }
-  25%  { box-shadow: 0 0 0 1px rgba(10,132,255,0.30), 0 4px 16px rgba(10,132,255,0.10); }
-  50%  { box-shadow: 0 0 0 1px rgba(191,90,242,0.30), 0 4px 16px rgba(191,90,242,0.10); }
-  75%  { box-shadow: 0 0 0 1px rgba(52,199,89,0.30), 0 4px 16px rgba(52,199,89,0.10); }
-  100% { box-shadow: 0 0 0 1px rgba(0,199,190,0.30), 0 4px 16px rgba(0,199,190,0.10); }
+@keyframes ornamentSparkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.9); }
+  50%       { opacity: 1;    transform: scale(1.3); }
+}
+@keyframes ornamentSparkleRotate {
+  0%   { opacity: 0.30; transform: rotate(0deg)   scale(0.85); }
+  50%  { opacity: 1.00; transform: rotate(180deg) scale(1.25); }
+  100% { opacity: 0.30; transform: rotate(360deg) scale(0.85); }
+}
+@keyframes ornamentBurst {
+  0%, 100% { opacity: 0.18; transform: scale(0.7);  }
+  40%       { opacity: 0.90; transform: scale(1.15); }
+  70%       { opacity: 0.55; transform: scale(0.95); }
+}
+@keyframes ornamentStarSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 `;
 
@@ -85,7 +84,7 @@ function parseColor(color: string): [number, number, number] {
   }
   const m = v.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
   if (m) return [+m[1], +m[2], +m[3]];
-  return [0, 255, 183]; // fallback neon vert
+  return [0, 255, 183];
 }
 
 function lighten(c: number, factor: number): number {
@@ -96,82 +95,287 @@ function toHex(r: number, g: number, b: number): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
-// ── Ornement mystique ──────────────────────────────────────────────────────────
+// ── Formes SVG sparkles ────────────────────────────────────────────────────────
 
-const DOT_POSITIONS: {
-  top: number; left: number; size: number; blur: number;
-  opacity: number; dur: number; delay: number;
-}[] = [
-  { top:  8, left: 15, size: 2, blur: 5, opacity: 0.28, dur: 3.5, delay: 0   },
-  { top: 12, left: 78, size: 3, blur: 7, opacity: 0.22, dur: 4.2, delay: 0.8 },
-  { top: 22, left:  5, size: 2, blur: 4, opacity: 0.18, dur: 3.8, delay: 1.5 },
-  { top: 28, left: 90, size: 2, blur: 5, opacity: 0.25, dur: 5.0, delay: 0.3 },
-  { top: 42, left:  2, size: 2, blur: 3, opacity: 0.14, dur: 5.5, delay: 2.8 },
-  { top: 58, left: 94, size: 2, blur: 3, opacity: 0.14, dur: 4.1, delay: 3.0 },
-  { top: 70, left:  8, size: 3, blur: 6, opacity: 0.20, dur: 4.5, delay: 2.1 },
-  { top: 78, left: 86, size: 2, blur: 4, opacity: 0.22, dur: 3.2, delay: 1.2 },
-  { top: 88, left: 30, size: 2, blur: 5, opacity: 0.18, dur: 4.8, delay: 0.6 },
-  { top: 92, left: 66, size: 3, blur: 7, opacity: 0.16, dur: 3.9, delay: 1.9 },
-];
+const STAR8    = "M0,-14 L3.5,-5.5 L13,-5.5 L5.5,0 L8.5,10 L0,5 L-8.5,10 L-5.5,0 L-13,-5.5 L-3.5,-5.5 Z";
+const STAR5    = "M0,-8 L1.8,-3 L7,-3 L3,0 L4.5,5 L0,2.5 L-4.5,5 L-3,0 L-7,-3 L-1.8,-3 Z";
+const SP_CROSS   = "M0,-5 L0.6,-0.6 L4,0 L0.6,0.6 L0,5 L-0.6,0.6 L-4,0 L-0.6,-0.6 Z";
+const SP_DIAMOND = "M0,-3.5 L2.5,0 L0,3.5 L-2.5,0 Z";
+const SP_BURST   = "M0,-5 L0,-1.8 M0,1.8 L0,5 M-5,0 L-1.8,0 M1.8,0 L5,0";
+const SP_MOBILE  = "M0,-3.5 L0.8,-0.8 L3.5,0 L0.8,0.8 L0,3.5 L-0.8,0.8 L-3.5,0 L-0.8,-0.8 Z";
 
-function MysticOrnament({ accentColor }: { accentColor: string }) {
+// ── OrnamentBorder ─────────────────────────────────────────────────────────────
+
+function OrnamentBorder({ haloColor }: { haloColor: string }) {
+  const [r, g, b] = parseColor(haloColor);
+
+  // Palette dérivée du halo : base, clair (mixé vers blanc), très clair
+  const c   = (a: number) => `rgba(${r},${g},${b},${a})`;
+  const rl  = lighten(r, 0.42), gl  = lighten(g, 0.42), bl  = lighten(b, 0.42);
+  const rll = lighten(r, 0.72), gll = lighten(g, 0.72), bll = lighten(b, 0.72);
+  const cL  = (a: number) => `rgba(${rl},${gl},${bl},${a})`;
+  const cLL = (a: number) => `rgba(${rll},${gll},${bll},${a})`;
+
   return (
-    <div style={{
-      position: "absolute", inset: 0,
-      pointerEvents: "none", overflow: "hidden", zIndex: 0,
-    }}>
-      {/* Arc intérieur — rotation lente */}
-      <div style={{
+    <svg
+      viewBox="0 0 375 812"
+      preserveAspectRatio="none"
+      style={{
         position: "absolute",
-        top: "50%", left: "50%",
-        width: 340, height: 340,
-        borderRadius: "50%",
-        border: `1px solid ${accentColor}1A`,
-        animation: "landingOrnamentSpin 45s linear infinite",
-      }} />
-      {/* Arc extérieur — contre-rotation très lente */}
-      <div style={{
-        position: "absolute",
-        top: "50%", left: "50%",
-        width: 560, height: 560,
-        borderRadius: "50%",
-        border: `1px solid ${accentColor}0D`,
-        animation: "landingOrnamentSpinRev 70s linear infinite",
-      }} />
-      {/* Micro-points lumineux */}
-      {DOT_POSITIONS.map((d, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            top: `${d.top}%`, left: `${d.left}%`,
-            width: d.size, height: d.size,
-            borderRadius: "50%",
-            background: accentColor,
-            boxShadow: `0 0 ${d.blur}px ${accentColor}`,
-            opacity: d.opacity,
-            animation: `landingDotPulse ${d.dur}s ease-in-out infinite`,
-            animationDelay: `${d.delay}s`,
-          }}
-        />
-      ))}
-    </div>
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: 2,
+      }}
+    >
+      <defs>
+        {/* Glow léger */}
+        <filter id="og" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        {/* Glow fort */}
+        <filter id="og2" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="6" result="b"/>
+          <feMerge>
+            <feMergeNode in="b"/><feMergeNode in="b"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        {/* Glow halo (bord adaptatif) */}
+        <filter id="og-halo" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="14"/>
+        </filter>
+
+        {/* Circuit pour les comètes mobiles */}
+        <path id="lp-orbit"
+          d="M22,8 L353,8 L367,22 L367,790 L353,804 L22,804 L8,790 L8,22 Z"/>
+
+        {/* Gradients de traîne — base, clair, très clair */}
+        <linearGradient id="tail-base" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stopColor={c(0)}/>
+          <stop offset="100%" stopColor={c(0.8)}/>
+        </linearGradient>
+        <linearGradient id="tail-light" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stopColor={cL(0)}/>
+          <stop offset="100%" stopColor={cL(0.8)}/>
+        </linearGradient>
+        <linearGradient id="tail-vlight" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stopColor={cLL(0)}/>
+          <stop offset="100%" stopColor={cLL(0.75)}/>
+        </linearGradient>
+
+        {/* Gradients de bord — monochrome, s'estompent aux extrémités */}
+        <linearGradient id="g-top" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stopColor={c(0.3)}/>
+          <stop offset="25%"  stopColor={cL(0.9)}/>
+          <stop offset="75%"  stopColor={c(0.9)}/>
+          <stop offset="100%" stopColor={c(0.3)}/>
+        </linearGradient>
+        <linearGradient id="g-right" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stopColor={c(0.3)}/>
+          <stop offset="30%"  stopColor={c(0.9)}/>
+          <stop offset="70%"  stopColor={cL(0.9)}/>
+          <stop offset="100%" stopColor={c(0.3)}/>
+        </linearGradient>
+        <linearGradient id="g-bottom" x1="100%" y1="0%" x2="0%" y2="0%">
+          <stop offset="0%"   stopColor={c(0.3)}/>
+          <stop offset="25%"  stopColor={c(0.9)}/>
+          <stop offset="75%"  stopColor={cL(0.9)}/>
+          <stop offset="100%" stopColor={c(0.3)}/>
+        </linearGradient>
+        <linearGradient id="g-left" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%"   stopColor={c(0.3)}/>
+          <stop offset="30%"  stopColor={cL(0.9)}/>
+          <stop offset="70%"  stopColor={c(0.9)}/>
+          <stop offset="100%" stopColor={c(0.3)}/>
+        </linearGradient>
+      </defs>
+
+      {/* ── Glow halo adaptatif ── */}
+      <rect x="2" y="2" width="371" height="808"
+        fill="none"
+        stroke={c(0.45)}
+        strokeWidth="20"
+        filter="url(#og-halo)"
+      />
+
+      {/* ── Bords ── */}
+      <line x1="22"  y1="8"   x2="353" y2="8"   stroke="url(#g-top)"    strokeWidth="1.5" filter="url(#og)"/>
+      <line x1="367" y1="22"  x2="367" y2="790" stroke="url(#g-right)"  strokeWidth="1.5" filter="url(#og)"/>
+      <line x1="353" y1="804" x2="22"  y2="804" stroke="url(#g-bottom)" strokeWidth="1.5" filter="url(#og)"/>
+      <line x1="8"   y1="790" x2="8"   y2="22"  stroke="url(#g-left)"   strokeWidth="1.5" filter="url(#og)"/>
+
+      {/* ── Grande étoile top-center ── */}
+      <g transform="translate(187.5, 8)" filter="url(#og2)">
+        <path d={STAR8} fill={cL(0.95)}
+          style={{ animation: "ornamentStarSpin 12s linear infinite", transformOrigin: "0 0" }}/>
+      </g>
+
+      {/* ── Étoiles de coins ── */}
+      <g transform="translate(14, 14)"   filter="url(#og2)"><path d={STAR5} fill={c(0.9)}/></g>
+      <g transform="translate(361, 14)"  filter="url(#og2)"><path d={STAR5} fill={cL(0.9)}/></g>
+      <g transform="translate(14, 798)"  filter="url(#og2)"><path d={STAR5} fill={cL(0.9)}/></g>
+      <g transform="translate(361, 798)" filter="url(#og2)"><path d={STAR5} fill={c(0.9)}/></g>
+
+      {/* ── Vrilles de coins ── */}
+      <g filter="url(#og)">
+        <path d="M8,50 C13,28 28,13 50,8"   stroke={c(0.70)}  strokeWidth="1"   fill="none"/>
+        <path d="M8,78 C20,50 45,30 78,18"   stroke={cL(0.45)} strokeWidth="0.8" fill="none"/>
+        <path d="M22,8 C16,20 10,32 8,50"    stroke={c(0.35)}  strokeWidth="0.7" fill="none"/>
+      </g>
+      <g filter="url(#og)">
+        <path d="M367,50 C362,28 347,13 325,8"  stroke={cL(0.70)} strokeWidth="1"   fill="none"/>
+        <path d="M367,78 C355,50 330,30 297,18"  stroke={c(0.45)}  strokeWidth="0.8" fill="none"/>
+        <path d="M353,8 C359,20 365,32 367,50"   stroke={cL(0.35)} strokeWidth="0.7" fill="none"/>
+      </g>
+      <g filter="url(#og)">
+        <path d="M8,762 C13,784 28,799 50,804"   stroke={cL(0.70)} strokeWidth="1"   fill="none"/>
+        <path d="M8,734 C20,762 45,782 78,794"   stroke={c(0.45)}  strokeWidth="0.8" fill="none"/>
+        <path d="M22,804 C16,792 10,780 8,762"   stroke={cL(0.35)} strokeWidth="0.7" fill="none"/>
+      </g>
+      <g filter="url(#og)">
+        <path d="M367,762 C362,784 347,799 325,804"  stroke={c(0.70)}  strokeWidth="1"   fill="none"/>
+        <path d="M367,734 C355,762 330,782 297,794"  stroke={cL(0.45)} strokeWidth="0.8" fill="none"/>
+        <path d="M353,804 C359,792 365,780 367,762"  stroke={c(0.35)}  strokeWidth="0.7" fill="none"/>
+      </g>
+
+      {/* ════ SPARKLES ════ */}
+
+      {/* ── Croix ✦ (rotation lente) ── */}
+      <g transform="translate(70, 8)" filter="url(#og2)">
+        <path d={SP_CROSS} fill={cL(0.85)}
+          style={{ animation: "ornamentSparkleRotate 8s ease-in-out 0s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(310, 8)" filter="url(#og2)">
+        <path d={SP_CROSS} fill={c(0.85)}
+          style={{ animation: "ornamentSparkleRotate 9.5s ease-in-out 1.2s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(367, 180)" filter="url(#og2)">
+        <path d={SP_CROSS} fill={c(0.85)}
+          style={{ animation: "ornamentSparkleRotate 7.5s ease-in-out 2.1s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(367, 660)" filter="url(#og2)">
+        <path d={SP_CROSS} fill={cL(0.80)}
+          style={{ animation: "ornamentSparkleRotate 10s ease-in-out 0.5s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(65, 804)" filter="url(#og2)">
+        <path d={SP_CROSS} fill={cLL(0.80)}
+          style={{ animation: "ornamentSparkleRotate 8.5s ease-in-out 3.0s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(305, 804)" filter="url(#og2)">
+        <path d={SP_CROSS} fill={c(0.85)}
+          style={{ animation: "ornamentSparkleRotate 9s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(8, 200)" filter="url(#og2)">
+        <path d={SP_CROSS} fill={cL(0.85)}
+          style={{ animation: "ornamentSparkleRotate 7s ease-in-out 0.8s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(8, 620)" filter="url(#og2)">
+        <path d={SP_CROSS} fill={c(0.80)}
+          style={{ animation: "ornamentSparkleRotate 9s ease-in-out 2.5s infinite", transformOrigin: "0 0" }}/>
+      </g>
+
+      {/* ── Losanges ◇ (pulse rapide) ── */}
+      <g transform="translate(120, 8)">
+        <path d={SP_DIAMOND} fill={c(0.75)}
+          style={{ animation: "ornamentSparkle 3.5s ease-in-out 0.6s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(255, 8)">
+        <path d={SP_DIAMOND} fill={cL(0.70)}
+          style={{ animation: "ornamentSparkle 4.2s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(367, 360)">
+        <path d={SP_DIAMOND} fill={cL(0.70)}
+          style={{ animation: "ornamentSparkle 3.8s ease-in-out 0.3s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(367, 500)">
+        <path d={SP_DIAMOND} fill={c(0.75)}
+          style={{ animation: "ornamentSparkle 5s ease-in-out 2.4s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(130, 804)">
+        <path d={SP_DIAMOND} fill={cLL(0.70)}
+          style={{ animation: "ornamentSparkle 4s ease-in-out 1.1s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(248, 804)">
+        <path d={SP_DIAMOND} fill={c(0.70)}
+          style={{ animation: "ornamentSparkle 3.2s ease-in-out 0.9s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(8, 320)">
+        <path d={SP_DIAMOND} fill={cL(0.70)}
+          style={{ animation: "ornamentSparkle 4.5s ease-in-out 3.2s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(8, 500)">
+        <path d={SP_DIAMOND} fill={cLL(0.65)}
+          style={{ animation: "ornamentSparkle 3.7s ease-in-out 1.5s infinite", transformOrigin: "0 0" }}/>
+      </g>
+
+      {/* ── Bursts + (rayons radiants) ── */}
+      <g transform="translate(188, 8)" filter="url(#og)">
+        <path d={SP_BURST} stroke={cL(0.80)} strokeWidth="1.2" fill="none"
+          style={{ animation: "ornamentBurst 5s ease-in-out 1.2s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(367, 406)" filter="url(#og)">
+        <path d={SP_BURST} stroke={c(0.80)} strokeWidth="1.2" fill="none"
+          style={{ animation: "ornamentBurst 4.5s ease-in-out 0s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(188, 804)" filter="url(#og)">
+        <path d={SP_BURST} stroke={cLL(0.75)} strokeWidth="1.2" fill="none"
+          style={{ animation: "ornamentBurst 6s ease-in-out 2.5s infinite", transformOrigin: "0 0" }}/>
+      </g>
+      <g transform="translate(8, 406)" filter="url(#og)">
+        <path d={SP_BURST} stroke={cL(0.75)} strokeWidth="1.2" fill="none"
+          style={{ animation: "ornamentBurst 5.5s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
+      </g>
+
+      {/* ════ COMÈTES MOBILES ════ */}
+
+      {/* Comète 1 — couleur base */}
+      <g filter="url(#og2)">
+        <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-base)" strokeWidth="1.8"/>
+        <path d={SP_MOBILE} fill={c(0.92)}/>
+        <animateMotion dur="22s" repeatCount="indefinite" rotate="auto">
+          <mpath href="#lp-orbit"/>
+        </animateMotion>
+      </g>
+
+      {/* Comète 2 — couleur claire */}
+      <g filter="url(#og2)">
+        <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-light)" strokeWidth="1.8"/>
+        <path d={SP_MOBILE} fill={cL(0.88)}/>
+        <animateMotion dur="22s" begin="-7.33s" repeatCount="indefinite" rotate="auto">
+          <mpath href="#lp-orbit"/>
+        </animateMotion>
+      </g>
+
+      {/* Comète 3 — très claire (presque blanc teinté) */}
+      <g filter="url(#og2)">
+        <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-vlight)" strokeWidth="1.8"/>
+        <path d={SP_MOBILE} fill={cLL(0.85)}/>
+        <animateMotion dur="22s" begin="-14.67s" repeatCount="indefinite" rotate="auto">
+          <mpath href="#lp-orbit"/>
+        </animateMotion>
+      </g>
+
+    </svg>
   );
 }
 
 // ── NavCard ────────────────────────────────────────────────────────────────────
 
 function NavCard({
-  emoji, label, onClick, animDelay = 0,
+  emoji, label, onClick, cardId,
 }: {
   emoji: string;
   label: string;
   onClick: () => void;
-  animDelay?: number;
+  cardId: string;
 }) {
   return (
     <button
       onClick={onClick}
+      data-navcard={cardId}
       className="remanence-btn"
       style={{
         display: "flex",
@@ -190,7 +394,6 @@ function NavCard({
         fontSize: 12,
         fontWeight: 500,
         letterSpacing: "0.03em",
-        animation: `navCardNeon 10s ease-in-out ${animDelay}s infinite`,
       }}
     >
       <span style={{ fontSize: 22 }}>{emoji}</span>
@@ -207,7 +410,6 @@ export function LandingScreen({
   onConstellation, onFestivalPicker, onContacts, onGames, onSante, onProgrammation,
   activeChasse, onResumeChasse,
 }: Props) {
-  // Timer live : se met à jour chaque seconde quand une session est active
   const [, setTick] = useState(0);
   useEffect(() => {
     if (!activeChasse) return;
@@ -215,7 +417,6 @@ export function LandingScreen({
     return () => clearInterval(id);
   }, [activeChasse]);
 
-  // ── Couleurs CTA dérivées du halo ─────────────────────────────────────────
   const [r, g, b]   = parseColor(haloColor ?? "#00FFB7");
   const ctaStart    = toHex(r, g, b);
   const ctaEnd      = toHex(lighten(r, 0.38), lighten(g, 0.38), lighten(b, 0.38));
@@ -231,11 +432,16 @@ export function LandingScreen({
 @keyframes landingGlowBreath {
   0%, 100% { box-shadow: 0 0 18px ${ctaGlow}, 0 4px 24px ${ctaGlowSoft}; }
   50%       { box-shadow: 0 0 30px ${ctaGlowHot}, 0 4px 36px ${ctaGlow}; }
+}
+[data-navcard] {
+  box-shadow:
+    inset 0 0 0 1px rgba(${r},${g},${b},0.22),
+    0 0 10px 3px rgba(${r},${g},${b},0.14);
 }`;
 
   return (
     <div style={{
-      height: "80dvh",
+      height: "90dvh",
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
@@ -244,30 +450,9 @@ export function LandingScreen({
       <style>{CSS}</style>
       <style>{glowCSS}</style>
 
-      {/* ── Ornement mystique (z-0, no pointer) ── */}
-      <MysticOrnament accentColor={haloColor} />
+      <OrnamentBorder haloColor={haloColor} />
 
-      {/* ── Zone header — quote ── */}
-      <div style={{
-        flexShrink: 0,
-        padding: "52px 24px 0",
-        textAlign: "center",
-        zIndex: 1,
-      }}>
-        <p style={{
-          margin: 0,
-          fontSize: 20,
-          fontStyle: "italic",
-          opacity: 0.45,
-          letterSpacing: "0.15em",
-          lineHeight: 1.2,
-          animation: "landingQuoteFade 1.2s ease both",
-        }}>
-          ❝ Ancre l'instant ❞
-        </p>
-      </div>
-
-      {/* ── Zone body — navigation ── */}
+      {/* ── Zone body ── */}
       <div style={{
         flex: 1,
         display: "flex",
@@ -278,7 +463,6 @@ export function LandingScreen({
         zIndex: 1,
       }}>
 
-        {/* ── CTA principal ── */}
         <div style={{
           display: "flex",
           justifyContent: "center",
@@ -295,7 +479,7 @@ export function LandingScreen({
               background: `linear-gradient(135deg, ${ctaStart} 0%, ${ctaEnd} 100%)`,
               boxShadow: `0 0 18px ${ctaGlow}, 0 4px 24px ${ctaGlowSoft}`,
               color: ctaText,
-              fontSize: 17,
+              fontSize: 18,
               fontWeight: 700,
               cursor: "pointer",
               fontFamily: "inherit",
@@ -307,7 +491,6 @@ export function LandingScreen({
           </button>
         </div>
 
-        {/* ── Trace éclair ── */}
         <div style={{
           display: "flex",
           justifyContent: "center",
@@ -317,8 +500,8 @@ export function LandingScreen({
             onClick={onExpressStart}
             className="remanence-btn"
             style={{
-              width: "58%",
-              height: 46,
+              width: "65%",
+              height: 50,
               borderRadius: 999,
               background: "rgba(255,255,255,0.06)",
               border: "1px solid rgba(255,255,255,0.15)",
@@ -335,34 +518,30 @@ export function LandingScreen({
           </button>
         </div>
 
-        {/* ── Séparateur ── */}
         <div style={{ height: 6 }} />
 
-        {/* ── Grille souvenirs — 3 colonnes ── */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: 10,
           animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s both",
         }}>
-          <NavCard emoji="💓" label="Vibrations"    onClick={onJournal}       animDelay={0}   />
-          <NavCard emoji="✨" label="Constellations" onClick={onConstellation} animDelay={3.5} />
-          <NavCard emoji="🤝" label="Rencontres"    onClick={onContacts}      animDelay={7}   />
+          <NavCard emoji="💓" label="Vibrations"    onClick={onJournal}       cardId="0" />
+          <NavCard emoji="✨" label="Constellations" onClick={onConstellation} cardId="1" />
+          <NavCard emoji="🤝" label="Rencontres"    onClick={onContacts}      cardId="2" />
         </div>
 
-        {/* ── Grille expériences — 3 colonnes ── */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: 10,
           animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.45s both",
         }}>
-          <NavCard emoji="🧠" label="Santé"        onClick={onSante}         animDelay={1.5} />
-          <NavCard emoji="🎵" label="Programme"    onClick={onProgrammation} animDelay={5}   />
-          <NavCard emoji="🎮" label="Jeux"         onClick={onGames}         animDelay={8.5} />
+          <NavCard emoji="🧠" label="Santé"        onClick={onSante}         cardId="3" />
+          <NavCard emoji="🎵" label="Programme"    onClick={onProgrammation} cardId="4" />
+          <NavCard emoji="🎮" label="Jeux"         onClick={onGames}         cardId="5" />
         </div>
 
-        {/* ── Bannière session Chasse active ── */}
         {activeChasse && activeChasse.timerExpiresAt > Date.now() && (
           <button
             onClick={onResumeChasse}
@@ -401,7 +580,7 @@ export function LandingScreen({
 
       </div>
 
-      {/* ── Zone footer — festival picker ── */}
+      {/* ── Footer festival ── */}
       <div style={{
         flexShrink: 0,
         padding: "0 24px 36px",
