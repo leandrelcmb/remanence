@@ -141,7 +141,7 @@ function ContactCard({
                 )}
                 <div style={{ fontSize: 24, fontWeight: 600 }}>{contact.name}</div>
                 {contact.note && (
-                  <div style={{ fontSize: 15, opacity: 0.7, lineHeight: 1.5 }}>{contact.note}</div>
+                  <div style={{ fontSize: 16, opacity: 0.7, lineHeight: 1.5 }}>{contact.note}</div>
                 )}
 
                 {/* Boutons : [Fermer] [Modifier] [🗑️] */}
@@ -242,7 +242,7 @@ function ContactCard({
                   rows={3}
                   style={{
                     background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)",
-                    borderRadius: 14, padding: "14px 16px", fontSize: 15,
+                    borderRadius: 14, padding: "14px 16px", fontSize: 16,
                     color: "white", fontFamily: "inherit", outline: "none",
                     resize: "none", width: "100%", boxSizing: "border-box",
                   }}
@@ -344,7 +344,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
             style={{
               background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: 999, padding: "8px 16px",
-              color: "rgba(255,255,255,0.7)", fontSize: 15,
+              color: "rgba(255,255,255,0.7)", fontSize: 16,
               cursor: "pointer", fontFamily: "inherit",
             }}
           >
@@ -375,7 +375,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
         display: "flex", flexDirection: "column", gap: 10,
       }}>
         {contacts.length === 0 && (
-          <p style={{ opacity: 0.5, fontSize: 15, marginTop: 12 }}>
+          <p style={{ opacity: 0.5, fontSize: 16, marginTop: 12 }}>
             Personne encore. Capture tes rencontres de festival ici 🌿
           </p>
         )}
@@ -464,7 +464,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
               rows={3}
               style={{
                 background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: 14, padding: "14px 16px", fontSize: 15,
+                borderRadius: 14, padding: "14px 16px", fontSize: 16,
                 color: "white", fontFamily: "inherit", outline: "none",
                 resize: "none", width: "100%", boxSizing: "border-box",
               }}

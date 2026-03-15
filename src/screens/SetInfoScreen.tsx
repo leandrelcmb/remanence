@@ -32,10 +32,13 @@ export function SetInfoScreen({ draft, artistSuggestions, onChangeDraft, onNext,
         placeholder="Artiste (ex : Astrix)"
         style={{
           width: "100%",
+          boxSizing: "border-box",
           borderRadius: 18,
           background: "rgba(255,255,255,0.06)",
           border: "1px solid rgba(255,255,255,0.12)",
           padding: 14,
+          fontSize: 16,
+          fontFamily: "inherit",
           color: "white",
           outline: "none",
         }}
@@ -113,10 +116,13 @@ export function SetInfoScreen({ draft, artistSuggestions, onChangeDraft, onNext,
         placeholder="Style (ex : psytrance / ambient)"
         style={{
           width: "100%",
+          boxSizing: "border-box",
           borderRadius: 18,
           background: "rgba(255,255,255,0.06)",
           border: "1px solid rgba(255,255,255,0.12)",
           padding: 14,
+          fontSize: 16,
+          fontFamily: "inherit",
           color: "white",
           outline: "none",
         }}
