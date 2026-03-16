@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -75,6 +76,9 @@ const SECRETS: Secret[] = [
 type Props = { onBack: () => void };
 
 export function TreasureScreen({ onBack }: Props) {
+  const { t } = useTranslation();
+  const secretTexts = t('treasure.secrets', { returnObjects: true }) as string[];
+
   const [found,        setFound]        = useState<Set<number>>(() => new Set());
   const [activeFilter, setActiveFilter] = useState<Filter>("tous");
   const [lastRevealed, setLastRevealed] = useState<number | null>(null);
@@ -112,6 +116,20 @@ export function TreasureScreen({ onBack }: Props) {
     setLastRevealed(null);
   }
 
+  const filterLabels: Record<Filter, string> = {
+    tous:        t('treasure.filterAll'),
+    rencontres:  t('treasure.filterMeetings'),
+    découvertes: t('treasure.filterDiscoveries'),
+    nature:      t('treasure.filterNature'),
+  };
+
+  const filterHints: Record<Filter, string> = {
+    tous:        t('treasure.hintAll'),
+    rencontres:  t('treasure.hintMeetings'),
+    découvertes: t('treasure.hintDiscoveries'),
+    nature:      t('treasure.hintNature'),
+  };
+
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
@@ -148,8 +166,8 @@ export function TreasureScreen({ onBack }: Props) {
         backdropFilter: "blur(20px)",
       }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>🗺️ Chasse au Trésor</div>
-          <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>Explore le festival, révèle ses secrets</div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>{t('treasure.title')}</div>
+          <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>{t('treasure.subtitle')}</div>
         </div>
         <button
           onClick={onBack}
@@ -163,7 +181,7 @@ export function TreasureScreen({ onBack }: Props) {
             cursor: "pointer",
             fontFamily: "inherit",
           }}
-        >Home ॐ</button>
+        >{t('common.home')}</button>
       </div>
 
       {/* ── Compteur + barre ── */}
@@ -181,7 +199,9 @@ export function TreasureScreen({ onBack }: Props) {
           }}>
             {countAll}
           </span>
-          <span style={{ fontSize: 14, opacity: 0.38, fontWeight: 300 }}>/ {totalAll} secrets révélés</span>
+          <span style={{ fontSize: 14, opacity: 0.38, fontWeight: 300 }}>
+            {t('treasure.revealed', { total: totalAll })}
+          </span>
 
           {/* Indicateur filtré */}
           {activeFilter !== "tous" && (
@@ -192,7 +212,7 @@ export function TreasureScreen({ onBack }: Props) {
               fontWeight: 600,
               letterSpacing: "0.03em",
             }}>
-              {countVisible} / {totalVisible} visibles
+              {countVisible} {t('treasure.visible', { total: totalVisible })}
             </span>
           )}
         </div>
@@ -225,7 +245,7 @@ export function TreasureScreen({ onBack }: Props) {
               <button
                 key={f.key}
                 onClick={() => setActiveFilter(f.key)}
-                title={f.hint}
+                title={filterHints[f.key]}
                 style={{
                   flexShrink: 0,
                   borderRadius: 999,
@@ -243,7 +263,7 @@ export function TreasureScreen({ onBack }: Props) {
                   whiteSpace: "nowrap",
                 }}
               >
-                {f.label}
+                {filterLabels[f.key]}
               </button>
             );
           })}
@@ -264,7 +284,7 @@ export function TreasureScreen({ onBack }: Props) {
             letterSpacing: "0.03em",
             fontStyle: "italic",
           }}>
-            {FILTERS.find((f) => f.key === activeFilter)?.hint}
+            {filterHints[activeFilter]}
           </p>
         )}
 
@@ -328,7 +348,7 @@ export function TreasureScreen({ onBack }: Props) {
                   color: isFound ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.50)",
                   transition: "color 0.3s ease",
                 }}>
-                  {secret.text}
+                  {secretTexts[i] ?? secret.text}
                 </span>
 
                 {/* Cercle check */}
@@ -372,7 +392,7 @@ export function TreasureScreen({ onBack }: Props) {
               letterSpacing: "0.04em",
             }}
           >
-            Recommencer depuis le début
+            {t('treasure.restart')}
           </button>
         )}
       </div>
@@ -405,11 +425,10 @@ export function TreasureScreen({ onBack }: Props) {
                 textShadow: `0 0 30px ${GOLD}80`,
                 marginBottom: 10,
               }}>
-                Tous les secrets révélés
+                {t('treasure.allDoneTitle')}
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "rgba(255,255,255,0.6)" }}>
-                Tu as traversé le festival avec tes yeux grands ouverts.<br />
-                Ozora te garde dans ses mémoires.
+                {t('treasure.allDoneMsg')}
               </p>
             </div>
 
@@ -426,7 +445,7 @@ export function TreasureScreen({ onBack }: Props) {
                 cursor: "pointer", fontFamily: "inherit",
                 boxShadow: `0 4px 24px ${GOLD}55`,
               }}>
-                Recommencer
+                {t('treasure.restartBtn')}
               </button>
               <button onClick={onBack} style={{
                 padding: "15px", borderRadius: 999,
@@ -435,7 +454,7 @@ export function TreasureScreen({ onBack }: Props) {
                 color: "rgba(255,255,255,0.72)", fontSize: 15,
                 cursor: "pointer", fontFamily: "inherit",
               }}>
-                Retour aux Jeux
+                {t('treasure.backGames')}
               </button>
             </div>
           </div>

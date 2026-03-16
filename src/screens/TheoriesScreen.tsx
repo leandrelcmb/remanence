@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 
 // ── Utilitaires couleur (palette dynamique depuis haloColor) ─────────────────
 
@@ -32,19 +33,6 @@ type TheoryCategory =
   | "absurde";
 
 type Theory  = { text: string; cat: TheoryCategory };
-type Variant = { emoji: string; label: string; desc: string };
-
-// ── Métadonnées par catégorie ─────────────────────────────────────────────────
-
-const CAT_META: Record<TheoryCategory, { emoji: string; label: string }> = {
-  musique:         { emoji: "🎧", label: "Musique"         },
-  extraterrestres: { emoji: "👽", label: "Extraterrestres" },
-  festival:        { emoji: "🌀", label: "Festival"        },
-  cosmique:        { emoji: "🌌", label: "Cosmique"        },
-  camping:         { emoji: "🏕",  label: "Camping"         },
-  absurde:         { emoji: "😂", label: "Absurde"         },
-};
-
 // ── 60 Théories ───────────────────────────────────────────────────────────────
 
 const THEORIES: Theory[] = [
@@ -120,33 +108,6 @@ const THEORIES: Theory[] = [
   { cat: "absurde", text: "Les gens deviennent systématiquement plus honnêtes dans les festivals — personne ne sait pourquoi." },
   { cat: "absurde", text: "Les festivals sont la forme primitive d'une société future dont personne n'a encore le plan." },
 ];
-
-// ── 3 Variantes ───────────────────────────────────────────────────────────────
-
-const VARIANTS: Variant[] = [
-  {
-    emoji: "🎤",
-    label: "Défense",
-    desc:  "Défends cette théorie pendant 30 secondes sans te laisser interrompre. Les autres écoutent, puis jugent.",
-  },
-  {
-    emoji: "🗳️",
-    label: "Vote du groupe",
-    desc:  "Chaque joueur dit si cette théorie pourrait être vraie. La majorité l'emporte.",
-  },
-  {
-    emoji: "✨",
-    label: "Extension collective",
-    desc:  "Chacun ajoute un élément à la théorie, dans l'ordre. La version finale appartient à tous.",
-  },
-];
-
-// ── Utilitaires ───────────────────────────────────────────────────────────────
-
-function pickRandom<T>(arr: T[], exclude?: T): T {
-  const pool = exclude !== undefined ? arr.filter((x) => x !== exclude) : arr;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
 
 // ── CSS animé ─────────────────────────────────────────────────────────────────
 
@@ -307,6 +268,22 @@ function ScratchCard({ children, revealed, onReveal, hint, borderColor, glowColo
 type Props = { onBack: () => void; haloColor?: string };
 
 export function TheoriesScreen({ onBack, haloColor }: Props) {
+  const { t } = useTranslation();
+
+  // ── Traductions ──────────────────────────────────────────────────────────
+  const theories = t('theories.theories', { returnObjects: true }) as string[];
+  const variants = t('theories.variants', { returnObjects: true }) as Array<{ emoji: string; label: string; desc: string }>;
+
+  // ── Métadonnées par catégorie (labels traduits) ──────────────────────────
+  const CAT_META: Record<TheoryCategory, { emoji: string; label: string }> = {
+    musique:         { emoji: "🎧", label: t('theories.catMusique')         },
+    extraterrestres: { emoji: "👽", label: t('theories.catExtraterrestres') },
+    festival:        { emoji: "🌀", label: t('theories.catFestival')        },
+    cosmique:        { emoji: "🌌", label: t('theories.catCosmique')        },
+    camping:         { emoji: "🏕",  label: t('theories.catCamping')         },
+    absurde:         { emoji: "😂", label: t('theories.catAbsurde')         },
+  };
+
   // ── Palette dynamique ────────────────────────────────────────────────────
   const [r, g, b]  = parseColor(haloColor ?? "#F0B429");
   const haloMain   = toHex(r, g, b);
@@ -321,8 +298,8 @@ export function TheoriesScreen({ onBack, haloColor }: Props) {
   50%     { box-shadow: 0 0 20px 6px rgba(${r},${g},${b},0.35); }
 }`;
 
-  const [theory,  setTheory]  = useState<Theory> (() => pickRandom(THEORIES));
-  const [variant, setVariant] = useState<Variant>(() => pickRandom(VARIANTS));
+  const [theoryIndex, setTheoryIndex] = useState<number>(() => Math.floor(Math.random() * THEORIES.length));
+  const [variantIndex, setVariantIndex] = useState<number>(() => Math.floor(Math.random() * (variants.length || 3)));
 
   const [theoryRevealed,  setTheoryRevealed]  = useState(false);
   const [variantRevealed, setVariantRevealed] = useState(false);
@@ -331,11 +308,23 @@ export function TheoriesScreen({ onBack, haloColor }: Props) {
 
   const bothRevealed = theoryRevealed && variantRevealed;
 
+  const theory = THEORIES[theoryIndex];
+  const theoryText = Array.isArray(theories) && theories[theoryIndex] ? theories[theoryIndex] : theory.text;
+  const variant = Array.isArray(variants) && variants[variantIndex] ? variants[variantIndex] : { emoji: "✨", label: "", desc: "" };
   const catMeta = CAT_META[theory.cat];
 
   function shuffle() {
-    setTheory ((prev) => pickRandom(THEORIES, prev));
-    setVariant((prev) => pickRandom(VARIANTS, prev));
+    setTheoryIndex((prev) => {
+      let next: number;
+      do { next = Math.floor(Math.random() * THEORIES.length); } while (next === prev && THEORIES.length > 1);
+      return next;
+    });
+    setVariantIndex((prev) => {
+      const total = Array.isArray(variants) ? variants.length : 3;
+      let next: number;
+      do { next = Math.floor(Math.random() * total); } while (next === prev && total > 1);
+      return next;
+    });
     setTheoryRevealed(false);
     setVariantRevealed(false);
     setShuffleKey((k) => k + 1);
@@ -358,7 +347,7 @@ export function TheoriesScreen({ onBack, haloColor }: Props) {
       }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>
-            🃏 Théories Absurdes
+            {t('theories.title')}
           </div>
           <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>
             60 cartes · 3 variantes
@@ -377,7 +366,7 @@ export function TheoriesScreen({ onBack, haloColor }: Props) {
             fontFamily: "inherit",
           }}
         >
-          Home ॐ
+          {t('common.home')}
         </button>
       </div>
 
@@ -449,7 +438,7 @@ export function TheoriesScreen({ onBack, haloColor }: Props) {
                 fontWeight: 500,
                 fontStyle: "italic",
               }}>
-                « {theory.text} »
+                « {theoryText} »
               </p>
             </div>
           </ScratchCard>
@@ -541,7 +530,7 @@ export function TheoriesScreen({ onBack, haloColor }: Props) {
             boxShadow: `0 4px 20px ${haloGlowMd}`,
           }}
         >
-          Nouvelles cartes
+          {t('theories.newCard')}
         </button>
 
         {/* ── Légende des variantes ── */}
@@ -560,8 +549,8 @@ export function TheoriesScreen({ onBack, haloColor }: Props) {
           }}>
             Les 3 variantes possibles
           </div>
-          {VARIANTS.map((v) => (
-            <div key={v.label} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+          {(Array.isArray(variants) ? variants : []).map((v, idx) => (
+            <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
               <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{v.emoji}</span>
               <div>
                 <span style={{ fontSize: 12, fontWeight: 700, color: haloMain, opacity: 0.85 }}>

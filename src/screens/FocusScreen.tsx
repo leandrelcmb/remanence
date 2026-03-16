@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Draft } from "../app/flow/types";
 import { RoundButton } from "../app/ui/RoundButton";
 
@@ -13,20 +14,21 @@ type Props = {
 
 type FocusKey = "mental" | "emotion" | "body";
 
-const FOCUSES: [FocusKey, string, string][] = [
-  ["mental", "🧠", "Mental"],
-  ["emotion", "❤️", "Émotions"],
-  ["body", "🕺", "Corps"],
-];
-
 // Note: haloColor est toujours passé en prop pour rester cohérent avec le reste
 // du flux, mais les animations CSS utilisent désormais la CSS var --halo-rgb
 // publiée par App.tsx — ce qui garantit leur fiabilité sur iOS Safari PWA.
 export function FocusScreen({ onSelect, onNext, onBack, onFocusFlare }: Props) {
+  const { t } = useTranslation();
   const btnRefs = useRef<Record<FocusKey, HTMLButtonElement | null>>({} as Record<FocusKey, HTMLButtonElement | null>);
   // État local : null au montage (aucun bouton pré-sélectionné visuellement)
   // Initialisé à null → évite la pré-sélection à chaque visite du composant
   const [localFocus, setLocalFocus] = useState<FocusKey | null>(null);
+
+  const FOCUSES: [FocusKey, string, string][] = [
+    ["mental", "🧠", t("common.mental")],
+    ["emotion", "❤️", t("common.emotions")],
+    ["body", "🕺", t("common.body")],
+  ];
 
   function handleSelect(f: FocusKey) {
     // Supprimer le pulse du bouton précédemment actif
@@ -53,7 +55,7 @@ export function FocusScreen({ onSelect, onNext, onBack, onFocusFlare }: Props) {
     <div style={{ display: "grid", gap: 120, minHeight: "85dvh", alignContent: "center" }}>
 
       <p style={{ opacity: 0.86, fontSize: 23, margin: 0, textAlign: "center" }}>
-        🎭 Où cela s'est joué ?
+        {t("focus.question")}
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
@@ -92,12 +94,12 @@ export function FocusScreen({ onSelect, onNext, onBack, onFocusFlare }: Props) {
       <div style={{ display: "flex", gap: 12 }}>
         <div style={{ flex: 1 }}>
           <RoundButton variant="secondary" onClick={onBack}>
-            ↪️ Retour
+            {t("focus.back")}
           </RoundButton>
         </div>
         <div style={{ flex: 1 }}>
           <RoundButton variant="primary" onClick={onNext}>
-            Continuer ✨
+            {t("focus.continue")}
           </RoundButton>
         </div>
       </div>

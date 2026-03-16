@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // ── Types internes ─────────────────────────────────────────────────────────────
 
@@ -648,6 +649,7 @@ function assembleSimMessage(substanceId: string, elapsedMin: number, mood: strin
 // ── Composants ────────────────────────────────────────────────────────────────
 
 function AlertBanner({ signs }: { signs?: string[] }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -659,7 +661,7 @@ function AlertBanner({ signs }: { signs?: string[] }) {
       }}
     >
       <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
-        ⛑️ Quand demander de l'aide
+        {t("risques.alertBannerTitle")}
       </div>
       {signs && signs.length > 0 && (
         <ul style={{ margin: "0 0 8px 16px", padding: 0, fontSize: 12, opacity: 0.85, lineHeight: 1.7 }}>
@@ -667,7 +669,7 @@ function AlertBanner({ signs }: { signs?: string[] }) {
         </ul>
       )}
       <div style={{ fontSize: 12, opacity: 0.70, lineHeight: 1.55, fontStyle: "italic" }}>
-        Des équipes sont là pour accompagner sans jugement.
+        {t("risques.alertBannerSub")}
       </div>
     </div>
   );
@@ -719,6 +721,7 @@ function CategoryColor({ cat }: { cat: Category }) {
 type Props = { onBack: () => void };
 
 export function ReductionRisquesScreen({ onBack }: Props) {
+  const { t } = useTranslation();
   const [view, setView] = useState<RisquesView>("hub");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedSubstance, setSelectedSubstance] = useState<Substance | null>(null);
@@ -736,26 +739,27 @@ export function ReductionRisquesScreen({ onBack }: Props) {
 
   // ── Header dynamique ────────────────────────────────────────────────────────
   const headerTitle =
-    view === "hub"             ? "Réduction des risques ⛑️" :
-    view === "categories"      ? "Catégories 🗂️" :
+    view === "hub"             ? `${t("risques.title")} ⛑️` :
+    view === "categories"      ? t("risques.headerCategories") :
     view === "categoryDetail"  ? `${selectedCategory?.emoji} ${selectedCategory?.name}` :
-    view === "substances"      ? "Substances 💊" :
+    view === "substances"      ? t("risques.headerSubstances") :
     view === "substanceDetail" ? selectedSubstance?.name ?? "" :
-    view === "conseils"        ? "Conseils festival 🏕️" :
-                                 "Simulateur ⏱️";
+    view === "conseils"        ? t("risques.headerConseils") :
+                                 t("risques.headerSim");
 
   const headerSub =
-    view === "hub"             ? "Informer pour mieux prendre soin" :
-    view === "categories"      ? "5 familles de substances" :
-    view === "substances"      ? `${SUBSTANCES.length} substances · tap pour le détail` :
-    view === "conseils"        ? "En festival, quelques repères utiles" :
-    view === "simulateur"      ? "Aide au timing — pas un outil médical" :
+    view === "hub"             ? t("risques.hubInfoBack") :
+    view === "categories"      ? t("risques.headerSubCategories") :
+    view === "substances"      ? t("risques.hubSubstancesCount", { count: SUBSTANCES.length }) :
+    view === "conseils"        ? t("risques.hubConseilsSub2") :
+    view === "simulateur"      ? t("risques.headerSubSim") :
     "";
 
   const backLabel =
-    view === "hub"             ? "← Santé" :
-    view === "categoryDetail"  ? "← Catégories" :
-    view === "substanceDetail" ? "← Substances" : "← Retour";
+    view === "hub"             ? t("risques.backSante") :
+    view === "categoryDetail"  ? t("risques.backCategories") :
+    view === "substanceDetail" ? t("risques.backSubstances") :
+                                 t("risques.backHub");
 
   // ── Simulateur ──────────────────────────────────────────────────────────────
   const simResult: SimResult | null =
@@ -767,10 +771,10 @@ export function ReductionRisquesScreen({ onBack }: Props) {
 
   function renderHub() {
     const hubCards = [
-      { key: "categories", emoji: "🗂️", title: "Catégories",       desc: "Familles de substances" },
-      { key: "substances",  emoji: "💊", title: "Substances",        desc: "Fiches par produit" },
-      { key: "conseils",    emoji: "🏕️", title: "Conseils festival", desc: "Hydratation, pauses, aide" },
-      { key: "simulateur",  emoji: "⏱️", title: "Simulateur",        desc: "Aide au timing" },
+      { key: "categories", emoji: "🗂️", title: t("risques.hubCategories"),  desc: t("risques.hubCategoriesSub") },
+      { key: "substances",  emoji: "💊", title: t("risques.hubSubstances"),  desc: t("risques.hubSubstancesSub") },
+      { key: "conseils",    emoji: "🏕️", title: t("risques.hubConseils"),    desc: t("risques.hubConseilsSub") },
+      { key: "simulateur",  emoji: "⏱️", title: t("risques.hubSimulateur"),  desc: t("risques.hubSimulateurSub") },
     ] as const;
 
     return (
@@ -879,7 +883,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
         </div>
 
         {/* Exemples */}
-        <Section title="Exemples">
+        <Section title={t("risques.sectionExamples")}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {cat.examples.map((e) => (
               <span
@@ -902,13 +906,13 @@ export function ReductionRisquesScreen({ onBack }: Props) {
 
         {/* Effets fréquents */}
         {cat.effects.length > 0 && (
-          <Section title="Effets fréquents">
+          <Section title={t("risques.sectionEffects")}>
             <BulletList items={cat.effects} />
           </Section>
         )}
 
         {/* Risques fréquents */}
-        <Section title="Risques fréquents">
+        <Section title={t("risques.sectionRisks")}>
           <BulletList items={cat.risks} color="#FF9500" />
         </Section>
       </div>
@@ -962,8 +966,8 @@ export function ReductionRisquesScreen({ onBack }: Props) {
               </div>
               <div style={{ fontSize: 11, opacity: 0.35, flexShrink: 0 }}>
                 {sub.durationH < 1
-                  ? `${Math.round(sub.durationH * 60)} min`
-                  : `~${sub.durationH}h`}
+                  ? `${Math.round(sub.durationH * 60)} ${t("risques.min")}`
+                  : `~${sub.durationH}${t("risques.hours")}`}
               </div>
               <span style={{ opacity: 0.30, fontSize: 14, flexShrink: 0 }}>›</span>
             </button>
@@ -984,15 +988,15 @@ export function ReductionRisquesScreen({ onBack }: Props) {
       sub.durationH < 1
         ? `${Math.round(sub.durationH * 60)} minutes`
         : sub.durationH === Math.floor(sub.durationH)
-          ? `${sub.durationH}h`
-          : `${sub.durationH}h`;
+          ? `${sub.durationH}${t("risques.hours")}`
+          : `${sub.durationH}${t("risques.hours")}`;
 
     const onsetText =
       sub.onsetMin < 5
         ? "quelques secondes"
         : sub.onsetMin < 60
-          ? `~${sub.onsetMin} min`
-          : `~${sub.onsetMin / 60}h`;
+          ? `~${sub.onsetMin} ${t("risques.min")}`
+          : `~${sub.onsetMin / 60}${t("risques.hours")}`;
 
     return (
       <div
@@ -1017,7 +1021,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
         </div>
 
         {/* Frise temporelle */}
-        <Section title="Durée approximative des effets">
+        <Section title={t("risques.sectionDuration")}>
           <div
             style={{
               display: "flex",
@@ -1059,12 +1063,12 @@ export function ReductionRisquesScreen({ onBack }: Props) {
         </Section>
 
         {/* Effets fréquents */}
-        <Section title="Effets fréquents">
+        <Section title={t("risques.sectionEffects")}>
           <BulletList items={sub.effects} />
         </Section>
 
         {/* Points d'attention */}
-        <Section title="Points d'attention 🌡️">
+        <Section title={t("risques.sectionAttention")}>
           <BulletList items={sub.attention} />
         </Section>
 
@@ -1079,7 +1083,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
           }}
         >
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
-            Attention aux mélanges ❗️
+            {t("risques.sectionMixing")}
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
             {sub.melanges.map((m) => (
@@ -1190,14 +1194,14 @@ export function ReductionRisquesScreen({ onBack }: Props) {
         {/* Champ 1 — Substance */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, opacity: 0.55, display: "block", marginBottom: 6 }}>
-            Substance
+            {t("risques.simSubstance")}
           </label>
           <select
             value={simSubstanceId}
             onChange={(e) => { setSimSubstanceId(e.target.value); setSimMoodId(""); }}
             style={selectStyle}
           >
-            <option value="" style={{ background: "#1a1a2e" }}>Choisir une substance…</option>
+            <option value="" style={{ background: "#1a1a2e" }}>{t("risques.simSubstancePlaceholder")}</option>
             {SIM_SUBSTANCES.map((s) => (
               <option key={s.id} value={s.id} style={{ background: "#1a1a2e" }}>
                 {s.emoji} {s.name}
@@ -1209,17 +1213,17 @@ export function ReductionRisquesScreen({ onBack }: Props) {
         {/* Champ 2 — Temps écoulé */}
         <div style={{ marginBottom: 24 }}>
           <label style={{ fontSize: 12, opacity: 0.55, display: "block", marginBottom: 6 }}>
-            Temps écoulé depuis la prise
+            {t("risques.simTime")}
           </label>
           <select
             value={simTimeValue}
             onChange={(e) => { setSimTimeValue(e.target.value); setSimMoodId(""); }}
             style={selectStyle}
           >
-            <option value="" style={{ background: "#1a1a2e" }}>Choisir…</option>
-            {TIME_OPTIONS.map((t) => (
-              <option key={t.value} value={String(t.value)} style={{ background: "#1a1a2e" }}>
-                {t.label}
+            <option value="" style={{ background: "#1a1a2e" }}>{t("risques.simTimePlaceholder")}</option>
+            {TIME_OPTIONS.map((t_opt) => (
+              <option key={t_opt.value} value={String(t_opt.value)} style={{ background: "#1a1a2e" }}>
+                {t_opt.label}
               </option>
             ))}
           </select>
@@ -1229,7 +1233,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
         {simSubstanceId && simTimeValue && (
           <div style={{ marginBottom: 28 }}>
             <label style={{ fontSize: 12, opacity: 0.55, display: "block", marginBottom: 10 }}>
-              Comment tu te sens ?
+              {t("risques.simMood")}
             </label>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
               {MOOD_OPTIONS.map((m) => (
@@ -1275,7 +1279,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
               marginBottom: 8,
             }}>
               <div style={{ fontSize: 10, opacity: 0.40, letterSpacing: "0.09em", textTransform: "uppercase", marginBottom: 6 }}>
-                Situation probable
+                {t("risques.simLabelSituation")}
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65 }}>{simResult.informatif}</p>
             </div>
@@ -1289,7 +1293,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
               marginBottom: 8,
             }}>
               <div style={{ fontSize: 10, opacity: 0.40, letterSpacing: "0.09em", textTransform: "uppercase", marginBottom: 6 }}>
-                Conseil
+                {t("risques.simLabelConseil")}
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65 }}>{simResult.conseil}</p>
             </div>
@@ -1303,7 +1307,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
               marginBottom: 8,
             }}>
               <div style={{ fontSize: 10, opacity: 0.40, letterSpacing: "0.09em", textTransform: "uppercase", marginBottom: 6 }}>
-                Rappel sécurité
+                {t("risques.simLabelSecurite")}
               </div>
               <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65 }}>{simResult.securite}</p>
             </div>

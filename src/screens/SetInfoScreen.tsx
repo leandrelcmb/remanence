@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { Draft } from "../app/flow/types";
 import { softHaptic } from "../app/flow/haptics";
 import { RoundButton } from "../app/ui/RoundButton";
@@ -18,18 +19,19 @@ type Props = {
 };
 
 export function SetInfoScreen({ draft, artistSuggestions, onChangeDraft, onNext, onBack }: Props) {
+  const { t } = useTranslation();
   const canContinue = draft.artistName.trim().length > 0;
 
   return (
     <div style={{ display: "grid", gap: 18, minHeight: "70dvh", alignContent: "center" }}>
       <p style={{ opacity: 0.86, fontSize: 20, margin: 0, textAlign: "center" }}>
-        🎧 Quel set viens-tu de vivre ?
+        {t('setInfo.question')}
       </p>
 
       <input
         value={draft.artistName}
         onChange={(e) => onChangeDraft({ artistName: e.target.value })}
-        placeholder="Artiste (ex : Astrix)"
+        placeholder={t('setInfo.artistPlaceholder')}
         style={{
           width: "100%",
           boxSizing: "border-box",
@@ -71,11 +73,11 @@ export function SetInfoScreen({ draft, artistSuggestions, onChangeDraft, onNext,
       )}
 
       <p style={{ opacity: 0.6, fontSize: 12 }}>
-        Si tu ne sais pas : demande autour de toi. Le nom est le sceau du souvenir ✨
+        {t('setInfo.artistHint')}
       </p>
 
       <div style={{ display: "grid", gap: 8 }}>
-        <p style={{ opacity: 0.72, fontSize: 13, margin: 0 }}>📍 Choisis une scène</p>
+        <p style={{ opacity: 0.72, fontSize: 13, margin: 0 }}>{t('setInfo.stageLabel')}</p>
         <div
           style={{
             borderRadius: 14,
@@ -103,7 +105,7 @@ export function SetInfoScreen({ draft, artistSuggestions, onChangeDraft, onNext,
                 }}
               >
                 <span>{stage.emoji} {stage.name}</span>
-                {active && <span style={{ opacity: 0.8, fontSize: 12 }}>✓ sélectionnée</span>}
+                {active && <span style={{ opacity: 0.8, fontSize: 12 }}>{t('setInfo.stageSelected')}</span>}
               </div>
             );
           })}
@@ -113,7 +115,7 @@ export function SetInfoScreen({ draft, artistSuggestions, onChangeDraft, onNext,
       <input
         value={draft.style}
         onChange={(e) => onChangeDraft({ style: e.target.value })}
-        placeholder="Style (ex : psytrance / ambient)"
+        placeholder={t('setInfo.stylePlaceholder')}
         style={{
           width: "100%",
           boxSizing: "border-box",
@@ -131,7 +133,7 @@ export function SetInfoScreen({ draft, artistSuggestions, onChangeDraft, onNext,
       <div style={{ display: "flex", gap: 12 }}>
         <div style={{ flex: 1 }}>
           <RoundButton variant="secondary" onClick={onBack}>
-            ↪️ Retour
+            {t('setInfo.back')}
           </RoundButton>
         </div>
         <div style={{ flex: 1 }}>
@@ -143,7 +145,7 @@ export function SetInfoScreen({ draft, artistSuggestions, onChangeDraft, onNext,
               onNext();
             }}
           >
-            Valider ✔️
+            {t('setInfo.validate')}
           </RoundButton>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useRef, useState, useMemo, type ReactNode, type TouchEvent as ReactTouchEvent } from "react";
+import { useTranslation } from 'react-i18next';
 import type { JournalItem } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
 import { formatTime } from "./utils";
@@ -6,9 +7,9 @@ import { formatTime } from "./utils";
 // ── Filtres ───────────────────────────────────────────────────────────────────
 
 const FOCUS_OPTIONS = [
-  { key: "mental",  emoji: "🧠", label: "Mental"   },
-  { key: "emotion", emoji: "❤️", label: "Émotions" },
-  { key: "body",    emoji: "🕺", label: "Corps"    },
+  { key: "mental",  emoji: "🧠", tKey: "common.mental"   },
+  { key: "emotion", emoji: "❤️", tKey: "common.emotions" },
+  { key: "body",    emoji: "🕺", tKey: "common.body"     },
 ];
 
 function FilterChip({
@@ -91,6 +92,7 @@ export function ConstellationScreen({
   onSelectStar,
   onBack,
 }: Props) {
+  const { t } = useTranslation();
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPinching, setIsPinching] = useState(false);
@@ -289,8 +291,8 @@ export function ConstellationScreen({
         backdropFilter: "blur(20px)",
       }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>Constellation ✨</div>
-          <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>Ton voyage en étoiles</div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>{t('constellation.title')}</div>
+          <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>{t('constellation.subtitle')}</div>
         </div>
         <button
           onClick={onBack}
@@ -305,7 +307,7 @@ export function ConstellationScreen({
             fontFamily: "inherit",
           }}
         >
-          Home ॐ
+          {t('common.home')}
         </button>
       </div>
 
@@ -330,7 +332,7 @@ export function ConstellationScreen({
                 active={activeFocus.includes(f.key)}
                 onClick={() => toggleFocus(f.key)}
               >
-                {f.emoji} {f.label}
+                {f.emoji} {t(f.tKey)}
               </FilterChip>
             ))}
           </div>
@@ -348,10 +350,10 @@ export function ConstellationScreen({
             </div>
           )}
           <div style={{ fontSize: 12, opacity: 0.5 }}>
-            {filteredJournal.length} étoile{filteredJournal.length !== 1 ? "s" : ""}
+            {t('constellation.star', { count: filteredJournal.length })}
             {(activeFocus.length > 0 || activeStage.length > 0)
-              ? ` · ${journal.length} au total`
-              : ` au total`}
+              ? ` · ${journal.length} ${t('constellation.total')}`
+              : ` ${t('constellation.total')}`}
           </div>
         </div>
       )}
@@ -391,8 +393,8 @@ export function ConstellationScreen({
             }}
           >
             {journal.length === 0
-              ? "Ta constellation apparaîtra ici après tes premiers souvenirs ✨"
-              : "Aucune étoile ne correspond aux filtres sélectionnés."}
+              ? t('constellation.empty')
+              : t('constellation.emptyFiltered')}
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import type { JournalItem } from "../core/store/service";
 import type { Festival, UserProfile } from "../core/models/types";
 import { listFestivalContacts, getEntriesWithPhotos } from "../core/store/service";
@@ -56,6 +57,7 @@ function formatFestivalDates(startDate?: string, endDate?: string): string | nul
 // ── Sous-composants ───────────────────────────────────────────────────────────
 
 function RecapHeader({ festival, onBack }: { festival: Festival | null; onBack: () => void }) {
+  const { t } = useTranslation();
   const dates = formatFestivalDates(festival?.startDate, festival?.endDate);
   return (
     <div style={{
@@ -67,7 +69,7 @@ function RecapHeader({ festival, onBack }: { festival: Festival | null; onBack: 
     }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 500 }}>Rémanence du festival 🎇</h2>
+          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 500 }}>{t('recap.title')}</h2>
           <div style={{ fontSize: 13, opacity: 0.45, marginTop: 4 }}>
             {festival?.name ?? "Festival"}
             {dates && ` · ${dates}`}
@@ -83,7 +85,7 @@ function RecapHeader({ festival, onBack }: { festival: Festival | null; onBack: 
             cursor: "pointer", fontFamily: "inherit",
           }}
         >
-          Home ॐ
+          {t('common.home')}
         </button>
       </div>
     </div>
@@ -109,6 +111,7 @@ function StatCard({ value, label }: { value: string; label: string }) {
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export function RecapScreen({ journal, festival, user, festivalId, onBack }: Props) {
+  const { t } = useTranslation();
   const [contactCount, setContactCount] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -198,10 +201,10 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
         }}>
           <p style={{ fontSize: 40, margin: 0 }}>🌿</p>
           <p style={{ fontSize: 20, opacity: 0.7, margin: 0 }}>
-            Aucun set capturé pour ce festival.
+            {t('recap.empty')}
           </p>
           <p style={{ fontSize: 15, opacity: 0.4, margin: 0 }}>
-            Lance-toi ! Chaque set est un souvenir unique.
+            {t('recap.emptySub')}
           </p>
         </div>
       </div>
@@ -225,16 +228,16 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
 
         {/* ── A. CHIFFRES CLÉS ── */}
         <section>
-          <p style={SECTION_TITLE}>Chiffres clés</p>
+          <p style={SECTION_TITLE}>{t('recap.keyFigures')}</p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <StatCard value={`${s.count}`} label={s.count === 1 ? "set capturé" : "sets capturés"} />
-            <StatCard value={`${s.avgEnergy.toFixed(1)}/10`} label="énergie moyenne" />
-            <StatCard value={`${s.domFocus.emoji} ${s.domFocus.label}`} label="focus dominant" />
-            <StatCard value={s.favStage} label="scène préférée" />
+            <StatCard value={`${s.count}`} label={t('recap.set', { count: s.count })} />
+            <StatCard value={`${s.avgEnergy.toFixed(1)}/10`} label={t('recap.avgEnergy')} />
+            <StatCard value={`${s.domFocus.emoji} ${s.domFocus.label}`} label={t('recap.dominantFocus')} />
+            <StatCard value={s.favStage} label={t('recap.favStage')} />
             {contactCount !== null && contactCount > 0 && (
               <StatCard
                 value={`${contactCount}`}
-                label={contactCount === 1 ? "rencontre" : "rencontres"}
+                label={t('recap.meeting', { count: contactCount })}
               />
             )}
           </div>
@@ -242,7 +245,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
 
         {/* ── B. PALETTE CHROMATIQUE ── */}
         <section>
-          <p style={SECTION_TITLE}>Tes couleurs</p>
+          <p style={SECTION_TITLE}>{t('recap.colors')}</p>
           <div style={{
             display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center",
             padding: "16px 18px", ...CARD,
@@ -266,7 +269,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
 
         {/* ── C. RÉPARTITION FOCUS ── */}
         <section>
-          <p style={SECTION_TITLE}>Où tu as vibré</p>
+          <p style={SECTION_TITLE}>{t('recap.whereVibed')}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, ...CARD }}>
             {FOCUS_CONFIG.map(({ key, label, emoji, color }) => {
               const cnt = s.focusCounts[key] ?? 0;
@@ -301,7 +304,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
 
         {/* ── D. MOMENTS FORTS ── */}
         <section>
-          <p style={SECTION_TITLE}>Tes pics d'énergie</p>
+          <p style={SECTION_TITLE}>{t('recap.energyPeaks')}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {s.topSets.map((item, rank) => {
               const c = energyTint(item.colorHex, item.energy);
@@ -344,7 +347,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
         {/* ── E. PHOTOS (si existantes) ── */}
         {photos.length > 0 && (
           <section>
-            <p style={SECTION_TITLE}>Instants capturés</p>
+            <p style={SECTION_TITLE}>{t('recap.capturedMoments')}</p>
 
             {/* Bouton export */}
             <button
@@ -366,7 +369,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
                 marginBottom: 12,
               }}
             >
-              {exporting ? "Export en cours…" : "Exporter mes photos 📸"}
+              {exporting ? t('recap.exporting') : t('recap.exportPhotos')}
             </button>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {photos.map((item) => (

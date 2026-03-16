@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 // ── Utilitaires couleur ───────────────────────────────────────────────────────
 
@@ -326,6 +327,8 @@ type Props = { onBack: () => void; haloColor?: string };
 // ── Composant ──────────────────────────────────────────────────────────────────
 
 export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
+  const { t } = useTranslation();
+
   // ── Halo colors ───────────────────────────────────────────────────────────
   const [r, g, b]   = parseColor(haloColor);
   const haloMain    = toHex(r, g, b);
@@ -409,10 +412,9 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
         backdropFilter: "blur(20px)",
       }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>Divers 🎲</div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>{t('divers.title')}</div>
           <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>
-            {filteredCards.length} carte{filteredCards.length !== 1 ? "s" : ""}
-            {activeCategories.length > 0 ? " · filtré" : " · toutes catégories"}
+            {t('divers.cardCount', { count: filteredCards.length })} · {activeCategories.length > 0 ? t('divers.filtered') : t('divers.allCats')}
           </div>
         </div>
         <button
@@ -428,7 +430,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
             fontFamily: "inherit",
           }}
         >
-          Home ॐ
+          {t('divers.home')}
         </button>
       </div>
 
@@ -459,7 +461,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
               transition: "all 0.15s ease",
             }}
           >
-            {m === "tirage" ? "🎲 Tirage" : "📋 Parcourir"}
+            {m === "tirage" ? t('divers.modeDraw') : t('divers.modeBrowse')}
           </button>
         ))}
       </div>
@@ -497,7 +499,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
                 transition: "all 0.15s ease",
               }}
             >
-              {cat.emoji} {cat.label}
+              {cat.emoji} {t('divers.cats.' + key)}
             </button>
           );
         })}
@@ -520,7 +522,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
               transition: "all 0.15s ease",
             }}
           >
-            ❤️ Favoris ({favorites.size})
+            {t('divers.favoritesCount', { count: favorites.size })}
           </button>
         )}
       </div>
@@ -539,10 +541,10 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
         }}>
           {filteredCards.length === 0 ? (
             <div style={{ textAlign: "center", opacity: 0.5, padding: 20 }}>
-              Aucune carte dans cette sélection.
+              {t('divers.noCards')}
               {favoritesOnly && favorites.size === 0 && (
                 <div style={{ marginTop: 8, fontSize: 13 }}>
-                  Marque des cartes ❤️ pour les retrouver ici.
+                  {t('divers.noFavs')}
                 </div>
               )}
             </div>
@@ -577,7 +579,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
                     fontWeight: 500,
                   }}>
                     {card && CATS[card.category]
-                      ? `${CATS[card.category].emoji} ${CATS[card.category].label.toUpperCase()}`
+                      ? `${CATS[card.category].emoji} ${t('divers.cats.' + card.category).toUpperCase()}`
                       : ""}
                   </span>
                   <span style={{ fontSize: 12, opacity: 0.40 }}>
@@ -632,7 +634,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
                     transition: "all 0.18s ease",
                   }}
                 >
-                  {isFav ? "❤️ Coup de cœur" : "🤍 Coup de cœur"}
+                  {isFav ? t('divers.favorite') : t('divers.notFavorite')}
                 </button>
 
                 {/* Suivante */}
@@ -653,7 +655,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
                     letterSpacing: "0.03em",
                   }}
                 >
-                  Suivante →
+                  {t('divers.next')}
                 </button>
               </div>
             </>
@@ -669,7 +671,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
         }}>
           {filteredCards.length === 0 ? (
             <div style={{ textAlign: "center", opacity: 0.5, padding: 32 }}>
-              Aucune carte dans cette sélection.
+              {t('divers.noCards')}
             </div>
           ) : (
             filteredCards.map(c => {
@@ -759,7 +761,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
           >
             {/* Badge catégorie */}
             <div style={{ fontSize: 12, opacity: 0.55, letterSpacing: "0.06em", fontWeight: 500 }}>
-              {CATS[selectedCard.category]?.emoji} {CATS[selectedCard.category]?.label.toUpperCase()}
+              {CATS[selectedCard.category]?.emoji} {t('divers.cats.' + selectedCard.category).toUpperCase()}
             </div>
 
             {/* Texte */}
@@ -802,7 +804,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
                   fontFamily: "inherit",
                 }}
               >
-                {favorites.has(selectedCard.id) ? "❤️ Coup de cœur" : "🤍 Coup de cœur"}
+                {favorites.has(selectedCard.id) ? t('divers.favorite') : t('divers.notFavorite')}
               </button>
 
               <button
@@ -819,7 +821,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
                   fontFamily: "inherit",
                 }}
               >
-                Fermer ✕
+                {t('common.close')}
               </button>
             </div>
           </div>

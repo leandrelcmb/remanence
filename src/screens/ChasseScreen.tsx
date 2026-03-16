@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ChangeEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from 'react-i18next';
 import { uuid, nowISO } from "../core/models/utils";
 import { setActiveChasse, clearActiveChasse, addChasseHistory } from "../core/store/repo";
 import type { ChasseType, WheelItem, ChasseActiveSession, ChasseHistoryEntry } from "../core/models/chasseTypes";
@@ -103,6 +104,8 @@ type Props = {
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: Props) {
+  const { t } = useTranslation();
+
   const [r, g, b]   = parseColor(haloColor ?? "#00FFB7");
   const haloMain    = toHex(r, g, b);
   const haloLight   = toHex(lighten(r, 0.22), lighten(g, 0.22), lighten(b, 0.22));
@@ -305,7 +308,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
         flexShrink: 0,
       }}>
         <div style={{ fontSize: 16, fontWeight: 700 }}>
-          {CHASSE_TITLES[activeType]}
+          {t(`chasse.titles.${activeType}`, { defaultValue: CHASSE_TITLES[activeType] })}
         </div>
         <button
           onClick={onBack}
@@ -424,7 +427,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                     opacity: (isResuming || phase !== "spin") && !active ? 0.4 : 1,
                   }}
                 >
-                  {TAB_LABELS[type]}
+                  {t(`chasse.tabs.${type}`, { defaultValue: TAB_LABELS[type] })}
                 </button>
               );
             })}
@@ -494,7 +497,9 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                 flexShrink: 0,
               }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>{result.icon} {result.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>
+                  {result.icon} {t(`chasse.items.${activeType}.${result.label}.label`, { defaultValue: result.label })}
+                </div>
               </div>
               {/* Timer */}
               <div style={{
@@ -518,7 +523,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
               borderTop: "1px solid rgba(255,255,255,0.08)",
               paddingTop: 10,
             }}>
-              "{result.challenge}"
+              "{t(`chasse.items.${activeType}.${result.label}.challenge`, { defaultValue: result.challenge })}"
             </p>
 
             {/* Compteur photos */}

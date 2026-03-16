@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 // ── Utilitaires couleur (palette dynamique depuis haloColor) ─────────────────
 
@@ -209,6 +210,8 @@ function shuffle<T>(arr: T[]): T[] {
 type Props = { onBack: () => void; haloColor?: string };
 
 export function AnecdotesScreen({ onBack, haloColor }: Props) {
+  const { t } = useTranslation();
+
   // ── Palette dynamique depuis le halo ───────────────────────────────────────
   const [r, g, b]   = parseColor(haloColor ?? "#BF5AF2");
   const haloMain    = toHex(r, g, b);
@@ -335,14 +338,14 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
       }}>
         <div>
           <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: "0.01em" }}>
-            🎪 Anecdotes de festival
+            {t('anecdotes.title')}
           </div>
           {score.total > 0 && (
             <div style={{
               fontSize: 12, opacity: 0.50, marginTop: 4,
               animation: "anecdotesFade 0.3s ease both",
             }}>
-              {score.ok} ✓ · {score.total - score.ok} ✗ sur {score.total}
+              {t('anecdotes.score', { ok: score.ok, bad: score.total - score.ok, total: score.total })}
             </div>
           )}
         </div>
@@ -360,7 +363,7 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
             flexShrink:   0,
           }}
         >
-          ← Jeux
+          {t('anecdotes.back')}
         </button>
       </div>
 
@@ -386,7 +389,7 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
           letterSpacing: "0.08em",
           marginBottom:  4,
         }}>
-          Carte {cardNumber} / {displayCards.length}
+          {t('anecdotes.cardNumber', { n: cardNumber, total: displayCards.length })}
         </div>
 
         {/* Contexte révélé — toujours dans le DOM, au-dessus des options */}
@@ -411,7 +414,7 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
             color:         isCorrect ? GREEN_CORRECT : RED_WRONG,
             letterSpacing: "0.04em",
           }}>
-            {isCorrect ? "✓ Bonne réponse !" : "✗ Pas tout à fait…"}
+            {isCorrect ? t('anecdotes.correct') : t('anecdotes.wrong')}
           </div>
           <p style={{
             margin:     0,
@@ -441,7 +444,7 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
           letterSpacing: "0.10em",
           margin:        "-2px 0",
         }}>
-          ou
+          {t('anecdotes.or')}
         </div>
 
         {/* Option 2 */}
@@ -476,7 +479,7 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
             animation:     revealed ? "anecdotesReveal 0.4s cubic-bezier(0.22,1,0.36,1) 0.15s both, anecdotesPulse 2.2s ease-in-out 0.55s infinite" : undefined,
           }}
         >
-          Carte suivante →
+          {t('anecdotes.nextCard')}
         </button>
 
       </div>

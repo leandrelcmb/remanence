@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { softHaptic } from "../app/flow/haptics";
 import { EnergyDots } from "../app/ui/EnergyDots";
 import { RoundButton } from "../app/ui/RoundButton";
@@ -25,13 +26,14 @@ type Props = {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 export function ColorEnergyScreen({ draft, onChangeDraft, onNext, onBack }: Props) {
+  const { t } = useTranslation();
   return (
     <div style={{ display: "grid", gap: 40, minHeight: "90dvh", alignContent: "center" }}>
 
       {/* ── Couleur ── */}
       <div style={{ display: "grid", gap: 18 }}>
         <p style={{ opacity: 0.86, fontSize: 28, margin: 0, textAlign: "center" }}>
-          🌈 Couleur instinctive
+          {t('colorEnergy.colorTitle')}
         </p>
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap", justifyContent: "center" }}>
           {RGB_COLORS.map((c) => {
@@ -69,7 +71,7 @@ export function ColorEnergyScreen({ draft, onChangeDraft, onNext, onBack }: Prop
       {/* ── Énergie ── */}
       <div style={{ display: "grid", gap: 18 }}>
         <p style={{ opacity: 0.86, fontSize: 28, margin: 0, textAlign: "center" }}>
-          ⚡ Intensité
+          {t('colorEnergy.energyTitle')}
         </p>
         <EnergyDots
           value={draft.energy}
@@ -82,12 +84,12 @@ export function ColorEnergyScreen({ draft, onChangeDraft, onNext, onBack }: Prop
       <div style={{ display: "flex", gap: 22 }}>
         <div style={{ flex: 1 }}>
           <RoundButton variant="secondary" onClick={onBack}>
-            ↪️ Retour
+            {t('colorEnergy.back')}
           </RoundButton>
         </div>
         <div style={{ flex: 1 }}>
           <RoundButton variant="primary" onClick={onNext}>
-            Je valide 🖖
+            {t('colorEnergy.validate')}
           </RoundButton>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 // ── Utilitaire couleur ────────────────────────────────────────────────────────
 // energyTint() renvoie du rgb(...) → on convertit en rgba() pour les CSS inline
@@ -278,6 +279,12 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
+// ── Utilitaire : capitalise la première lettre ────────────────────────────────
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 // ── Bouton flèche (réutilisable) ──────────────────────────────────────────────
 
 function NavBtn({ onClick, label, disabled }: { onClick: () => void; label: string; disabled?: boolean }) {
@@ -311,6 +318,7 @@ type SwipeCardProps = {
 };
 
 function SwipeCard({ items, renderCard, nightMode = false }: SwipeCardProps) {
+  const { t } = useTranslation();
   const [index,   setIndex]   = useState(0);
   const [animDir, setAnimDir] = useState<"right" | "left">("right");
   const [animKey, setAnimKey] = useState(0);
@@ -399,16 +407,16 @@ function SwipeCard({ items, renderCard, nightMode = false }: SwipeCardProps) {
 
       {/* Compteur + navigation */}
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <NavBtn onClick={goPrev} label="← Précédent" />
+        <NavBtn onClick={goPrev} label={t('sante.navPrev')} />
         <div style={{ fontSize: 13, opacity: 0.45, minWidth: 60, textAlign: "center" }}>
           {index + 1} / {items.length}
         </div>
-        <NavBtn onClick={goNext} label="Suivant →" />
+        <NavBtn onClick={goNext} label={t('sante.navNext')} />
       </div>
 
       {/* Hint swipe */}
       <div style={{ fontSize: 11, opacity: 0.30, letterSpacing: "0.05em" }}>
-        Glisse la carte pour naviguer
+        {t('sante.swipeHint')}
       </div>
     </div>
   );
@@ -419,10 +427,12 @@ function SwipeCard({ items, renderCard, nightMode = false }: SwipeCardProps) {
 type CheckInProps = { onMood: (m: CheckinMood | null) => void };
 
 function CheckInView({ onMood }: CheckInProps) {
+  const { t } = useTranslation();
+
   const moods: { key: CheckinMood; emoji: string; label: string }[] = [
-    { key: "super",   emoji: "😊", label: "Super"   },
-    { key: "bof",     emoji: "😐", label: "Bof"     },
-    { key: "pas-top", emoji: "😔", label: "Pas top" },
+    { key: "super",   emoji: "😊", label: t('sante.moodSuperLabel')   },
+    { key: "bof",     emoji: "😐", label: t('sante.moodBofLabel')     },
+    { key: "pas-top", emoji: "😔", label: t('sante.moodPasTopLabel')  },
   ];
 
   return (
@@ -436,10 +446,10 @@ function CheckInView({ onMood }: CheckInProps) {
       <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ fontSize: 36 }}>🧠</div>
         <div style={{ fontSize: 22, fontWeight: 600, letterSpacing: "0.01em", lineHeight: 1.4 }}>
-          Comment tu te sens ?
+          {t('sante.checkinQuestion')}
         </div>
         <div style={{ fontSize: 13, opacity: 0.45, lineHeight: 1.5 }}>
-          Pour t'orienter vers ce qui peut t'aider.
+          {t('sante.checkinSub')}
         </div>
       </div>
 
@@ -483,7 +493,7 @@ function CheckInView({ onMood }: CheckInProps) {
           padding: "8px 16px",
         }}
       >
-        Passer →
+        {t('sante.skip')}
       </button>
     </div>
   );
@@ -497,13 +507,16 @@ type HubProps = {
 };
 
 function HubView({ mood, onSection }: HubProps) {
+  const { t } = useTranslation();
   const suggested = mood ? SUGGESTED[mood] : [];
 
   const moodEmoji: Record<CheckinMood, string> = {
     "super": "😊", "bof": "😐", "pas-top": "😔",
   };
-  const moodLabel: Record<CheckinMood, string> = {
-    "super": "Super", "bof": "Bof", "pas-top": "Pas top",
+  const moodLabelMap: Record<CheckinMood, string> = {
+    "super":   t('sante.moodSuperLabel'),
+    "bof":     t('sante.moodBofLabel'),
+    "pas-top": t('sante.moodPasTopLabel'),
   };
 
   return (
@@ -523,7 +536,7 @@ function HubView({ mood, onSection }: HubProps) {
           display: "flex", alignItems: "center", gap: 6,
         }}>
           <span>{moodEmoji[mood]}</span>
-          <span>Tu te sens {moodLabel[mood].toLowerCase()} — voici ce qui peut t'aider.</span>
+          <span>{t('sante.moodSuggestion', { mood: moodLabelMap[mood].toLowerCase() })}</span>
         </div>
       )}
 
@@ -534,7 +547,7 @@ function HubView({ mood, onSection }: HubProps) {
             fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
             textTransform: "uppercase", opacity: 0.40, marginBottom: 12,
           }}>
-            Pour toi maintenant
+            {t('sante.forYou')}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
             {suggested.map((sid) => {
@@ -561,10 +574,10 @@ function HubView({ mood, onSection }: HubProps) {
                   <div style={{ fontSize: 28, lineHeight: 1 }}>{s.emoji}</div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, lineHeight: 1.3 }}>
-                      {s.title}
+                      {t(`sante.hub${capitalize(sid)}`)}
                     </div>
                     <div style={{ fontSize: 11, opacity: 0.55, lineHeight: 1.4 }}>
-                      {s.desc}
+                      {t(`sante.hub${capitalize(sid)}Sub`)}
                     </div>
                   </div>
                   {/* Badge recommandé */}
@@ -576,7 +589,7 @@ function HubView({ mood, onSection }: HubProps) {
                     fontSize: 9, fontWeight: 700,
                     color: "#F0C832", letterSpacing: "0.05em",
                   }}>
-                    ✦ POUR TOI
+                    {t('sante.forYouBadge')}
                   </div>
                 </button>
               );
@@ -592,7 +605,7 @@ function HubView({ mood, onSection }: HubProps) {
             fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
             textTransform: "uppercase", opacity: 0.40, marginBottom: 12,
           }}>
-            Toujours disponible
+            {t('sante.alwaysAvailable')}
           </div>
         )}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
@@ -617,10 +630,10 @@ function HubView({ mood, onSection }: HubProps) {
               <div style={{ fontSize: 28, lineHeight: 1 }}>{s.emoji}</div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, lineHeight: 1.3 }}>
-                  {s.title}
+                  {t(`sante.hub${capitalize(s.id)}`)}
                 </div>
                 <div style={{ fontSize: 11, opacity: 0.50, lineHeight: 1.4 }}>
-                  {s.desc}
+                  {t(`sante.hub${capitalize(s.id)}Sub`)}
                 </div>
               </div>
             </button>
@@ -712,12 +725,18 @@ const GROUP_META = {
 } as const;
 
 function ReconnexionView() {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const groups = (["observation", "respiration", "présence"] as const).map((g) => ({
     ...GROUP_META[g],
     key: g,
     exercises: EXERCISES.filter((e) => e.group === g),
+    label: g === "observation"
+      ? t('sante.sectionObservation')
+      : g === "respiration"
+        ? t('sante.sectionRespiration')
+        : t('sante.sectionPresence'),
   }));
 
   return (
@@ -731,7 +750,7 @@ function ReconnexionView() {
       }}
     >
       <div style={{ fontSize: 13, opacity: 0.45, textAlign: "center", lineHeight: 1.6 }}>
-        Choisis une technique. Prends le temps qu'il te faut.
+        {t('sante.reconnexionInstruction')}
       </div>
 
       {groups.map((g) => (
@@ -839,6 +858,8 @@ function ModeNuitView() {
 type Props = { onBack: () => void; onRisques: () => void; haloColor?: string };
 
 export function SanteScreen({ onBack, onRisques, haloColor = "#00FFB7" }: Props) {
+  const { t } = useTranslation();
+
   // check-in persisté au niveau module (survit aux navigations sans rechargement)
   const [view, setView] = useState<SanteView>(
     _sessionMood !== null ? "hub" : "checkin"
@@ -859,19 +880,19 @@ export function SanteScreen({ onBack, onRisques, haloColor = "#00FFB7" }: Props)
 
   const sectionMeta = SECTIONS.find((s) => s.id === view);
   const headerTitle =
-    view === "checkin"    ? "Santé 🧠" :
-    view === "hub"        ? "Santé 🧠" :
-    sectionMeta ? `${sectionMeta.emoji} ${sectionMeta.title}` : "Santé 🧠";
+    view === "checkin" ? t('sante.headerCheckin') :
+    view === "hub"     ? t('sante.headerHub') :
+    sectionMeta ? `${sectionMeta.emoji} ${t(`sante.hub${capitalize(sectionMeta.id)}`)}` : t('sante.headerCheckin');
 
   const headerSub =
-    view === "checkin"   ? "Un espace pour te poser" :
-    view === "hub"       ? "Choisir un espace" :
-    view === "mantras"   ? `${MANTRAS.length} phrases · glisse pour naviguer` :
-    view === "inspiration" ? `${INSPIRATIONS.length} pensées · glisse pour naviguer` :
-    view === "reconnexion" ? "15 techniques de grounding" :
-    view === "nuit"      ? `${NUIT_PHRASES.length} phrases pour la nuit` : "";
+    view === "checkin"     ? t('sante.headerSub') :
+    view === "hub"         ? t('sante.headerHubSub') :
+    view === "mantras"     ? t('sante.subMantraCount', { count: MANTRAS.length }) :
+    view === "inspiration" ? t('sante.subInspirationCount', { count: INSPIRATIONS.length }) :
+    view === "reconnexion" ? t('sante.subReconnexionCount') :
+    view === "nuit"        ? t('sante.subNuitCount', { count: NUIT_PHRASES.length }) : "";
 
-  const backLabel = (view === "checkin" || view === "hub") ? "Home ॐ" : "← Retour";
+  const backLabel = (view === "checkin" || view === "hub") ? t('sante.backHome') : t('sante.backSection');
 
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -947,10 +968,10 @@ export function SanteScreen({ onBack, onRisques, haloColor = "#00FFB7" }: Props)
         >
           <span style={{ fontSize: 22, lineHeight: 1 }}>⛑️</span>
           <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: "0.02em" }}>
-            Réduction des risques
+            {t('sante.risquesLink')}
           </span>
           <span style={{ fontSize: 11, opacity: 0.45 }}>
-            Infos & repères · Conseils festival · Simulateur
+            {t('sante.risquesLinkSub')}
           </span>
         </button>
       </div>

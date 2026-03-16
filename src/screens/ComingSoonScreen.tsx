@@ -1,8 +1,12 @@
+import { useTranslation } from "react-i18next";
+
 type Props = {
   onBack: () => void;
 };
 
 export function ComingSoonScreen({ onBack }: Props) {
+  const { t } = useTranslation();
+
   return (
     <div style={{
       minHeight: "80dvh",
@@ -17,12 +21,12 @@ export function ComingSoonScreen({ onBack }: Props) {
       <div style={{ fontSize: 56 }}>🚧</div>
 
       <p style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>
-        En construction
+        {t('comingSoon.title')}
       </p>
 
       <p style={{ fontSize: 15, opacity: 0.55, margin: 0, lineHeight: 1.6 }}>
-        Ce jeu arrive bientôt.<br />
-        Reste connecté à l'instant 🌱
+        {t('comingSoon.message')}<br />
+        {t('comingSoon.sub')}
       </p>
 
       <button
@@ -40,7 +44,7 @@ export function ComingSoonScreen({ onBack }: Props) {
           letterSpacing: "0.03em",
         }}
       >
-        Retour aux jeux
+        {t('comingSoon.back')}
       </button>
     </div>
   );

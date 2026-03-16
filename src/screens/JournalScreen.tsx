@@ -1,4 +1,5 @@
 import { useState, useMemo, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import type { JournalItem } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
 import { formatTime, focusEmoji } from "./utils";
@@ -37,9 +38,9 @@ type Props = {
 // ── Filtres ───────────────────────────────────────────────────────────────────
 
 const FOCUS_OPTIONS = [
-  { key: "mental",  emoji: "🧠", label: "Mental"   },
-  { key: "emotion", emoji: "❤️", label: "Émotions" },
-  { key: "body",    emoji: "🕺", label: "Corps"    },
+  { key: "mental",  emoji: "🧠", labelKey: "common.mental"   },
+  { key: "emotion", emoji: "❤️", labelKey: "common.emotions" },
+  { key: "body",    emoji: "🕺", labelKey: "common.body"     },
 ];
 
 const FOCUS_EMOJIS: Record<string, string> = {
@@ -82,6 +83,8 @@ function FilterChip({
 // ── Mini-stats ────────────────────────────────────────────────────────────────
 
 function MiniStats({ journal }: { journal: JournalItem[] }) {
+  const { t } = useTranslation();
+
   if (journal.length === 0) return null;
 
   const count = journal.length;
@@ -100,10 +103,10 @@ function MiniStats({ journal }: { journal: JournalItem[] }) {
   const domFocus = Object.entries(focusCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
 
   const stats = [
-    { value: `${count}`,        label: count === 1 ? "set" : "sets" },
-    { value: `${avgEnergy}/10`, label: "énergie moy." },
-    ...(favStage ? [{ value: favStage, label: "scène fav." }] : []),
-    ...(domFocus ? [{ value: `${FOCUS_EMOJIS[domFocus] ?? ""} ${domFocus}`, label: "focus" }] : []),
+    { value: `${count}`,        label: t('journal.set', { count }) },
+    { value: `${avgEnergy}/10`, label: t('journal.avgEnergy') },
+    ...(favStage ? [{ value: favStage, label: t('journal.favStage') }] : []),
+    ...(domFocus ? [{ value: `${FOCUS_EMOJIS[domFocus] ?? ""} ${domFocus}`, label: t('journal.focus') }] : []),
   ];
 
   return (
@@ -140,6 +143,7 @@ function MiniStats({ journal }: { journal: JournalItem[] }) {
 // ── Carte d'un souvenir ───────────────────────────────────────────────────────
 
 function JournalCard({ item, onClick }: { item: JournalItem; onClick: () => void }) {
+  const { t } = useTranslation();
   const itemColor = energyTint(item.colorHex, item.energy);
 
   return (
@@ -167,7 +171,7 @@ function JournalCard({ item, onClick }: { item: JournalItem; onClick: () => void
         <div style={{ display: "grid", gap: 4 }}>
           <strong style={{ fontSize: 20 }}>{item.artistName}</strong>
           <div style={{ opacity: 0.65, fontSize: 15 }}>
-            {formatTime(item.startTime)} · {item.stageName || "Scène inconnue"}
+            {formatTime(item.startTime)} · {item.stageName || t('journal.unknownStage')}
           </div>
         </div>
 
@@ -197,7 +201,7 @@ function JournalCard({ item, onClick }: { item: JournalItem; onClick: () => void
           }}
         />
         <div style={{ opacity: 0.7, fontSize: 13 }}>
-          {item.style?.trim() ? item.style : "Style non renseigné"}
+          {item.style?.trim() ? item.style : t('journal.unknownStyle')}
         </div>
       </div>
 
@@ -238,6 +242,8 @@ export function JournalScreen({
   onSavePseudo,
   onRecap,
 }: Props) {
+  const { t } = useTranslation();
+
   // ── Palette dynamique depuis la dernière couleur du journal ────────────────
   const [r, g, b]   = parseColor(latestJournalColor);
   const haloMain    = toHex(r, g, b);
@@ -317,10 +323,10 @@ export function JournalScreen({
         }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>
-              Vibrations 💓
+              {t('journal.title')}
             </div>
             <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>
-              {journal.length} souvenir{journal.length !== 1 ? "s" : ""}
+              {t('journal.memory', { count: journal.length })}
             </div>
           </div>
           <button
@@ -336,7 +342,7 @@ export function JournalScreen({
               fontFamily: "inherit",
             }}
           >
-            Home ॐ
+            {t('common.home')}
           </button>
         </div>
 
@@ -382,7 +388,7 @@ export function JournalScreen({
               <div style={{ fontSize: 13, opacity: 0.5, flex: 1 }}>✨ {userName}</div>
               <button
                 onClick={() => { setPseudoDraft(userName); setEditingPseudo(true); }}
-                title="Modifier le pseudo"
+                title={t('journal.editPseudo')}
                 style={{ background: "none", border: "none", cursor: "pointer", opacity: 0.35, fontSize: 15, padding: 4, lineHeight: 1 }}
               >
                 ✏️
@@ -409,7 +415,7 @@ export function JournalScreen({
               marginBottom: 24,
             }}
           >
-            Récap du festival 🎇
+            {t('journal.recap')}
           </button>
 
           {/* ── Mini-stats ── */}
@@ -425,7 +431,7 @@ export function JournalScreen({
                   active={activeFocus.includes(f.key)}
                   onClick={() => toggleFocus(f.key)}
                 >
-                  {f.emoji} {f.label}
+                  {f.emoji} {t(f.labelKey)}
                 </FilterChip>
               ))}
             </div>
@@ -446,7 +452,7 @@ export function JournalScreen({
 
             {isFiltered && (
               <div style={{ fontSize: 12, opacity: 0.5, paddingLeft: 2 }}>
-                {filtered.length} souvenir{filtered.length !== 1 ? "s" : ""}
+                {t('journal.memory', { count: filtered.length })}
               </div>
             )}
           </div>
@@ -455,13 +461,13 @@ export function JournalScreen({
         {/* ── Liste des souvenirs ── */}
         {journal.length === 0 && (
           <p style={{ opacity: 0.6, padding: "0 12px" }}>
-            Aucun souvenir enregistré pour le moment.
+            {t('journal.empty')}
           </p>
         )}
 
         {filtered.length === 0 && journal.length > 0 && (
           <p style={{ opacity: 0.5, fontSize: 14, padding: "0 12px" }}>
-            Aucun souvenir ne correspond aux filtres sélectionnés.
+            {t('journal.emptyFiltered')}
           </p>
         )}
 
