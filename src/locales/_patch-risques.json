@@ -1,0 +1,656 @@
+{
+  "fr": {
+    "categories": [
+      {
+        "id": "stimulants",
+        "emoji": "💊",
+        "name": "Stimulants",
+        "color": "#FF9500",
+        "description": "Produits qui augmentent l'énergie, l'éveil et la stimulation.",
+        "examples": ["MDMA", "amphétamines", "cocaïne", "3-MMC"],
+        "effects": ["énergie", "sociabilité", "stimulation"],
+        "risks": ["déshydratation", "surchauffe", "fatigue importante après coup"]
+      },
+      {
+        "id": "psychedeliques",
+        "emoji": "🍄",
+        "name": "Psychédéliques",
+        "color": "#BF5AF2",
+        "description": "Produits qui modifient la perception et les sensations.",
+        "examples": ["LSD", "champignons", "DMT", "mescaline"],
+        "effects": ["perception altérée", "introspection", "émotions amplifiées"],
+        "risks": ["confusion", "anxiété", "bad trip"]
+      },
+      {
+        "id": "dissociatifs",
+        "emoji": "🧬",
+        "name": "Dissociatifs",
+        "color": "#00C7BE",
+        "description": "Produits qui modifient la perception du corps et de la réalité.",
+        "examples": ["kétamine"],
+        "effects": ["sensation de flottement", "dissociation"],
+        "risks": ["perte d'équilibre", "confusion"]
+      },
+      {
+        "id": "depresseurs",
+        "emoji": "📉",
+        "name": "Dépresseurs",
+        "color": "#FF3B30",
+        "description": "Produits qui ralentissent certaines fonctions du système nerveux.",
+        "examples": ["alcool", "GHB / GBL", "benzodiazépines"],
+        "effects": [],
+        "risks": ["perte de conscience", "respiration ralentie", "mélanges dangereux"]
+      },
+      {
+        "id": "cannabis",
+        "emoji": "🌿",
+        "name": "Cannabis",
+        "color": "#34C759",
+        "description": "Produits à base de THC.",
+        "examples": ["herbe", "résine", "huile"],
+        "effects": ["relaxation", "modification des sensations"],
+        "risks": ["anxiété", "perte de motivation", "malaise chez certaines personnes"]
+      }
+    ],
+    "substances": [
+      {
+        "id": "mdma",
+        "name": "MDMA · Ecstasy",
+        "emoji": "💊",
+        "categoryId": "stimulants",
+        "onsetMin": 45,
+        "durationH": 4.5,
+        "afterEffects": "Fatigue ou descente émotionnelle possible après coup.",
+        "effects": ["euphorie", "empathie et proximité avec les autres", "énergie pour danser"],
+        "attention": [
+          "boire de l'eau régulièrement",
+          "faire des pauses",
+          "éviter la chaleur excessive",
+          "éviter de reprendre trop rapidement"
+        ],
+        "melanges": ["alcool", "stimulants supplémentaires", "certains médicaments"],
+        "melangesText": "Les mélanges peuvent augmenter les risques pour le cœur et la température du corps.",
+        "alertSigns": [
+          "perte de conscience",
+          "forte confusion",
+          "difficulté à respirer",
+          "agitation extrême",
+          "température corporelle très élevée"
+        ]
+      },
+      {
+        "id": "lsd",
+        "name": "LSD",
+        "emoji": "🌈",
+        "categoryId": "psychedeliques",
+        "onsetMin": 60,
+        "durationH": 10,
+        "afterEffects": null,
+        "effects": ["perception altérée des couleurs et formes", "introspection intense", "émotions amplifiées"],
+        "attention": [
+          "prévoir un cadre rassurant",
+          "ne pas conduire",
+          "éviter si état émotionnel fragile",
+          "l'expérience peut être très longue"
+        ],
+        "melanges": ["stimulants", "alcool", "certains médicaments psychiatriques"],
+        "melangesText": "Les mélanges peuvent rendre l'expérience très imprévisible.",
+        "alertSigns": [
+          "panique intense impossible à calmer",
+          "perte totale de contact avec la réalité",
+          "comportement dangereux pour soi ou les autres"
+        ]
+      },
+      {
+        "id": "champignons",
+        "name": "Champignons",
+        "emoji": "🍄",
+        "categoryId": "psychedeliques",
+        "onsetMin": 45,
+        "durationH": 5,
+        "afterEffects": null,
+        "effects": ["perception modifiée", "rires", "introspection", "sensations corporelles amplifiées"],
+        "attention": [
+          "éviter en cas d'anxiété préexistante",
+          "prévoir un environnement calme",
+          "commencer avec une petite quantité"
+        ],
+        "melanges": ["alcool", "cannabis", "stimulants"],
+        "melangesText": "Les mélanges renforcent les effets et augmentent le risque de mauvaise expérience.",
+        "alertSigns": ["panique incontrôlable", "hallucinations très déstabilisantes", "comportement dangereux"]
+      },
+      {
+        "id": "cocaine",
+        "name": "Cocaïne",
+        "emoji": "❄️",
+        "categoryId": "stimulants",
+        "onsetMin": 5,
+        "durationH": 0.75,
+        "afterEffects": null,
+        "effects": ["énergie soudaine", "confiance accrue", "réduction de la fatigue"],
+        "attention": [
+          "durée courte — envie fréquente de reprendre",
+          "risque cardiaque",
+          "éviter si problèmes cardiaques"
+        ],
+        "melanges": ["alcool", "autres stimulants"],
+        "melangesText": "Le mélange avec l'alcool crée une substance qui augmente les risques cardiaques.",
+        "alertSigns": ["douleur thoracique", "palpitations intenses", "perte de conscience"]
+      },
+      {
+        "id": "amphetamines",
+        "name": "Amphétamines",
+        "emoji": "💊",
+        "categoryId": "stimulants",
+        "onsetMin": 30,
+        "durationH": 6,
+        "afterEffects": null,
+        "effects": ["énergie prolongée", "réduction du besoin de sommeil", "concentration accrue"],
+        "attention": [
+          "risque de manquer les signaux de fatigue",
+          "le corps ne ressent plus la faim ni la soif"
+        ],
+        "melanges": ["alcool", "MDMA", "cocaïne"],
+        "melangesText": "Les mélanges de stimulants augmentent fortement les risques cardiaques.",
+        "alertSigns": ["palpitations intenses", "forte anxiété", "forte montée de température"]
+      },
+      {
+        "id": "ketamine",
+        "name": "Kétamine",
+        "emoji": "🧬",
+        "categoryId": "dissociatifs",
+        "onsetMin": 5,
+        "durationH": 1,
+        "afterEffects": null,
+        "effects": ["sensation de flottement", "dissociation", "distorsion du temps"],
+        "attention": [
+          "perte d'équilibre possible",
+          "éviter de se retrouver seul",
+          "ne pas conduire",
+          "doser avec précaution"
+        ],
+        "melanges": ["alcool", "dépresseurs", "GHB"],
+        "melangesText": "Le mélange avec d'autres dépresseurs peut entraîner une perte de conscience.",
+        "alertSigns": ["perte de conscience", "respiration difficile", "incapacité à bouger ou répondre"]
+      },
+      {
+        "id": "alcool",
+        "name": "Alcool",
+        "emoji": "🍺",
+        "categoryId": "depresseurs",
+        "onsetMin": 15,
+        "durationH": 3,
+        "afterEffects": null,
+        "effects": ["désinhibition", "relaxation", "sociabilité"],
+        "attention": [
+          "boire de l'eau en parallèle",
+          "manger avant",
+          "éviter de mélanger avec d'autres substances"
+        ],
+        "melanges": ["GHB", "kétamine", "benzodiazépines", "MDMA"],
+        "melangesText": "L'alcool mélangé à d'autres dépresseurs peut entraîner une perte de conscience grave.",
+        "alertSigns": ["vomissements avec perte de conscience", "respiration lente ou irrégulière", "ne répond plus"]
+      },
+      {
+        "id": "cannabis",
+        "name": "Cannabis",
+        "emoji": "🌿",
+        "categoryId": "cannabis",
+        "onsetMin": 30,
+        "durationH": 2,
+        "afterEffects": "Somnolence possible.",
+        "effects": ["relaxation", "modification des sensations", "appétit stimulé"],
+        "attention": [
+          "les effets varient beaucoup selon la personne",
+          "la chaleur et la fatigue amplifient les effets",
+          "risque de malaise si première fois ou trop forte dose"
+        ],
+        "melanges": ["alcool", "psychédéliques"],
+        "melangesText": "Les mélanges peuvent amplifier fortement les effets et provoquer des malaises.",
+        "alertSigns": ["malaise intense ou perte de connaissance", "panique incontrôlable", "hallucinations non souhaitées"]
+      },
+      {
+        "id": "ghb",
+        "name": "GHB / GBL",
+        "emoji": "📉",
+        "categoryId": "depresseurs",
+        "onsetMin": 15,
+        "durationH": 3,
+        "afterEffects": null,
+        "effects": ["euphorie douce", "relaxation", "désinhibition"],
+        "attention": [
+          "marge entre dose active et dose dangereuse très faible",
+          "ne jamais mélanger avec l'alcool",
+          "ne jamais laisser quelqu'un seul"
+        ],
+        "melanges": ["alcool", "kétamine", "autres dépresseurs"],
+        "melangesText": "Le GHB mélangé à l'alcool peut provoquer une perte de conscience rapide et grave.",
+        "alertSigns": ["perte de conscience soudaine", "respiration très lente", "impossible à réveiller"]
+      },
+      {
+        "id": "3mmc",
+        "name": "3-MMC",
+        "emoji": "💊",
+        "categoryId": "stimulants",
+        "onsetMin": 30,
+        "durationH": 3,
+        "afterEffects": null,
+        "effects": ["euphorie", "sociabilité", "énergie"],
+        "attention": [
+          "risque de redoser rapidement",
+          "effets variables selon les personnes",
+          "fatigue importante après"
+        ],
+        "melanges": ["alcool", "MDMA", "autres stimulants"],
+        "melangesText": "Les mélanges augmentent les risques cardiaques et la surchauffe.",
+        "alertSigns": ["palpitations", "forte chaleur", "agitation extrême"]
+      },
+      {
+        "id": "poppers",
+        "name": "Poppers",
+        "emoji": "🫧",
+        "categoryId": "stimulants",
+        "onsetMin": 1,
+        "durationH": 0.05,
+        "afterEffects": null,
+        "effects": ["rush de quelques secondes", "relaxation musculaire", "sensation de chaleur"],
+        "attention": [
+          "ne jamais avaler",
+          "éviter si problèmes cardiaques ou tension artérielle",
+          "ne pas inhaler trop fort ou trop longtemps"
+        ],
+        "melanges": ["médicaments pour la dysfonction érectile"],
+        "melangesText": "Ce mélange peut provoquer une chute de tension grave.",
+        "alertSigns": ["perte de connaissance", "douleur thoracique", "maux de tête intenses"]
+      }
+    ],
+    "conseils": [
+      {
+        "emoji": "💧",
+        "title": "Hydratation",
+        "tips": ["boire de l'eau régulièrement", "éviter de boire trop d'un coup"]
+      },
+      {
+        "emoji": "💤",
+        "title": "Pauses",
+        "tips": ["faire des pauses entre les moments de danse", "écouter son corps"]
+      },
+      {
+        "emoji": "🌡️",
+        "title": "Chaleur",
+        "tips": ["se mettre à l'ombre", "se rafraîchir régulièrement"]
+      },
+      {
+        "emoji": "😴",
+        "title": "Sommeil",
+        "tips": ["dormir un peu si possible", "le manque de sommeil amplifie les effets"]
+      },
+      {
+        "emoji": "💟",
+        "title": "Être entouré",
+        "tips": ["rester avec des personnes de confiance", "veiller les uns sur les autres"]
+      },
+      {
+        "emoji": "🆘",
+        "title": "Demander de l'aide",
+        "tips": [
+          "si quelqu'un ne va pas bien, appelle le staff ou les bénévoles",
+          "rester avec la personne",
+          "les équipes sont là pour aider"
+        ]
+      }
+    ],
+    "simSubstances": [
+      { "id": "mdma",         "name": "MDMA / ecstasy",       "emoji": "💊" },
+      { "id": "lsd",          "name": "LSD",                  "emoji": "🌈" },
+      { "id": "champignons",  "name": "Champignons",          "emoji": "🍄" },
+      { "id": "dmt",          "name": "DMT",                  "emoji": "🌀" },
+      { "id": "mescaline",    "name": "Mescaline",            "emoji": "🌵" },
+      { "id": "amphetamines", "name": "Amphétamines / speed", "emoji": "💊" },
+      { "id": "cocaine",      "name": "Cocaïne",              "emoji": "❄️" },
+      { "id": "ketamine",     "name": "Kétamine",             "emoji": "🧬" },
+      { "id": "alcool",       "name": "Alcool",               "emoji": "🍺" },
+      { "id": "cannabis",     "name": "Cannabis",             "emoji": "🌿" },
+      { "id": "ghb",          "name": "GHB / GBL",            "emoji": "📉" },
+      { "id": "benzos",       "name": "Benzodiazépines",      "emoji": "💊" },
+      { "id": "3mmc",         "name": "3-MMC",                "emoji": "💊" },
+      { "id": "poppers",      "name": "Poppers",              "emoji": "🫧" }
+    ],
+    "timeOptions": [
+      { "label": "Moins de 30 min", "value": 15 },
+      { "label": "30 min – 1 h",    "value": 45 },
+      { "label": "1 – 2 h",         "value": 90 },
+      { "label": "2 – 4 h",         "value": 180 },
+      { "label": "4 – 6 h",         "value": 300 },
+      { "label": "6 – 8 h",         "value": 420 },
+      { "label": "Plus de 8 h",     "value": 510 }
+    ]
+  },
+  "en": {
+    "categories": [
+      {
+        "id": "stimulants",
+        "emoji": "💊",
+        "name": "Stimulants",
+        "color": "#FF9500",
+        "description": "Substances that increase energy, alertness, and stimulation.",
+        "examples": ["MDMA", "amphetamines", "cocaine", "3-MMC"],
+        "effects": ["energy", "sociability", "stimulation"],
+        "risks": ["dehydration", "overheating", "significant fatigue afterwards"]
+      },
+      {
+        "id": "psychedeliques",
+        "emoji": "🍄",
+        "name": "Psychedelics",
+        "color": "#BF5AF2",
+        "description": "Substances that alter perception and sensations.",
+        "examples": ["LSD", "mushrooms", "DMT", "mescaline"],
+        "effects": ["altered perception", "introspection", "amplified emotions"],
+        "risks": ["confusion", "anxiety", "bad trip"]
+      },
+      {
+        "id": "dissociatifs",
+        "emoji": "🧬",
+        "name": "Dissociatives",
+        "color": "#00C7BE",
+        "description": "Substances that alter the perception of the body and reality.",
+        "examples": ["ketamine"],
+        "effects": ["floating sensation", "dissociation"],
+        "risks": ["loss of balance", "confusion"]
+      },
+      {
+        "id": "depresseurs",
+        "emoji": "📉",
+        "name": "Depressants",
+        "color": "#FF3B30",
+        "description": "Substances that slow down certain functions of the nervous system.",
+        "examples": ["alcohol", "GHB / GBL", "benzodiazepines"],
+        "effects": [],
+        "risks": ["loss of consciousness", "slowed breathing", "dangerous combinations"]
+      },
+      {
+        "id": "cannabis",
+        "emoji": "🌿",
+        "name": "Cannabis",
+        "color": "#34C759",
+        "description": "THC-based products.",
+        "examples": ["herb", "resin", "oil"],
+        "effects": ["relaxation", "altered sensations"],
+        "risks": ["anxiety", "loss of motivation", "discomfort in some people"]
+      }
+    ],
+    "substances": [
+      {
+        "id": "mdma",
+        "name": "MDMA · Ecstasy",
+        "emoji": "💊",
+        "categoryId": "stimulants",
+        "onsetMin": 45,
+        "durationH": 4.5,
+        "afterEffects": "Fatigue or emotional comedown possible afterwards.",
+        "effects": ["euphoria", "empathy and closeness with others", "energy to dance"],
+        "attention": [
+          "drink water regularly",
+          "take breaks",
+          "avoid excessive heat",
+          "avoid redosing too soon"
+        ],
+        "melanges": ["alcohol", "additional stimulants", "certain medications"],
+        "melangesText": "Combinations can increase risks to the heart and raise body temperature.",
+        "alertSigns": [
+          "loss of consciousness",
+          "severe confusion",
+          "difficulty breathing",
+          "extreme agitation",
+          "very high body temperature"
+        ]
+      },
+      {
+        "id": "lsd",
+        "name": "LSD",
+        "emoji": "🌈",
+        "categoryId": "psychedeliques",
+        "onsetMin": 60,
+        "durationH": 10,
+        "afterEffects": null,
+        "effects": ["altered perception of colors and shapes", "intense introspection", "amplified emotions"],
+        "attention": [
+          "plan a safe and reassuring setting",
+          "do not drive",
+          "avoid if in a fragile emotional state",
+          "the experience can be very long"
+        ],
+        "melanges": ["stimulants", "alcohol", "certain psychiatric medications"],
+        "melangesText": "Combinations can make the experience very unpredictable.",
+        "alertSigns": [
+          "intense panic that cannot be calmed",
+          "complete loss of contact with reality",
+          "behavior dangerous to oneself or others"
+        ]
+      },
+      {
+        "id": "champignons",
+        "name": "Mushrooms",
+        "emoji": "🍄",
+        "categoryId": "psychedeliques",
+        "onsetMin": 45,
+        "durationH": 5,
+        "afterEffects": null,
+        "effects": ["altered perception", "laughter", "introspection", "amplified body sensations"],
+        "attention": [
+          "avoid if pre-existing anxiety",
+          "plan a calm environment",
+          "start with a small amount"
+        ],
+        "melanges": ["alcohol", "cannabis", "stimulants"],
+        "melangesText": "Combinations intensify effects and increase the risk of a bad experience.",
+        "alertSigns": ["uncontrollable panic", "very destabilizing hallucinations", "dangerous behavior"]
+      },
+      {
+        "id": "cocaine",
+        "name": "Cocaine",
+        "emoji": "❄️",
+        "categoryId": "stimulants",
+        "onsetMin": 5,
+        "durationH": 0.75,
+        "afterEffects": null,
+        "effects": ["sudden energy", "increased confidence", "reduced fatigue"],
+        "attention": [
+          "short duration — frequent urge to redose",
+          "cardiac risk",
+          "avoid if you have heart problems"
+        ],
+        "melanges": ["alcohol", "other stimulants"],
+        "melangesText": "Mixing with alcohol creates a substance that increases cardiac risks.",
+        "alertSigns": ["chest pain", "intense palpitations", "loss of consciousness"]
+      },
+      {
+        "id": "amphetamines",
+        "name": "Amphetamines",
+        "emoji": "💊",
+        "categoryId": "stimulants",
+        "onsetMin": 30,
+        "durationH": 6,
+        "afterEffects": null,
+        "effects": ["prolonged energy", "reduced need for sleep", "increased concentration"],
+        "attention": [
+          "risk of missing fatigue signals",
+          "the body no longer feels hunger or thirst"
+        ],
+        "melanges": ["alcohol", "MDMA", "cocaine"],
+        "melangesText": "Combining stimulants greatly increases cardiac risks.",
+        "alertSigns": ["intense palpitations", "severe anxiety", "sharp rise in body temperature"]
+      },
+      {
+        "id": "ketamine",
+        "name": "Ketamine",
+        "emoji": "🧬",
+        "categoryId": "dissociatifs",
+        "onsetMin": 5,
+        "durationH": 1,
+        "afterEffects": null,
+        "effects": ["floating sensation", "dissociation", "distortion of time"],
+        "attention": [
+          "possible loss of balance",
+          "avoid being alone",
+          "do not drive",
+          "dose carefully"
+        ],
+        "melanges": ["alcohol", "depressants", "GHB"],
+        "melangesText": "Combining with other depressants can lead to loss of consciousness.",
+        "alertSigns": ["loss of consciousness", "difficulty breathing", "inability to move or respond"]
+      },
+      {
+        "id": "alcool",
+        "name": "Alcohol",
+        "emoji": "🍺",
+        "categoryId": "depresseurs",
+        "onsetMin": 15,
+        "durationH": 3,
+        "afterEffects": null,
+        "effects": ["disinhibition", "relaxation", "sociability"],
+        "attention": [
+          "drink water alongside",
+          "eat beforehand",
+          "avoid mixing with other substances"
+        ],
+        "melanges": ["GHB", "ketamine", "benzodiazepines", "MDMA"],
+        "melangesText": "Alcohol mixed with other depressants can cause serious loss of consciousness.",
+        "alertSigns": ["vomiting with loss of consciousness", "slow or irregular breathing", "unresponsive"]
+      },
+      {
+        "id": "cannabis",
+        "name": "Cannabis",
+        "emoji": "🌿",
+        "categoryId": "cannabis",
+        "onsetMin": 30,
+        "durationH": 2,
+        "afterEffects": "Possible drowsiness.",
+        "effects": ["relaxation", "altered sensations", "increased appetite"],
+        "attention": [
+          "effects vary greatly from person to person",
+          "heat and fatigue amplify effects",
+          "risk of discomfort if first time or too high a dose"
+        ],
+        "melanges": ["alcohol", "psychedelics"],
+        "melangesText": "Combinations can strongly amplify effects and cause discomfort.",
+        "alertSigns": ["intense discomfort or loss of consciousness", "uncontrollable panic", "unwanted hallucinations"]
+      },
+      {
+        "id": "ghb",
+        "name": "GHB / GBL",
+        "emoji": "📉",
+        "categoryId": "depresseurs",
+        "onsetMin": 15,
+        "durationH": 3,
+        "afterEffects": null,
+        "effects": ["mild euphoria", "relaxation", "disinhibition"],
+        "attention": [
+          "very narrow margin between active dose and dangerous dose",
+          "never mix with alcohol",
+          "never leave someone alone"
+        ],
+        "melanges": ["alcohol", "ketamine", "other depressants"],
+        "melangesText": "GHB mixed with alcohol can cause rapid and serious loss of consciousness.",
+        "alertSigns": ["sudden loss of consciousness", "very slow breathing", "impossible to wake up"]
+      },
+      {
+        "id": "3mmc",
+        "name": "3-MMC",
+        "emoji": "💊",
+        "categoryId": "stimulants",
+        "onsetMin": 30,
+        "durationH": 3,
+        "afterEffects": null,
+        "effects": ["euphoria", "sociability", "energy"],
+        "attention": [
+          "risk of redosing quickly",
+          "variable effects depending on the person",
+          "significant fatigue afterwards"
+        ],
+        "melanges": ["alcohol", "MDMA", "other stimulants"],
+        "melangesText": "Combinations increase cardiac risks and the risk of overheating.",
+        "alertSigns": ["palpitations", "intense heat", "extreme agitation"]
+      },
+      {
+        "id": "poppers",
+        "name": "Poppers",
+        "emoji": "🫧",
+        "categoryId": "stimulants",
+        "onsetMin": 1,
+        "durationH": 0.05,
+        "afterEffects": null,
+        "effects": ["rush lasting a few seconds", "muscle relaxation", "sensation of warmth"],
+        "attention": [
+          "never swallow",
+          "avoid if you have heart problems or blood pressure issues",
+          "do not inhale too hard or for too long"
+        ],
+        "melanges": ["medications for erectile dysfunction"],
+        "melangesText": "This combination can cause a serious drop in blood pressure.",
+        "alertSigns": ["loss of consciousness", "chest pain", "intense headache"]
+      }
+    ],
+    "conseils": [
+      {
+        "emoji": "💧",
+        "title": "Hydration",
+        "tips": ["drink water regularly", "avoid drinking too much at once"]
+      },
+      {
+        "emoji": "💤",
+        "title": "Breaks",
+        "tips": ["take breaks between dancing", "listen to your body"]
+      },
+      {
+        "emoji": "🌡️",
+        "title": "Heat",
+        "tips": ["find shade", "cool down regularly"]
+      },
+      {
+        "emoji": "😴",
+        "title": "Sleep",
+        "tips": ["sleep a little if possible", "lack of sleep amplifies effects"]
+      },
+      {
+        "emoji": "💟",
+        "title": "Stay together",
+        "tips": ["stay with people you trust", "look out for one another"]
+      },
+      {
+        "emoji": "🆘",
+        "title": "Ask for help",
+        "tips": [
+          "if someone is not doing well, call the staff or volunteers",
+          "stay with the person",
+          "the teams are here to help"
+        ]
+      }
+    ],
+    "simSubstances": [
+      { "id": "mdma",         "name": "MDMA / ecstasy",        "emoji": "💊" },
+      { "id": "lsd",          "name": "LSD",                   "emoji": "🌈" },
+      { "id": "champignons",  "name": "Mushrooms",             "emoji": "🍄" },
+      { "id": "dmt",          "name": "DMT",                   "emoji": "🌀" },
+      { "id": "mescaline",    "name": "Mescaline",             "emoji": "🌵" },
+      { "id": "amphetamines", "name": "Amphetamines / speed",  "emoji": "💊" },
+      { "id": "cocaine",      "name": "Cocaine",               "emoji": "❄️" },
+      { "id": "ketamine",     "name": "Ketamine",              "emoji": "🧬" },
+      { "id": "alcool",       "name": "Alcohol",               "emoji": "🍺" },
+      { "id": "cannabis",     "name": "Cannabis",              "emoji": "🌿" },
+      { "id": "ghb",          "name": "GHB / GBL",             "emoji": "📉" },
+      { "id": "benzos",       "name": "Benzodiazepines",       "emoji": "💊" },
+      { "id": "3mmc",         "name": "3-MMC",                 "emoji": "💊" },
+      { "id": "poppers",      "name": "Poppers",               "emoji": "🫧" }
+    ],
+    "timeOptions": [
+      { "label": "Less than 30 min", "value": 15 },
+      { "label": "30 min – 1 h",     "value": 45 },
+      { "label": "1 – 2 h",          "value": 90 },
+      { "label": "2 – 4 h",          "value": 180 },
+      { "label": "4 – 6 h",          "value": 300 },
+      { "label": "6 – 8 h",          "value": 420 },
+      { "label": "More than 8 h",    "value": 510 }
+    ]
+  }
+}
