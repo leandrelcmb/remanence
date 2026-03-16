@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import type { ChasseType } from "../core/models/chasseTypes";
 import type { ChasseHistoryEntry } from "../core/models/chasseTypes";
 import { listChasseHistory, deleteChasseHistory } from "../core/store/repo";
@@ -19,31 +20,31 @@ type Props = {
 type GameCard = {
   id: string;
   emoji: string;
-  title: string;
-  sub: string;
+  titleKey: string;
+  subKey: string;
   active: true;
   chasseType: ChasseType;
 } | {
   id: string;
   emoji: string;
-  title: string;
-  sub: string;
+  titleKey: string;
+  subKey: string;
   active: "introspection" | "treasure" | "theories" | "anecdotes" | "divers";
 } | {
   id: string;
   emoji: string;
-  title: string;
-  sub: string;
+  titleKey: string;
+  subKey: string;
   active: false;
 };
 
 const GAMES: GameCard[] = [
-  { id: "tableau",       emoji: "📸", title: "Tableau du festival", sub: "Chromatique · Formes · Créatures",                   active: true,            chasseType: "chromatic"   },
-  { id: "treasure",     emoji: "🗺️", title: "Chasse au Trésor",   sub: "30 secrets à révéler dans le festival",              active: "treasure"                                 },
-  { id: "theories",     emoji: "🃏", title: "Théories Absurdes",   sub: "60 cartes absurdes — gratte pour révéler",           active: "theories"                                 },
-  { id: "introspection",emoji: "💭", title: "Introspection",       sub: "Des questions douces pour célébrer notre existence", active: "introspection"                            },
-  { id: "anecdotes",    emoji: "🎪", title: "Anecdotes",           sub: "150 cartes · Vrai ou Faux festival",                 active: "anecdotes"                                },
-  { id: "divers",       emoji: "🎲", title: "Divers",              sub: "~150 cartes · Camping, Rencontres, Défis…",          active: "divers"                                   },
+  { id: "tableau",       emoji: "📸", titleKey: "games.chasseTitle",       subKey: "games.chasseSub",       active: true,            chasseType: "chromatic"   },
+  { id: "treasure",     emoji: "🗺️", titleKey: "games.treasureTitle",     subKey: "games.treasureSub",     active: "treasure"                                 },
+  { id: "theories",     emoji: "🃏", titleKey: "games.theoriesTitle",     subKey: "games.theoriesSub",     active: "theories"                                 },
+  { id: "introspection",emoji: "💭", titleKey: "games.introspectionTitle", subKey: "games.introspectionSub", active: "introspection"                            },
+  { id: "anecdotes",    emoji: "🎪", titleKey: "games.anecdotesTitle",    subKey: "games.anecdotesSub",    active: "anecdotes"                                },
+  { id: "divers",       emoji: "🎲", titleKey: "games.diversTitle",       subKey: "games.diversSub",       active: "divers"                                   },
 ];
 
 function formatDate(iso: string): string {
@@ -52,6 +53,7 @@ function formatDate(iso: string): string {
 }
 
 export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onTheories, onAnecdotes, onDivers, onComingSoon }: Props) {
+  const { t } = useTranslation();
   const [history, setHistory] = useState<ChasseHistoryEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<ChasseHistoryEntry | null>(null);
 
@@ -77,8 +79,8 @@ export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onT
         backdropFilter: "blur(20px)",
       }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>Jeux 🎮</div>
-          <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>Explore le festival autrement</div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>{t('games.title')}</div>
+          <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>{t('games.subtitle')}</div>
         </div>
         <button
           onClick={onBack}
@@ -93,7 +95,7 @@ export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onT
             fontFamily: "inherit",
           }}
         >
-          Home ॐ
+          {t('common.home')}
         </button>
       </div>
 
@@ -144,10 +146,10 @@ export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onT
                 <div style={{ fontSize: 32, lineHeight: 1 }}>{game.emoji}</div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, marginBottom: 4 }}>
-                    {game.title}
+                    {t(game.titleKey)}
                   </div>
                   <div style={{ fontSize: 11, opacity: 0.6, lineHeight: 1.4 }}>
-                    {game.sub}
+                    {t(game.subKey)}
                   </div>
                 </div>
 
@@ -162,7 +164,7 @@ export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onT
                     fontWeight: 600,
                     letterSpacing: "0.04em",
                   }}>
-                    BIENTÔT
+                    {t('games.comingSoon')}
                   </div>
                 )}
               </button>
@@ -180,7 +182,7 @@ export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onT
               textTransform: "uppercase",
               marginBottom: 12,
             }}>
-              Tes chasses 📖
+              {t('games.myHunts')}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -342,7 +344,7 @@ export function GamesScreen({ onBack, onChasse, onIntrospection, onTreasure, onT
                 marginTop: 4,
               }}
             >
-              Supprimer cette chasse
+              {t('games.deleteHunt')}
             </button>
           </div>
         </div>,

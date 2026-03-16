@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { RootLayout } from "./RootLayout";
+import { LanguagePickerScreen } from "../screens/LanguagePickerScreen";
 import { createSetEntry, updateJournalItem, deleteJournalItem } from "../core/store/service";
 import type { JournalItem } from "../core/store/service";
 import { energyTint } from "./ui/EnergyDots";
@@ -70,6 +71,7 @@ type EditingEntry = {
 };
 
 export default function App() {
+  const [hasLanguage, setHasLanguage] = useState(() => !!localStorage.getItem("lang"));
   const [screen, setScreen] = useState<FlowScreen>("landing");
   const [animDir, setAnimDir] = useState<AnimDir>("neutral");
   const [selectedItem, setSelectedItem] = useState<JournalItem | null>(null);
@@ -258,6 +260,15 @@ export default function App() {
     return (
       <RootLayout haloColor="#7B5EA7" haloOpacity={0.35} haloScale={1.1} haloCenterY={50}>
         <div />
+      </RootLayout>
+    );
+  }
+
+  // ── Sélection de langue (avant onboarding) ──
+  if (!hasLanguage) {
+    return (
+      <RootLayout haloColor="#7B5EA7" haloOpacity={0.22} haloScale={1.1} haloCenterY={50}>
+        <LanguagePickerScreen onComplete={() => setHasLanguage(true)} />
       </RootLayout>
     );
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from 'react-i18next';
 import type { ChasseType } from "../core/models/chasseTypes";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -414,6 +415,7 @@ export function LandingScreen({
   onConstellation, onFestivalPicker, onContacts, onGames, onSante, onProgrammation,
   activeChasse, onResumeChasse,
 }: Props) {
+  const { t } = useTranslation();
   const [, setTick] = useState(0);
   useEffect(() => {
     if (!activeChasse) return;
@@ -491,7 +493,7 @@ export function LandingScreen({
               animation: "landingCtaFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s both, landingGlowBreath 3.5s ease-in-out 0.8s infinite",
             }}
           >
-            Entrer en rémanence 🌱
+            {t('landing.cta')}
           </button>
         </div>
 
@@ -518,7 +520,7 @@ export function LandingScreen({
               letterSpacing: "0.04em",
             }}
           >
-            Trace éclair ⚡
+            {t('landing.express')}
           </button>
         </div>
 
@@ -530,9 +532,9 @@ export function LandingScreen({
           gap: 10,
           animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s both",
         }}>
-          <NavCard emoji="💓" label="Vibrations"    onClick={onJournal}       cardId="0" />
-          <NavCard emoji="✨" label="Constellations" onClick={onConstellation} cardId="1" />
-          <NavCard emoji="🤝" label="Rencontres"    onClick={onContacts}      cardId="2" />
+          <NavCard emoji="💓" label={t('landing.journal')}        onClick={onJournal}       cardId="0" />
+          <NavCard emoji="✨" label={t('landing.constellation')} onClick={onConstellation} cardId="1" />
+          <NavCard emoji="🤝" label={t('landing.contacts')}     onClick={onContacts}      cardId="2" />
         </div>
 
         <div style={{
@@ -541,9 +543,9 @@ export function LandingScreen({
           gap: 10,
           animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.45s both",
         }}>
-          <NavCard emoji="🧠" label="Santé"        onClick={onSante}         cardId="3" />
-          <NavCard emoji="🎵" label="Programme"    onClick={onProgrammation} cardId="4" />
-          <NavCard emoji="🎮" label="Jeux"         onClick={onGames}         cardId="5" />
+          <NavCard emoji="🧠" label={t('landing.health')}  onClick={onSante}         cardId="3" />
+          <NavCard emoji="🎵" label={t('landing.program')} onClick={onProgrammation} cardId="4" />
+          <NavCard emoji="🎮" label={t('landing.games')}   onClick={onGames}         cardId="5" />
         </div>
 
         {activeChasse && activeChasse.timerExpiresAt > Date.now() && (
@@ -573,10 +575,10 @@ export function LandingScreen({
             }} />
             <div style={{ flex: 1, textAlign: "left" }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>
-                {activeChasse.resultIcon} {activeChasse.resultLabel} en cours
+                {activeChasse.resultIcon} {activeChasse.resultLabel} {t('landing.gameActive')}
               </div>
               <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
-                {formatRemainingTime(activeChasse.timerExpiresAt)} restantes · Reprendre →
+                {formatRemainingTime(activeChasse.timerExpiresAt)} {t('landing.gameResume')}
               </div>
             </div>
           </button>
@@ -607,7 +609,7 @@ export function LandingScreen({
 	    fontStyle: "italic",
           }}
         >
-          {festivalName} · changer
+          {festivalName} · {t('landing.changeFestival')}
         </button>
       </div>
 

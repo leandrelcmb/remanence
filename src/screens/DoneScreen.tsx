@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { energyTint } from "../app/ui/EnergyDots";
 import { focusEmoji } from "./utils";
 
@@ -89,6 +90,7 @@ function ParticleField({ color }: { color: string }) {
 // ── Écran principal ──────────────────────────────────────────────────────────
 
 export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
+  const { t } = useTranslation();
   const accentColor  = lastSavedColor ?? "#00FFB7";
   const [r, g, b]   = parseColor(accentColor);
   const haloMain    = toHex(r, g, b);
@@ -121,7 +123,7 @@ export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
           color: accentColor,
           textShadow: `0 0 28px ${accentColor}55`,
         }}>
-          Ta trace est ancrée 🎁
+          {t('done.title')}
         </p>
 
         {/* Carte récap */}
@@ -151,7 +153,7 @@ export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
               {/* Artiste + scène */}
               <div>
                 <div style={{ fontSize: 22, fontWeight: 500 }}>
-                  {lastSavedEntry.artistName || "Artiste inconnu"}
+                  {lastSavedEntry.artistName || t('done.unknownArtist')}
                 </div>
                 {lastSavedEntry.stageName && (
                   <div style={{ fontSize: 13, opacity: 0.5, marginTop: 4 }}>
@@ -204,7 +206,7 @@ export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
             background: `${accentColor}18`,
             border: `1px solid ${accentColor}44`,
           }}>
-            Le souvenir a rejoint ta constellation ✨
+            {t('done.constellationMsg')}
           </div>
         )}
 
@@ -232,7 +234,7 @@ export function DoneScreen({ lastSavedColor, lastSavedEntry, onHome }: Props) {
               letterSpacing: "0.03em",
             }}
           >
-            Se reconnecter à l'instant 🍀
+            {t('done.reconnect')}
           </button>
         </div>
 

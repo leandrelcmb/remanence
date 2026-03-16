@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from 'react-i18next';
 import type { FestivalContact } from "../core/models/types";
 import {
   createContact,
@@ -32,6 +33,7 @@ function ContactCard({
   onDelete: () => void;
   onUpdate: (updated: FestivalContact) => void;
 }) {
+  const { t } = useTranslation();
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState<ContactFormState>({
@@ -148,12 +150,12 @@ function ContactCard({
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <div style={{ flex: 1 }}>
                     <RoundButton variant="secondary" onClick={() => setShowDetail(false)}>
-                      Fermer
+                      {t('contacts.close')}
                     </RoundButton>
                   </div>
                   <div style={{ flex: 1 }}>
                     <RoundButton variant="primary" onClick={() => setShowEdit(true)}>
-                      Modifier
+                      {t('contacts.edit')}
                     </RoundButton>
                   </div>
                   {/* Bouton poubelle compact */}
@@ -180,7 +182,7 @@ function ContactCard({
             ) : (
               /* ── Mode édition ── */
               <>
-                <h3 style={{ margin: 0, fontSize: 19, fontWeight: 500 }}>Modifier la rencontre</h3>
+                <h3 style={{ margin: 0, fontSize: 19, fontWeight: 500 }}>{t('contacts.editTitle')}</h3>
 
                 {/* Photo */}
                 <div>
@@ -216,14 +218,14 @@ function ContactCard({
                         cursor: "pointer", fontFamily: "inherit", width: "100%",
                       }}
                     >
-                      📷 Changer la photo
+                      {t('contacts.changePhoto')}
                     </button>
                   )}
                 </div>
 
                 {/* Nom */}
                 <input
-                  type="text" placeholder="Prénom ou @"
+                  type="text" placeholder={t('contacts.namePlaceholder')}
                   value={editForm.name}
                   onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
                   style={{
@@ -236,7 +238,7 @@ function ContactCard({
 
                 {/* Note */}
                 <textarea
-                  placeholder="Une particularité, un moment partagé…"
+                  placeholder={t('contacts.notePlaceholder')}
                   value={editForm.note}
                   onChange={(e) => setEditForm((f) => ({ ...f, note: e.target.value }))}
                   rows={3}
@@ -251,12 +253,12 @@ function ContactCard({
                 <div style={{ display: "flex", gap: 10 }}>
                   <div style={{ flex: 1 }}>
                     <RoundButton variant="secondary" onClick={() => setShowEdit(false)}>
-                      Annuler
+                      {t('contacts.cancel')}
                     </RoundButton>
                   </div>
                   <div style={{ flex: 1 }}>
                     <RoundButton variant="primary" onClick={handleSaveEdit} disabled={!editForm.name.trim()}>
-                      Sauvegarder ✓
+                      {t('contacts.save')}
                     </RoundButton>
                   </div>
                 </div>
@@ -273,6 +275,7 @@ function ContactCard({
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
+  const { t } = useTranslation();
   const [contacts, setContacts] = useState<FestivalContact[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<ContactFormState>({ name: "", note: "", photo: undefined });
@@ -334,7 +337,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
         {/* Titre + bouton retour */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 26, fontWeight: 500 }}>Rencontres 🧬</h2>
+            <h2 style={{ margin: 0, fontSize: 26, fontWeight: 500 }}>{t('contacts.title')}</h2>
             <div style={{ fontSize: 13, opacity: 0.45, marginTop: 4 }}>
               {festivalName} · {contacts.length} contact{contacts.length !== 1 ? "s" : ""}
             </div>
@@ -348,7 +351,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
               cursor: "pointer", fontFamily: "inherit",
             }}
           >
-            Home ॐ
+            {t('common.home')}
           </button>
         </div>
 
@@ -365,7 +368,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
             fontFamily: "inherit", letterSpacing: "0.04em",
           }}
         >
-          + Ajouter une rencontre
+          {t('contacts.add')}
         </button>
       </div>
 
@@ -376,7 +379,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
       }}>
         {contacts.length === 0 && (
           <p style={{ opacity: 0.5, fontSize: 16, marginTop: 12 }}>
-            Personne encore. Capture tes rencontres de festival ici 🌿
+            {t('contacts.empty')}
           </p>
         )}
         {contacts.map((c) => (
@@ -402,7 +405,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
             borderRadius: "24px 24px 0 0", padding: "28px 20px 40px",
             width: "100%", maxWidth: 430, display: "grid", gap: 25,
           }}>
-            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 500 }}>Nouvelle rencontre</h3>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 500 }}>{t('contacts.newTitle')}</h3>
 
             {/* Photo */}
             <div>
@@ -438,14 +441,14 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
                     cursor: "pointer", fontFamily: "inherit", width: "100%",
                   }}
                 >
-                  📷 Prendre une photo (optionnel)
+                  {t('contacts.addPhoto')}
                 </button>
               )}
             </div>
 
             {/* Nom */}
             <input
-              type="text" placeholder="Prénom ou @"
+              type="text" placeholder={t('contacts.namePlaceholder')}
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               style={{
@@ -473,12 +476,12 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{ flex: 1 }}>
                 <RoundButton variant="secondary" onClick={() => { setShowForm(false); setForm({ name: "", note: "", photo: undefined }); }}>
-                  Annuler
+                  {t('contacts.cancel')}
                 </RoundButton>
               </div>
               <div style={{ flex: 1 }}>
                 <RoundButton variant="primary" onClick={handleSave} disabled={!form.name.trim() || saving}>
-                  {saving ? "Enregistrement…" : "Ancrer 🌿"}
+                  {saving ? "Enregistrement…" : t('contacts.anchor')}
                 </RoundButton>
               </div>
             </div>

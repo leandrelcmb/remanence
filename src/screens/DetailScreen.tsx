@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import type { JournalItem } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
 import { RoundButton } from "../app/ui/RoundButton";
@@ -38,6 +39,7 @@ type Props = {
 };
 
 export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloColor = "#00FFB7" }: Props) {
+  const { t } = useTranslation();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const displayColor = energyTint(item.colorHex, item.energy);
 
@@ -70,7 +72,7 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
         {item.photo && (
           <img
             src={item.photo}
-            alt="Souvenir du moment"
+            alt={t('detail.imgAlt')}
             style={{ width: "100%", borderRadius: 14, marginBottom: 10 }}
           />
         )}
@@ -90,7 +92,7 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
               boxShadow: `0 0 18px ${displayColor}`,
             }}
           />
-          <span>{item.style?.trim() ? item.style : "Style inconnu"}</span>
+          <span>{item.style?.trim() ? item.style : t('detail.unknownStyle')}</span>
         </div>
 
         {item.feelingText?.trim() && (
@@ -112,12 +114,12 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <RoundButton variant="secondary" onClick={() => onEdit(item)}>
-                Modifier ✏️
+                {t('detail.edit')}
               </RoundButton>
             </div>
             <div style={{ flex: 1 }}>
               <RoundButton variant="secondary" onClick={() => setConfirmingDelete(true)}>
-                Supprimer 🗑️
+                {t('detail.delete')}
               </RoundButton>
             </div>
           </div>
@@ -139,7 +141,7 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
               letterSpacing: "0.03em",
             }}
           >
-            {backTarget === "constellation" ? "Revenir à la constellation ✨" : "Revenir aux vibrations 💓"}
+            {backTarget === "constellation" ? t('detail.backConstellation') : t('detail.backJournal')}
           </button>
         </div>
       ) : (
@@ -154,12 +156,12 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
           }}
         >
           <p style={{ margin: 0, textAlign: "center", opacity: 0.9 }}>
-            Supprimer ce souvenir définitivement ?
+            {t('detail.deleteConfirm')}
           </p>
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <RoundButton variant="secondary" onClick={() => setConfirmingDelete(false)}>
-                Annuler
+                {t('detail.cancel')}
               </RoundButton>
             </div>
             <div style={{ flex: 1 }}>
@@ -176,7 +178,7 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
                   fontSize: 20,
                 }}
               >
-                Supprimer
+                {t('detail.confirmDelete')}
               </button>
             </div>
           </div>

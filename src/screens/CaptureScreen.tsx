@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import { useTranslation } from 'react-i18next';
 import { RoundButton } from "../app/ui/RoundButton";
 
 type Props = {
@@ -25,10 +26,11 @@ const cardBase: React.CSSProperties = {
 };
 
 export function CaptureScreen({ photo, onCameraPhoto, onGalleryPhoto, onClearPhoto, onFinish, onBack }: Props) {
+  const { t } = useTranslation();
   return (
     <div style={{ display: "grid", gap: 32, minHeight: "85dvh", alignContent: "center" }}>
       <p style={{ opacity: 0.86, fontSize: 30, margin: 0, textAlign: "center" }}>
-        Capture du moment 🔐
+        {t('capture.title')}
       </p>
 
       {!photo && (
@@ -36,7 +38,7 @@ export function CaptureScreen({ photo, onCameraPhoto, onGalleryPhoto, onClearPho
           {/* Option 1 — Caméra directe */}
           <label style={{ ...cardBase, padding: "44px 20px" }}>
             <span style={{ fontSize: 44 }}>📸</span>
-            <span style={{ fontSize: 16, opacity: 0.9 }}>Prendre une photo</span>
+            <span style={{ fontSize: 16, opacity: 0.9 }}>{t('capture.takePhoto')}</span>
             <input
               type="file"
               accept="image/*"
@@ -49,7 +51,7 @@ export function CaptureScreen({ photo, onCameraPhoto, onGalleryPhoto, onClearPho
           {/* Option 2 — Galerie / fichiers */}
           <label style={{ ...cardBase, padding: "22px 20px" }}>
             <span style={{ fontSize: 28 }}>🖼️</span>
-            <span style={{ fontSize: 15, opacity: 0.75 }}>Depuis ma galerie</span>
+            <span style={{ fontSize: 15, opacity: 0.75 }}>{t('capture.fromGallery')}</span>
             <input
               type="file"
               accept="image/*"
@@ -64,7 +66,7 @@ export function CaptureScreen({ photo, onCameraPhoto, onGalleryPhoto, onClearPho
         <div style={{ display: "grid", gap: 14 }}>
           <img
             src={photo}
-            alt="Capture du moment"
+            alt={t('capture.imgAlt')}
             style={{
               width: "100%",
               borderRadius: 16,
@@ -86,7 +88,7 @@ export function CaptureScreen({ photo, onCameraPhoto, onGalleryPhoto, onClearPho
               opacity: 0.7,
             }}
           >
-            🔄 Changer la photo
+            {t('capture.changePhoto')}
           </button>
         </div>
       )}
@@ -94,7 +96,7 @@ export function CaptureScreen({ photo, onCameraPhoto, onGalleryPhoto, onClearPho
       <div style={{ display: "flex", gap: 5 }}>
         <div style={{ flex: 1 }}>
           <RoundButton variant="secondary" onClick={onBack}>
-            ↪️ Retour
+            {t('capture.back')}
           </RoundButton>
         </div>
         <div
@@ -106,7 +108,7 @@ export function CaptureScreen({ photo, onCameraPhoto, onGalleryPhoto, onClearPho
           }}
         >
           <RoundButton variant="primary" onClick={onFinish}>
-            Ancrer 💌
+            {t('capture.anchor')}
           </RoundButton>
         </div>
       </div>

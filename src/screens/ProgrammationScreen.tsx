@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { SCENES, TIMETABLE } from "../app/data/timetable";
 import type { TimetableEntry } from "../app/data/timetable";
 
@@ -103,6 +104,7 @@ function SceneSection({
   emoji: string;
   entries: TimetableEntry[];
 }) {
+  const { t } = useTranslation();
   const color = SCENE_COLORS[sceneKey] ?? "#ffffff";
   return (
     <div style={{ marginBottom: 24 }}>
@@ -126,7 +128,7 @@ function SceneSection({
           {sceneKey}
         </span>
         <span style={{ fontSize: 11, opacity: 0.35 }}>
-          {entries.length} artiste{entries.length > 1 ? "s" : ""}
+          {t('programmation.artist', { count: entries.length })}
         </span>
       </div>
       {entries.map((entry) => (
@@ -144,6 +146,7 @@ function EmptyState({
 }: {
   scenes: ReadonlyArray<{ readonly key: string; readonly emoji: string }>;
 }) {
+  const { t } = useTranslation();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <p
@@ -156,7 +159,7 @@ function EmptyState({
           lineHeight: 1.5,
         }}
       >
-        La programmation complète arrive bientôt ✨
+        {t('programmation.comingSoon')}
       </p>
 
       {scenes.map(({ key, emoji }) => {
@@ -192,7 +195,7 @@ function EmptyState({
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 600 }}>{key}</div>
               <div style={{ fontSize: 11, opacity: 0.38, marginTop: 2 }}>
-                Artistes à venir…
+                {t('programmation.comingArtists')}
               </div>
             </div>
           </div>
@@ -205,6 +208,7 @@ function EmptyState({
 // ── Composant principal ────────────────────────────────────────────────────────
 
 export function ProgrammationScreen({ onBack }: Props) {
+  const { t } = useTranslation();
   const [activeScene, setActiveScene] = useState<string>("");
 
   const scenes = [...SCENES] as Array<{ key: string; emoji: string }>;
@@ -249,12 +253,12 @@ export function ProgrammationScreen({ onBack }: Props) {
       >
         <div>
           <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>
-            Programmation 🎵
+            {t('programmation.title')}
           </div>
           <div style={{ fontSize: 12, opacity: 0.45, marginTop: 2 }}>
             {hasData
-              ? `${TIMETABLE.length} artiste${TIMETABLE.length > 1 ? "s" : ""} · ${scenes.length} scènes`
-              : "Timetable complète à venir"}
+              ? t('programmation.subtitleData', { artists: TIMETABLE.length, scenes: scenes.length })
+              : t('programmation.comingSoon')}
           </div>
         </div>
         <button
@@ -270,7 +274,7 @@ export function ProgrammationScreen({ onBack }: Props) {
             fontFamily: "inherit",
           }}
         >
-          ← Retour
+          {t('programmation.back')}
         </button>
       </div>
 
@@ -306,7 +310,7 @@ export function ProgrammationScreen({ onBack }: Props) {
             fontFamily: "inherit",
           }}
         >
-          ✦ Toutes
+          {t('programmation.allScenes')}
         </button>
 
         {/* Pills par scène */}
@@ -364,7 +368,7 @@ export function ProgrammationScreen({ onBack }: Props) {
               fontStyle: "italic",
             }}
           >
-            Aucun artiste pour cette scène
+            {t('programmation.noArtists')}
           </div>
         )}
 

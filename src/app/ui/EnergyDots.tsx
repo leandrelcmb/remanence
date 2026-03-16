@@ -20,7 +20,7 @@ export function energyTint(color: string, energy: number) {
   const b = parseInt(color.slice(5, 7), 16);
 
   // Énergie faible → assombrir (×0.35) | Énergie haute → vif (×1.10, cap 255)
-  // Pas de mix vers blanc : la teinte est toujours préservée
+  // Pas de mix vers blanc : la teinte de la couleur est toujours préservée
   const brightness = 0.35 + 0.75 * factor; // énergie=1 → 0.35 | énergie=10 → 1.10
 
   const newR = Math.min(255, Math.round(r * brightness));
@@ -42,7 +42,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 22px;
+      height: 14px;
       border-radius: 999px;
       outline: none;
       background:
@@ -59,8 +59,8 @@ export function EnergyDots({ value, color, onChange }: Props) {
     .remanence-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 38px;
-      height: 38px;
+      width: 28px;
+      height: 28px;
       border-radius: 999px;
       border: 2px solid rgba(255,255,255,0.85);
       background: ${tint};
@@ -76,7 +76,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
     }
 
     .remanence-range::-moz-range-track {
-      height: 22px;
+      height: 14px;
       border-radius: 999px;
       border: none;
       background:
@@ -91,8 +91,8 @@ export function EnergyDots({ value, color, onChange }: Props) {
     }
 
     .remanence-range::-moz-range-thumb {
-      width: 38px;
-      height: 38px;
+      width: 28px;
+      height: 28px;
       border-radius: 999px;
       border: 2px solid rgba(255,255,255,0.85);
       background: ${tint};
@@ -104,7 +104,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
   `;
 
   return (
-    <div style={{ display: "grid", gap: 32 }}>
+    <div style={{ display: "grid", gap: 32, justifyItems: "center" }}>
       <style>{sliderCss}</style>
 
       <div
@@ -112,7 +112,6 @@ export function EnergyDots({ value, color, onChange }: Props) {
           display: "grid",
           gap: 10,
           justifyItems: "center",
-          textAlign: "center",
         }}
       >
         <div
@@ -131,7 +130,7 @@ export function EnergyDots({ value, color, onChange }: Props) {
         </div>
       </div>
 
-      <div style={{ width: "100%", display: "grid", gap: 14 }}>
+      <div style={{ width: "100%", maxWidth: 340, display: "grid", gap: 14 }}>
         <input
           className="remanence-range"
           type="range"

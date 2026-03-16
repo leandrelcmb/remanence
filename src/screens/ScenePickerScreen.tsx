@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import type { Draft } from "../app/flow/types";
 import { SCENES, artistsByScene } from "../app/data/timetable";
 import { ARTISTS } from "../app/data/artists";
@@ -24,6 +25,7 @@ type Props = {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Props) {
+  const { t } = useTranslation();
   const [phase, setPhase]               = useState<"scene" | "artist">("scene");
   const [selectedScene, setSelectedScene] = useState<string>("");
   const [query, setQuery]               = useState("");
@@ -91,10 +93,10 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
       }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.01em" }}>
-            {phase === "scene" ? "Où étais-tu ? 🎪" : `${selectedScene} ${sceneEmoji}`}
+            {phase === "scene" ? t('scenePicker.title') : `${selectedScene} ${sceneEmoji}`}
           </div>
           <div style={{ fontSize: 12, opacity: 0.45, marginTop: 2 }}>
-            {phase === "scene" ? "Choisis ta scène" : "Quel artiste ?"}
+            {phase === "scene" ? t('scenePicker.chooseStage') : t('scenePicker.artistQuestion')}
           </div>
         </div>
         <button
@@ -110,7 +112,7 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
             fontFamily: "inherit",
           }}
         >
-          {phase === "scene" ? "← Retour" : "← Scène"}
+          {phase === "scene" ? t('scenePicker.back') : t('scenePicker.backStage')}
         </button>
       </div>
 
@@ -197,9 +199,9 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
                 ✨
               </span>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 600 }}>Moment éphémère</div>
+                <div style={{ fontSize: 17, fontWeight: 600 }}>{t('scenePicker.ephemeral')}</div>
                 <div style={{ fontSize: 12, opacity: 0.50, marginTop: 2 }}>
-                  Hors des scènes · Souvenir libre
+                  {t('scenePicker.ephemeralSub')}
                 </div>
               </div>
             </button>
@@ -212,7 +214,7 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
             {/* Champ recherche / saisie libre */}
             <input
               type="text"
-              placeholder={hasSceneData ? "Rechercher un artiste…" : "Nom de l'artiste…"}
+              placeholder={hasSceneData ? t('scenePicker.searchArtist') : t('scenePicker.artistName')}
               value={hasSceneData ? query : (draft.artistName || query)}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -311,7 +313,7 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
                 padding: "24px 0",
                 fontStyle: "italic",
               }}>
-                Tape le nom de l'artiste pour continuer
+                {t('scenePicker.artistHint')}
               </div>
             )}
 
@@ -338,7 +340,7 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
                   letterSpacing: "0.03em",
                 }}
               >
-                Je valide 🖖
+                {t('scenePicker.validate')}
               </button>
             </div>
           </>

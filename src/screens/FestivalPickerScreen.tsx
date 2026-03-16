@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { RoundButton } from "../app/ui/RoundButton";
 import type { Festival } from "../core/models/types";
 
@@ -18,6 +19,7 @@ function formatFestivalDates(startISO: string, endISO: string): string {
 }
 
 export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, onCreate, onBack }: Props) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -46,9 +48,9 @@ export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, on
 
       {/* Titre */}
       <div>
-        <h2 style={{ fontSize: 22, fontWeight: 300, margin: 0 }}>Festivals 🪩</h2>
+        <h2 style={{ fontSize: 22, fontWeight: 300, margin: 0 }}>{t('festivalPicker.title')}</h2>
         <p style={{ fontSize: 13, opacity: 0.45, marginTop: 6, margin: 0 }}>
-          Sélectionne le festival actif ou crée-en un nouveau.
+          {t('festivalPicker.subtitle')}
         </p>
       </div>
 
@@ -99,7 +101,7 @@ export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, on
 
               {isActive && (
                 <span style={{ fontSize: 11, opacity: 0.5, letterSpacing: "0.06em" }}>
-                  ACTIF
+                  {t('festivalPicker.active')}
                 </span>
               )}
             </button>
@@ -117,14 +119,14 @@ export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, on
           background: "rgba(255,255,255,0.05)",
           border: "1px solid rgba(255,255,255,0.12)",
         }}>
-          <p style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Nouveau festival</p>
+          <p style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>{t('festivalPicker.newFestival')}</p>
 
           {/* Nom */}
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nom du festival"
+            placeholder={t('festivalPicker.namePlaceholder')}
             maxLength={60}
             style={inputStyle}
           />
@@ -132,7 +134,7 @@ export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, on
           {/* Dates */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
-              <label style={labelStyle}>DU</label>
+              <label style={labelStyle}>{t('festivalPicker.from')}</label>
               <input
                 type="date"
                 value={startDate}
@@ -141,7 +143,7 @@ export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, on
               />
             </div>
             <div>
-              <label style={labelStyle}>AU</label>
+              <label style={labelStyle}>{t('festivalPicker.to')}</label>
               <input
                 type="date"
                 value={endDate}
@@ -156,7 +158,7 @@ export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, on
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Lieu (optionnel)"
+            placeholder={t('festivalPicker.locationPlaceholder')}
             maxLength={80}
             style={inputStyle}
           />
@@ -169,25 +171,25 @@ export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, on
                 onClick={handleCreate}
                 disabled={!name.trim() || !startDate || !endDate || saving}
               >
-                {saving ? "…" : "Créer →"}
+                {saving ? t('common.loading') : t('festivalPicker.create')}
               </RoundButton>
             </div>
             <div style={{ flex: 1 }}>
               <RoundButton variant="secondary" onClick={() => setShowForm(false)}>
-                Annuler
+                {t('common.cancel')}
               </RoundButton>
             </div>
           </div>
         </div>
       ) : (
         <RoundButton variant="secondary" onClick={() => setShowForm(true)}>
-          + Ajouter un festival
+          {t('festivalPicker.addFestival')}
         </RoundButton>
       )}
 
       {/* Retour */}
       <RoundButton variant="secondary" onClick={onBack}>
-        Retour à l'accueil
+        {t('festivalPicker.backHome')}
       </RoundButton>
 
     </div>
