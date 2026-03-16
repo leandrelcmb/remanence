@@ -32,12 +32,12 @@
   "landing": {
     "cta": "Enter remanence 🌱",
     "express": "Quick trace ⚡",
-    "journal": "💓 Vibrations",
-    "constellation": "✨ Constellations",
-    "contacts": "🤝 Encounters",
-    "health": "🧠 Wellness",
-    "program": "🎵 Programme",
-    "games": "🎮 Games",
+    "journal": "Vibrations",
+    "constellation": "Constellations",
+    "contacts": "Encounters",
+    "health": "Wellness",
+    "program": "Programme",
+    "games": "Games",
     "gameActive": "in progress",
     "gameResume": "remaining · Resume →",
     "changeFestival": "change"
