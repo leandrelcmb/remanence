@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 // ── Utilitaires couleur ───────────────────────────────────────────────────────
@@ -122,6 +122,9 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
   }, [DIVERS_CARDS, activeCategories, favoritesOnly, favorites]);
 
   // ── Deck mélangé (Tirage) ─────────────────────────────────────────────────
+  const STORAGE_KEY = "remanence_divers_card";
+  const hasRestoredRef = useRef(false);
+
   const [shuffledDeck, setShuffledDeck] = useState<DiversCard[]>(() => shuffle([...DIVERS_CARDS]));
   const [index, setIndex] = useState(0);
   const [animKey, setAnimKey] = useState(0);
@@ -133,11 +136,39 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
     setAnimKey(k => k + 1);
   }, [filteredCards]);
 
+  // Restaurer la carte sauvegardée après le premier shuffle (une seule fois)
+  useEffect(() => {
+    if (hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
+    try {
+      const savedId = localStorage.getItem(STORAGE_KEY);
+      if (savedId) {
+        const idx = shuffledDeck.findIndex(c => c.id === savedId);
+        if (idx >= 0) { setIndex(idx); setAnimKey(k => k + 1); }
+      }
+    } catch { /* ok */ }
+  }, [shuffledDeck]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const card = shuffledDeck[index % Math.max(1, shuffledDeck.length)];
   const isFav = card ? favorites.has(card.id) : false;
 
+  // Persister la carte courante dans localStorage
+  useEffect(() => {
+    if (card?.id) {
+      try { localStorage.setItem(STORAGE_KEY, card.id); } catch { /* ok */ }
+    }
+  }, [card]);
+
   function handleNext() {
     setIndex(i => (i + 1) % Math.max(1, shuffledDeck.length));
+    setAnimKey(k => k + 1);
+  }
+
+  function handleReset() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ok */ }
+    hasRestoredRef.current = true; // pas de restauration après reset volontaire
+    setShuffledDeck(shuffle([...filteredCards]));
+    setIndex(0);
     setAnimKey(k => k + 1);
   }
 
@@ -274,6 +305,27 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
           </button>
         )}
       </div>
+
+      {/* ── Bouton reset (mode tirage seulement) ── */}
+      {mode === "tirage" && (
+        <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end", padding: "4px 16px" }}>
+          <button
+            onClick={handleReset}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: 12,
+              opacity: 0.45,
+              color: "white",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              letterSpacing: "0.03em",
+            }}
+          >
+            {t('divers.reset')}
+          </button>
+        </div>
+      )}
 
       {/* ── Corps selon mode ── */}
       {mode === "tirage" ? (

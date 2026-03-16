@@ -527,12 +527,13 @@ export default function App() {
               resumeSession={activeChasse ?? undefined}
               haloColor={haloColor}
               onBack={() => {
-                // Rafraîchir l'état de la session active après annulation/sauvegarde
-                setActiveChasse(null);
+                // Naviguer d'abord, puis rafraîchir depuis IndexedDB
+                // (ne pas setActiveChasse(null) avant l'async : ça effacerait
+                //  temporairement la session et briserait le retour immédiat)
+                navigate("games", "backward");
                 getActiveChasse().then((s) =>
                   setActiveChasse(s && s.timerExpiresAt > Date.now() ? s : null)
                 );
-                navigate("games", "backward");
               }}
             />
           )}
