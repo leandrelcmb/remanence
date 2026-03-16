@@ -73,8 +73,9 @@ type Props = { onBack: () => void; haloColor?: string };
 // ── Composant ──────────────────────────────────────────────────────────────────
 
 export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
-  const { t } = useTranslation();
-  const DIVERS_CARDS = t('divers.cards', { returnObjects: true }) as DiversCard[];
+  const { t, i18n } = useTranslation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const DIVERS_CARDS = useMemo(() => t('divers.cards', { returnObjects: true }) as DiversCard[], [i18n.language]);
 
   // ── Halo colors ───────────────────────────────────────────────────────────
   const [r, g, b]   = parseColor(haloColor);
