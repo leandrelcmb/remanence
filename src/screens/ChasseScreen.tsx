@@ -141,6 +141,11 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
 
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Ref stable pour timerExpiresAt (évite la closure stale dans useEffect([photos]))
+  const timerExpiresAtRef = useRef<number>(
+    isResuming ? resumeSession!.timerExpiresAt : 0
+  );
+
   // ── Timer countdown ───────────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== "challenge" || timer <= 0) return;
@@ -155,7 +160,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
       chasseType: activeType,
       result,
       photos,
-      timerExpiresAt: Date.now() + timer * 1000,
+      timerExpiresAt: timerExpiresAtRef.current, // valeur stable, pas de closure stale
     };
     setActiveChasse(session); // fire-and-forget
   }, [photos]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -173,11 +178,13 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
     setTimeout(() => {
       setPhase("challenge");
       // Persister dès le début du challenge
+      const expiresAt = Date.now() + 3600 * 1000;
+      timerExpiresAtRef.current = expiresAt; // mémoriser l'horodatage absolu
       const session: ChasseActiveSession = {
         chasseType: activeType,
         result: segments[idx],
         photos: Array(21).fill(null),
-        timerExpiresAt: Date.now() + 3600 * 1000,
+        timerExpiresAt: expiresAt,
       };
       setActiveChasse(session);
     }, 3700);
@@ -323,7 +330,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
             fontFamily: "inherit",
           }}
         >
-          ← Jeux
+          {t('chasse.back')}
         </button>
       </div>
 
@@ -458,7 +465,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                 letterSpacing: "0.03em",
               }}
             >
-              {phase === "spinning" ? "La chasse est lancée…" : "Lancer la chasse 🎯"}
+              {phase === "spinning" ? t('chasse.spinning') : t('chasse.spinBtn')}
             </button>
           </div>
         </div>
@@ -540,7 +547,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
               marginBottom: 10,
             }}>
               <div style={{ fontSize: 11, opacity: 0.45, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                Ton feed
+                {t('chasse.feed')}
               </div>
               {editMode && (
                 <button
@@ -552,12 +559,12 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                     fontFamily: "inherit",
                   }}
                 >
-                  Terminé
+                  {t('chasse.editDone')}
                 </button>
               )}
               {!editMode && photoCount > 0 && (
                 <div style={{ fontSize: 11, opacity: 0.4 }}>
-                  Maintenir pour réorganiser
+                  {t('chasse.reorder')}
                 </div>
               )}
             </div>
@@ -674,7 +681,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                 letterSpacing: "0.03em",
               }}
             >
-              Enregistrer le feed 💾
+              {t('chasse.saveBtn')}
             </button>
 
             <button
@@ -691,7 +698,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                 letterSpacing: "0.03em",
               }}
             >
-              Annuler la partie ✕
+              {t('chasse.cancelBtn')}
             </button>
           </div>
 
@@ -724,10 +731,10 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
             onClick={(e) => e.stopPropagation()}
           >
             <p style={{ margin: 0, fontSize: 17, fontWeight: 700, textAlign: "center" }}>
-              Annuler la partie ?
+              {t('chasse.cancelTitle')}
             </p>
             <p style={{ margin: 0, fontSize: 14, opacity: 0.55, textAlign: "center", lineHeight: 1.5 }}>
-              Le feed actuel ne sera pas sauvegardé.<br />Tu reviendras à l'écran de tirage.
+              {t('chasse.cancelDesc')}
             </p>
             <button
               onClick={handleCancel}
@@ -738,7 +745,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                 cursor: "pointer", fontFamily: "inherit",
               }}
             >
-              Oui, annuler
+              {t('chasse.cancelConfirm')}
             </button>
             <button
               onClick={() => setShowCancelConfirm(false)}
@@ -750,7 +757,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                 cursor: "pointer", fontFamily: "inherit",
               }}
             >
-              Continuer la chasse
+              {t('chasse.continueBtn')}
             </button>
           </div>
         </div>,

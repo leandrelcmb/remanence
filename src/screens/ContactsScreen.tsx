@@ -461,7 +461,7 @@ export function ContactsScreen({ festivalId, festivalName, onBack }: Props) {
 
             {/* Note */}
             <textarea
-              placeholder="Une particularité, un moment partagé… (optionnel)"
+              placeholder={t('contacts.notePlaceholder')}
               value={form.note}
               onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
               rows={3}
