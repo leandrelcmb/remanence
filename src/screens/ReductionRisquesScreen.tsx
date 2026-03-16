@@ -58,266 +58,12 @@ const SIM_DURATION: Record<string, number> = {
   cannabis: 2, ghb: 3, benzos: 6, "3mmc": 3, poppers: 0.05,
 };
 
-const MOOD_OPTIONS: { id: string; emoji: string; label: string }[] = [
-  { id: "ok",      emoji: "🙂", label: "ça va bien" },
-  { id: "strange", emoji: "😐", label: "un peu étrange" },
-  { id: "intense", emoji: "😵", label: "trop intense" },
-  { id: "anxious", emoji: "😰", label: "anxieux" },
-  { id: "hot",     emoji: "🥵", label: "chaud / fatigué" },
-  { id: "tired",   emoji: "😴", label: "très fatigué" },
-];
-
-// ── Banques de messages (A=montée · B=ok · C=étrange · D=anxieux · E=chaleur · F=épuisé)
-
-const BANK_A: readonly string[] = [
-  "Les effets peuvent encore évoluer. Il peut être utile d'attendre avant de reprendre quoi que ce soit.",
-  "Certaines substances mettent du temps à se stabiliser. Laisse ton corps suivre son rythme.",
-  "Si les effets sont encore en train de monter, il est souvent préférable d'attendre avant toute décision.",
-  "Prends quelques minutes pour ressentir ce qui se passe dans ton corps.",
-  "Les sensations peuvent encore changer un peu. Laisse le temps faire son travail.",
-  "Respire doucement et observe comment tu te sens.",
-  "Les effets arrivent parfois progressivement.",
-  "Un peu de patience peut éviter de prendre trop rapidement.",
-  "Prendre le temps aide souvent à mieux vivre l'expérience.",
-  "Attendre un moment permet souvent d'y voir plus clair.",
-  "Chaque corps réagit différemment.",
-  "Les effets peuvent se stabiliser avec un peu de temps.",
-  "Écouter son corps reste le meilleur repère.",
-  "Les sensations évoluent parfois lentement.",
-  "Laisse le moment se poser tranquillement.",
-  "Tu peux simplement observer ce qui se passe.",
-  "Le temps est souvent un bon allié.",
-  "Rien ne presse.",
-  "Une pause peut aider à mieux ressentir.",
-  "Reste attentif à ton rythme.",
-  "Les effets peuvent continuer à évoluer un moment.",
-  "Attendre évite souvent les surprises.",
-  "Prends le temps de respirer.",
-  "Observe tes sensations.",
-  "Les choses se mettent souvent en place doucement.",
-];
-
-const BANK_B: readonly string[] = [
-  "Si tout va bien, continue simplement d'écouter ton corps.",
-  "Profite du moment en restant attentif à ton énergie.",
-  "Pense à boire un peu d'eau de temps en temps.",
-  "Faire des pauses aide à garder un bon équilibre.",
-  "Prendre soin de soi permet de profiter plus longtemps.",
-  "Respirer profondément peut faire du bien.",
-  "Si tu te sens bien, continue à ton rythme.",
-  "Garder un peu d'énergie pour la suite est souvent une bonne idée.",
-  "Boire de l'eau et se reposer un peu peut aider.",
-  "Un moment calme peut être agréable.",
-  "Profite de la musique et de l'ambiance.",
-  "Rester connecté à son corps est important.",
-  "Les pauses font aussi partie du festival.",
-  "Un peu d'eau peut toujours aider.",
-  "Prendre le temps de respirer peut faire du bien.",
-  "Profite de l'instant.",
-  "Ton rythme est le bon.",
-  "Rien ne presse.",
-  "Reste à l'écoute de tes sensations.",
-  "Un moment calme peut être agréable.",
-  "Tu peux simplement profiter du moment.",
-  "La musique continue.",
-  "Ton corps sait souvent ce dont il a besoin.",
-  "Respire tranquillement.",
-  "Tout semble aller bien.",
-];
-
-const BANK_C: readonly string[] = [
-  "Certaines sensations peuvent sembler inhabituelles.",
-  "Le corps et l'esprit peuvent réagir différemment selon le contexte.",
-  "Respirer lentement peut aider à se recentrer.",
-  "Prends quelques minutes pour te poser.",
-  "Boire un peu d'eau peut faire du bien.",
-  "Trouver un endroit calme peut aider.",
-  "Regarder autour de soi peut rassurer.",
-  "Les sensations évoluent souvent avec le temps.",
-  "Prendre une pause peut être utile.",
-  "S'asseoir quelques minutes peut aider.",
-  "Respirer profondément peut calmer le corps.",
-  "Observer ses sensations sans les juger peut aider.",
-  "Tout n'a pas besoin d'aller vite.",
-  "Les sensations changent souvent.",
-  "Laisse le moment passer.",
-  "Tu peux te poser un instant.",
-  "Les choses peuvent redevenir plus simples avec le temps.",
-  "Une pause peut aider.",
-  "Ralentir peut faire du bien.",
-  "Respire doucement.",
-  "Regarde la musique autour de toi.",
-  "Prends le temps.",
-  "Les sensations passent souvent.",
-  "Tu peux te poser.",
-  "Le moment va évoluer.",
-];
-
-const BANK_D: readonly string[] = [
-  "L'anxiété peut apparaître quand les sensations sont nouvelles.",
-  "Respire lentement et profondément.",
-  "Tu peux prendre quelques minutes au calme.",
-  "Les sensations passent avec le temps.",
-  "Trouver un endroit calme peut aider.",
-  "Regarder autour de soi peut rassurer.",
-  "Parler à un ami peut faire du bien.",
-  "Boire un peu d'eau peut aider.",
-  "Tu peux simplement t'asseoir.",
-  "Respire doucement.",
-  "Les sensations vont évoluer.",
-  "Tu n'es pas seul.",
-  "Prends quelques minutes.",
-  "La musique est là.",
-  "Le moment va passer.",
-  "Ton corps va retrouver son rythme.",
-  "Prends le temps.",
-  "Ralentir peut aider.",
-  "Respirer profondément peut calmer.",
-  "Un peu de repos peut faire du bien.",
-  "Tu peux fermer les yeux quelques secondes.",
-  "Les sensations passent.",
-  "Tu es en sécurité.",
-  "Prends soin de toi.",
-  "Ce moment peut se calmer.",
-];
-
-const BANK_E: readonly string[] = [
-  "La chaleur et la danse peuvent fatiguer le corps.",
-  "Boire un peu d'eau peut aider.",
-  "Prendre une pause peut faire du bien.",
-  "Se mettre à l'ombre peut aider.",
-  "Ton corps peut avoir besoin de ralentir.",
-  "Faire une pause est parfois la meilleure chose.",
-  "Respire tranquillement.",
-  "S'asseoir quelques minutes peut aider.",
-  "La fatigue peut amplifier les sensations.",
-  "Prendre soin de soi aide à profiter du festival.",
-  "Un peu de repos peut faire du bien.",
-  "Boire de l'eau peut aider.",
-  "Ton corps te parle.",
-  "Écoute-le.",
-  "Prends quelques minutes.",
-  "La musique peut attendre.",
-  "Ton bien-être est important.",
-  "Se poser peut aider.",
-  "Un peu d'ombre peut faire du bien.",
-  "Respire doucement.",
-  "Le corps peut récupérer rapidement.",
-  "Un moment calme peut aider.",
-  "Ralentir est parfois la bonne décision.",
-  "Hydrate-toi.",
-  "Prends soin de toi.",
-];
-
-const BANK_F: readonly string[] = [
-  "La fatigue peut amplifier les sensations.",
-  "Se reposer peut aider.",
-  "Dormir un peu peut faire du bien.",
-  "Boire de l'eau peut aider.",
-  "Manger quelque chose peut aider.",
-  "Le corps récupère avec le repos.",
-  "Prendre une pause peut faire la différence.",
-  "Ton corps a peut-être besoin de ralentir.",
-  "Un moment calme peut aider.",
-  "Respire tranquillement.",
-  "S'allonger un moment peut aider.",
-  "La fatigue passe avec le repos.",
-  "Ton énergie reviendra.",
-  "Prends soin de toi.",
-  "Le repos est parfois la meilleure solution.",
-  "Tu peux simplement te poser.",
-  "Le festival continue demain.",
-  "Un peu de sommeil peut aider.",
-  "Ton corps peut récupérer.",
-  "Prends quelques minutes.",
-  "Un moment calme peut faire du bien.",
-  "Ralentir peut aider.",
-  "Respire doucement.",
-  "Le repos aide souvent.",
-  "Prends soin de toi.",
-];
-
-// ── Assemblage du message simulateur ──────────────────────────────────────────
-
 type SimResult = {
   informatif: string;
   conseil: string;
   securite: string;
   rassurant: string;
 };
-
-function assembleSimMessage(substanceId: string, elapsedMin: number, mood: string): SimResult {
-  const onset      = SIM_ONSET[substanceId] ?? 30;
-  const durMin     = (SIM_DURATION[substanceId] ?? 3) * 60;
-
-  // 1. Phase temporelle → message informatif
-  type Phase = "before" | "rising" | "peak" | "declining" | "after";
-  let phase: Phase;
-  let informatif: string;
-
-  if (elapsedMin < onset * 0.7) {
-    phase      = "before";
-    informatif = "Les effets n'ont probablement pas encore commencé. Prends le temps d'attendre avant de reprendre quoi que ce soit.";
-  } else if (elapsedMin <= onset * 1.3) {
-    phase      = "rising";
-    informatif = "Tu es probablement dans la phase de montée. Les effets peuvent encore évoluer — attends de voir comment ton corps réagit.";
-  } else if (elapsedMin <= durMin * 0.8) {
-    phase      = "peak";
-    informatif = "Tu es dans la période principale des effets. Écoute ton corps, hydrate-toi et prends des pauses.";
-  } else if (elapsedMin <= durMin * 1.2) {
-    phase      = "declining";
-    informatif = "Les effets commencent probablement à diminuer. Le corps peut être plus fatigué qu'il n'y paraît.";
-  } else {
-    phase      = "after";
-    informatif = "Les effets sont probablement passés. Le corps continue à récupérer — c'est normal de se sentir épuisé.";
-  }
-
-  // 2. Sélection de la banque selon humeur + phase
-  const isMontee = phase === "before" || phase === "rising";
-  let bank: readonly string[];
-  if (isMontee && (mood === "ok" || mood === "")) {
-    bank = BANK_A;
-  } else if (mood === "ok" || mood === "") {
-    bank = BANK_B;
-  } else if (mood === "strange") {
-    bank = isMontee ? [...BANK_A, ...BANK_C] : BANK_C;
-  } else if (mood === "intense") {
-    bank = BANK_C;
-  } else if (mood === "anxious") {
-    bank = BANK_D;
-  } else if (mood === "hot") {
-    bank = BANK_E;
-  } else {
-    bank = BANK_F; // tired
-  }
-
-  // Sélection déterministe (même entrée → même message)
-  const seed   = substanceId.charCodeAt(0) * 7 + Math.floor(elapsedMin / 15);
-  const conseil = bank[seed % bank.length];
-
-  // 3. Rappel sécurité contextuel
-  const securite =
-    mood === "anxious" || mood === "intense"
-      ? "Si les sensations sont difficiles, trouver un endroit calme et rester avec quelqu'un de confiance peut aider. Des équipes sont disponibles sans jugement."
-      : mood === "hot" || mood === "tired"
-      ? "La chaleur et la fatigue amplifient souvent les effets. Boire de l'eau, se mettre à l'ombre et faire une pause peut faire du bien."
-      : isMontee
-      ? "Attendre avant de reprendre quoi que ce soit est souvent la meilleure décision dans cette phase."
-      : "Boire régulièrement de l'eau et faire des pauses aide à garder un bon équilibre.";
-
-  // 4. Phrase rassurante selon humeur
-  const RASSURANTS: Record<string, string> = {
-    ok:      "Tout semble aller dans le bon sens. Continue d'écouter ton corps.",
-    strange: "Les sensations évoluent. Tu peux simplement les observer sans t'y accrocher.",
-    intense: "Ça peut passer. Tu n'es pas seul — les équipes du festival sont là.",
-    anxious: "Tu es en sécurité. Prendre soin de toi est la bonne chose à faire.",
-    hot:     "Ton corps va récupérer. Repose-toi et prends soin de toi.",
-    tired:   "Le repos est la meilleure chose maintenant. Le festival continue demain.",
-  };
-  const rassurant = RASSURANTS[mood] ?? "Prends soin de toi.";
-
-  return { informatif, conseil, securite, rassurant };
-}
 
 // ── Composants ────────────────────────────────────────────────────────────────
 
@@ -400,6 +146,74 @@ export function ReductionRisquesScreen({ onBack }: Props) {
   const CONSEILS   = t('risques.conseils',   { returnObjects: true }) as Conseil[];
   const SIM_SUBSTANCES = t('risques.simSubstances', { returnObjects: true }) as { id: string; name: string; emoji: string }[];
   const TIME_OPTIONS   = t('risques.timeOptions',   { returnObjects: true }) as { label: string; value: number }[];
+  const MOOD_OPTIONS   = t("risques.moodOptions",   { returnObjects: true }) as { id: string; emoji: string; label: string }[];
+
+  // ── Simulateur — logique ─────────────────────────────────────────────────
+  function assembleSimMessage(substanceId: string, elapsedMin: number, mood: string): SimResult {
+    const onset  = SIM_ONSET[substanceId] ?? 30;
+    const durMin = (SIM_DURATION[substanceId] ?? 3) * 60;
+
+    type Phase = "before" | "rising" | "peak" | "declining" | "after";
+    let phase: Phase;
+    const simPhases = t("risques.simPhases", { returnObjects: true }) as Record<string, string>;
+    let informatif: string;
+
+    if (elapsedMin < onset * 0.7) {
+      phase = "before"; informatif = simPhases.before;
+    } else if (elapsedMin <= onset * 1.3) {
+      phase = "rising"; informatif = simPhases.rising;
+    } else if (elapsedMin <= durMin * 0.8) {
+      phase = "peak"; informatif = simPhases.peak;
+    } else if (elapsedMin <= durMin * 1.2) {
+      phase = "declining"; informatif = simPhases.declining;
+    } else {
+      phase = "after"; informatif = simPhases.after;
+    }
+
+    const bankA = t("risques.bankA", { returnObjects: true }) as readonly string[];
+    const bankB = t("risques.bankB", { returnObjects: true }) as readonly string[];
+    const bankC = t("risques.bankC", { returnObjects: true }) as readonly string[];
+    const bankD = t("risques.bankD", { returnObjects: true }) as readonly string[];
+    const bankE = t("risques.bankE", { returnObjects: true }) as readonly string[];
+    const bankF = t("risques.bankF", { returnObjects: true }) as readonly string[];
+
+    const isMontee = phase === "before" || phase === "rising";
+    let bank: readonly string[];
+    if (isMontee && (mood === "ok" || mood === "")) {
+      bank = bankA;
+    } else if (mood === "ok" || mood === "") {
+      bank = bankB;
+    } else if (mood === "strange") {
+      bank = isMontee ? [...bankA, ...bankC] : bankC;
+    } else if (mood === "intense") {
+      bank = bankC;
+    } else if (mood === "anxious") {
+      bank = bankD;
+    } else if (mood === "hot") {
+      bank = bankE;
+    } else {
+      bank = bankF;
+    }
+
+    const seed    = substanceId.charCodeAt(0) * 7 + Math.floor(elapsedMin / 15);
+    const conseil = bank[seed % bank.length];
+
+    const simSecurite   = t("risques.simSecurite",   { returnObjects: true }) as Record<string, string>;
+    const simRassurants = t("risques.simRassurants",  { returnObjects: true }) as Record<string, string>;
+
+    const securite =
+      mood === "anxious" || mood === "intense"
+        ? simSecurite.anxiousIntense
+        : mood === "hot" || mood === "tired"
+        ? simSecurite.hotTired
+        : isMontee
+        ? simSecurite.montee
+        : simSecurite.default;
+
+    const rassurant = simRassurants[mood] ?? simRassurants.default;
+
+    return { informatif, conseil, securite, rassurant };
+  }
   const [view, setView] = useState<RisquesView>("hub");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedSubstance, setSelectedSubstance] = useState<Substance | null>(null);
@@ -471,13 +285,13 @@ export function ReductionRisquesScreen({ onBack }: Props) {
           }}
         >
           <p style={{ margin: "0 0 8px", fontSize: 13, opacity: 0.75, lineHeight: 1.6 }}>
-            Cette section informe pour réduire les risques, pas pour encourager la consommation.
+            {t("risques.hubIntro1")}
           </p>
           <p style={{ margin: "0 0 8px", fontSize: 13, opacity: 0.65, lineHeight: 1.6 }}>
-            Chaque corps est différent. Les effets varient selon la fatigue, la chaleur, les mélanges ou le contexte.
+            {t("risques.hubIntro2")}
           </p>
           <p style={{ margin: 0, fontSize: 13, opacity: 0.65, lineHeight: 1.6 }}>
-            ⛑️ Des personnes sont là pour accompagner sans jugement si quelque chose ne va pas.
+            {t("risques.hubIntro3")}
           </p>
         </div>
 
@@ -671,7 +485,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
 
     const onsetText =
       sub.onsetMin < 5
-        ? "quelques secondes"
+        ? t("risques.substanceOnsetSeconds")
         : sub.onsetMin < 60
           ? `~${sub.onsetMin} ${t("risques.min")}`
           : `~${sub.onsetMin / 60}${t("risques.hours")}`;
@@ -711,7 +525,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
               fontSize: 11,
             }}
           >
-            <span style={{ opacity: 0.55, whiteSpace: "nowrap" }}>Début {onsetText}</span>
+            <span style={{ opacity: 0.55, whiteSpace: "nowrap" }}>{t("risques.substanceBegin", { onset: onsetText })}</span>
             <div
               style={{
                 flex: 1,
@@ -721,7 +535,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
                 margin: "0 8px",
               }}
             />
-            <span style={{ fontWeight: 600, color, whiteSpace: "nowrap" }}>Effets {durationText}</span>
+            <span style={{ fontWeight: 600, color, whiteSpace: "nowrap" }}>{t("risques.substanceEffects", { duration: durationText })}</span>
             <div
               style={{
                 flex: 1,
@@ -731,7 +545,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
                 margin: "0 8px",
               }}
             />
-            <span style={{ opacity: 0.40, whiteSpace: "nowrap" }}>Descente</span>
+            <span style={{ opacity: 0.40, whiteSpace: "nowrap" }}>{t("risques.substanceDecline")}</span>
           </div>
           {sub.afterEffects && (
             <p style={{ margin: "8px 0 0", fontSize: 11, opacity: 0.45, fontStyle: "italic", lineHeight: 1.5 }}>
@@ -805,8 +619,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
             margin: "0 0 20px",
           }}
         >
-          En festival, l'euphorie, la musique et le manque de sommeil peuvent faire baisser la vigilance.
-          Quelques repères simples pour passer un bon moment en prenant soin de soi et des autres.
+          {t("risques.conseilsIntro")}
         </p>
 
         {CONSEILS.map((c) => (
@@ -865,8 +678,7 @@ export function ReductionRisquesScreen({ onBack }: Props) {
     return (
       <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "16px 16px 48px" }}>
         <p style={{ fontSize: 13, opacity: 0.60, lineHeight: 1.65, margin: "0 0 24px" }}>
-          Un repère sur le timing, basé sur des données générales.
-          Chaque personne réagit différemment. Ce n'est pas un outil médical.
+          {t("risques.simIntro")}
         </p>
 
         {/* Champ 1 — Substance */}
@@ -1011,9 +823,9 @@ export function ReductionRisquesScreen({ onBack }: Props) {
           borderRadius: 16,
           padding: "14px 16px",
         }}>
-          <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 600 }}>💟 Prends soin de toi.</p>
+          <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 600 }}>{t("risques.simFooterTitle")}</p>
           <p style={{ margin: 0, fontSize: 12, opacity: 0.65, lineHeight: 1.55 }}>
-            Si tu veux te recentrer ou ralentir, les modules de respiration et de recentrage sont disponibles dans Santé.
+            {t("risques.simFooterBody")}
           </p>
         </div>
       </div>

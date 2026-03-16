@@ -164,14 +164,6 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
     setAnimKey(k => k + 1);
   }
 
-  function handleReset() {
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ok */ }
-    hasRestoredRef.current = true; // pas de restauration après reset volontaire
-    setShuffledDeck(shuffle([...filteredCards]));
-    setIndex(0);
-    setAnimKey(k => k + 1);
-  }
-
   // ── Mode Parcourir : carte sélectionnée ───────────────────────────────────
   const [selectedCard, setSelectedCard] = useState<DiversCard | null>(null);
 
@@ -305,27 +297,6 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
           </button>
         )}
       </div>
-
-      {/* ── Bouton reset (mode tirage seulement) ── */}
-      {mode === "tirage" && (
-        <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end", padding: "4px 16px" }}>
-          <button
-            onClick={handleReset}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: 12,
-              opacity: 0.45,
-              color: "white",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              letterSpacing: "0.03em",
-            }}
-          >
-            {t('divers.reset')}
-          </button>
-        </div>
-      )}
 
       {/* ── Corps selon mode ── */}
       {mode === "tirage" ? (
