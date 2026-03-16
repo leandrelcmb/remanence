@@ -111,6 +111,7 @@
   "detail": {
     "imgAlt": "Souvenir du moment",
     "unknownStyle": "Style inconnu",
+    "unknownStage": "Scène inconnue",
     "edit": "Modifier ✏️",
     "delete": "Supprimer 🗑️",
     "backConstellation": "Revenir à la constellation ✨",
@@ -148,6 +149,18 @@
     "deleteHunt": "Supprimer cette chasse"
   },
   "chasse": {
+    "back": "← Jeux",
+    "spinning": "La chasse est lancée…",
+    "spinBtn": "Lancer la chasse 🎯",
+    "feed": "Ton feed",
+    "reorder": "Maintenir pour réorganiser",
+    "editDone": "Terminé",
+    "saveBtn": "Enregistrer le feed 💾",
+    "cancelBtn": "Annuler la partie ✕",
+    "cancelTitle": "Annuler la partie ?",
+    "cancelDesc": "Le feed actuel ne sera pas sauvegardé. Tu reviendras à l'écran de tirage.",
+    "cancelConfirm": "Oui, annuler",
+    "continueBtn": "Continuer la chasse",
     "titles": {
       "chromatic": "Chasse Chromatique 🎨",
       "formes": "Chasse des Formes 🔷",

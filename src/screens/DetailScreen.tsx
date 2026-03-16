@@ -55,7 +55,7 @@ export function DetailScreen({ item, backTarget, onBack, onEdit, onDelete, haloC
       <div style={{ display: "grid", gap: 6, textAlign: "center" }}>
         <h2 style={{ margin: 0, fontWeight: 600 }}>{item.artistName}</h2>
         <div style={{ opacity: 0.6 }}>
-          {formatTime(item.startTime)} · {item.stageName || "Scène inconnue"}
+          {formatTime(item.startTime)} · {item.stageName || t('detail.unknownStage')}
         </div>
       </div>
 

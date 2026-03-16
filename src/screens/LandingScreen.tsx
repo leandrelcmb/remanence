@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from 'react-i18next';
 import type { ChasseType } from "../core/models/chasseTypes";
 
@@ -118,7 +117,7 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
   const cL  = (a: number) => `rgba(${rl},${gl},${bl},${a})`;
   const cLL = (a: number) => `rgba(${rll},${gll},${bll},${a})`;
 
-  return createPortal(
+  return (
     <svg
       viewBox="0 0 375 812"
       preserveAspectRatio="none"
@@ -362,8 +361,7 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
         </animateMotion>
       </g>
 
-    </svg>,
-    document.body
+    </svg>
   );
 }
 

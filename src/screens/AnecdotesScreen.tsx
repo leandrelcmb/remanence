@@ -57,8 +57,9 @@ function shuffle<T>(arr: T[]): T[] {
 type Props = { onBack: () => void; haloColor?: string };
 
 export function AnecdotesScreen({ onBack, haloColor }: Props) {
-  const { t } = useTranslation();
-  const ANECDOTES = t('anecdotes.items', { returnObjects: true }) as AnecdoteCard[];
+  const { t, i18n } = useTranslation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const ANECDOTES = useMemo(() => t('anecdotes.items', { returnObjects: true }) as AnecdoteCard[], [i18n.language]);
 
   // ── Palette dynamique depuis le halo ───────────────────────────────────────
   const [r, g, b]   = parseColor(haloColor ?? "#BF5AF2");

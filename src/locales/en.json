@@ -111,6 +111,7 @@
   "detail": {
     "imgAlt": "Moment memory",
     "unknownStyle": "Unknown style",
+    "unknownStage": "Unknown stage",
     "edit": "Edit ✏️",
     "delete": "Delete 🗑️",
     "backConstellation": "Back to constellation ✨",
@@ -148,6 +149,18 @@
     "deleteHunt": "Delete this hunt"
   },
   "chasse": {
+    "back": "← Games",
+    "spinning": "The hunt is on…",
+    "spinBtn": "Start the hunt 🎯",
+    "feed": "Your feed",
+    "reorder": "Hold to rearrange",
+    "editDone": "Done",
+    "saveBtn": "Save feed 💾",
+    "cancelBtn": "Cancel game ✕",
+    "cancelTitle": "Cancel the game?",
+    "cancelDesc": "The current feed won't be saved. You'll be taken back to the spin screen.",
+    "cancelConfirm": "Yes, cancel",
+    "continueBtn": "Continue the hunt",
     "titles": {
       "chromatic": "Chromatic Hunt 🎨",
       "formes": "Shape Hunt 🔷",
