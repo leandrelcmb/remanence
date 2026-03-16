@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from 'react-i18next';
 import type { ChasseType } from "../core/models/chasseTypes";
 
@@ -454,7 +455,7 @@ export function LandingScreen({
       <style>{CSS}</style>
       <style>{glowCSS}</style>
 
-      <OrnamentBorder haloColor={haloColor} />
+      {createPortal(<OrnamentBorder haloColor={haloColor} />, document.body)}
 
       {/* ── Zone body ── */}
       <div style={{

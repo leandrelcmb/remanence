@@ -39,7 +39,7 @@ export const RootLayout = ({
           filterBoost={haloFilter}
           filterTransition={haloFilterTransition}
         />
-        <div style={{ position: "relative", zIndex: 1 }}>{children}</div>
+        <div style={{ position: "relative", zIndex: 1, paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>{children}</div>
       </div>
     </div>
   );
