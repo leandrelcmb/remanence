@@ -129,7 +129,7 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
         width: "min(100vw, 430px)",
         height: "100dvh",
         pointerEvents: "none",
-        zIndex: 2,
+        zIndex: 0,
       }}
     >
       <defs>
