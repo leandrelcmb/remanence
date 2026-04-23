@@ -590,10 +590,18 @@
     "comingSoon": "Full timetable coming soon",
     "back": "← Back",
     "comingArtists": "Artists coming soon…",
-    "noArtists": "No artists for this stage",
+    "noArtists": "No artists for this selection",
     "subtitleData": "{{artists}} artist(s) · {{scenes}} stage(s)",
     "artist_one": "artist",
-    "artist_other": "artists"
+    "artist_other": "artists",
+    "ratingAll": "All",
+    "ratingGo": "Must see",
+    "ratingMaybe": "Maybe",
+    "ratingSkip": "Not a priority",
+    "ratingUnrated": "Unrated",
+    "detailRateTitle": "My take",
+    "detailComment": "Notes, SoundCloud link…",
+    "detailBack": "← List"
   },
   "comingSoon": {
     "title": "Under construction",

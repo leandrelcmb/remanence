@@ -1,6 +1,8 @@
 import type { Artist, Festival, FestivalContact, SetEntry, UserProfile, UUID } from "../models/types";
 import type { ChasseActiveSession, ChasseHistoryEntry } from "../models/chasseTypes";
 import { getDB } from "./db";
+import type { LineupRating } from "./db";
+export type { LineupRating };
 
 export const MetaKeys = {
   ActiveFestivalId: "activeFestivalId",
@@ -163,4 +165,20 @@ export async function listChasseHistory(): Promise<ChasseHistoryEntry[]> {
 export async function deleteChasseHistory(id: string): Promise<void> {
   const db = await getDB();
   await db.delete("chasseHistory", id);
+}
+// ── Notations lineup ─────────────────────────────────────────────────────────
+
+export async function setLineupRating(r: LineupRating): Promise<void> {
+  const db = await getDB();
+  await db.put('lineupRatings', r, r.artistName);
+}
+
+export async function getLineupRating(artistName: string): Promise<LineupRating | undefined> {
+  const db = await getDB();
+  return db.get('lineupRatings', artistName);
+}
+
+export async function listAllLineupRatings(): Promise<LineupRating[]> {
+  const db = await getDB();
+  return db.getAll('lineupRatings');
 }

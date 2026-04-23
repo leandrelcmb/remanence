@@ -3,6 +3,14 @@ import type { DBSchema, IDBPDatabase } from "idb";
 import type { Artist, Festival, FestivalContact, SetEntry, UserProfile, UUID } from "../models/types";
 import type { ChasseActiveSession, ChasseHistoryEntry } from "../models/chasseTypes";
 
+// ── Type notation lineup (défini ici pour éviter la dépendance circulaire) ──
+export type LineupRating = {
+  artistName: string;
+  rating: "go" | "maybe" | "skip";
+  comment: string;
+  updatedAt: string;
+};
+
 interface RemanenceDB extends DBSchema {
   meta: {
     key: string; // e.g. "activeFestivalId"
@@ -45,13 +53,17 @@ interface RemanenceDB extends DBSchema {
     value: ChasseHistoryEntry;
     indexes: { "by-savedAt": string };
   };
+  lineupRatings: {
+    key: string;   // artistName
+    value: LineupRating;
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<RemanenceDB>> | null = null;
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<RemanenceDB>("remanence-db", 3, {
+    dbPromise = openDB<RemanenceDB>("remanence-db", 4, {
       upgrade(db, oldVersion) {
         // ── v1 : stores initiaux ──────────────────────────────────────────────
         if (oldVersion < 1) {
@@ -82,6 +94,11 @@ export function getDB() {
           db.createObjectStore("chasseActive");                                   // clé explicite
           const history = db.createObjectStore("chasseHistory", { keyPath: "id" });
           history.createIndex("by-savedAt", "savedAt");
+        }
+
+        // ── v4 : notations programmation lineup ───────────────────────────────
+        if (oldVersion < 4) {
+          db.createObjectStore("lineupRatings");                                  // clé = artistName
         }
       },
     });

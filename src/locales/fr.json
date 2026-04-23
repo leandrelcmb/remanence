@@ -590,10 +590,18 @@
     "comingSoon": "Timetable complète à venir",
     "back": "← Retour",
     "comingArtists": "Artistes à venir…",
-    "noArtists": "Aucun artiste pour cette scène",
+    "noArtists": "Aucun artiste pour cette sélection",
     "subtitleData": "{{artists}} artiste(s) · {{scenes}} scène(s)",
     "artist_one": "artiste",
-    "artist_other": "artistes"
+    "artist_other": "artistes",
+    "ratingAll": "Tous",
+    "ratingGo": "À voir",
+    "ratingMaybe": "Peut-être",
+    "ratingSkip": "Pas prioritaire",
+    "ratingUnrated": "Non noté",
+    "detailRateTitle": "Mon ressenti",
+    "detailComment": "Notes, lien SoundCloud…",
+    "detailBack": "← Liste"
   },
   "comingSoon": {
     "title": "En construction",
