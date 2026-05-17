@@ -601,7 +601,8 @@
     "ratingUnrated": "Non noté",
     "detailRateTitle": "Mon ressenti",
     "detailComment": "Notes, lien SoundCloud…",
-    "detailBack": "← Liste"
+    "detailBack": "← Liste",
+    "dayAll": "Tous les jours"
   },
   "comingSoon": {
     "title": "En construction",

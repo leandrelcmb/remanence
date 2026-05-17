@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { SCENES, TIMETABLE } from "../app/data/timetable";
+import { SCENES, TIMETABLE, DAY_LABELS } from "../app/data/timetable";
 import type { TimetableEntry } from "../app/data/timetable";
 import type { LineupRating } from "../core/store/repo";
 import { listAllLineupRatings, setLineupRating } from "../core/store/repo";
@@ -454,12 +454,19 @@ function ArtistDetail({
 export function ProgrammationScreen({ onBack }: Props) {
   const { t } = useTranslation();
   const [activeScene, setActiveScene] = useState<string>("");
+  const [dayFilter, setDayFilter] = useState<string>("");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("");
   const [ratings, setRatings] = useState<Map<string, LineupRating>>(new Map());
   const [selectedArtist, setSelectedArtist] = useState<TimetableEntry | null>(null);
 
   const scenes = [...SCENES] as Array<{ key: string; emoji: string }>;
   const hasData = TIMETABLE.length > 0;
+
+  // Jours disponibles (extraits du TIMETABLE, triés)
+  const availableDays = useMemo(() => {
+    const days = new Set(TIMETABLE.filter((e) => e.day).map((e) => e.day!));
+    return [...days].sort();
+  }, []);
 
   // Charger les notations au montage
   useEffect(() => {
@@ -492,17 +499,22 @@ export function ProgrammationScreen({ onBack }: Props) {
     setSelectedArtist(null);
   }
 
-  // Double filtre : scène + notation
+  // Triple filtre : scène + jour + notation, avec tri par jour puis par heure
   const filteredArtists = useMemo(() => {
-    return TIMETABLE.filter((e) => !activeScene || e.scene === activeScene).filter(
-      (e) => {
+    return TIMETABLE
+      .filter((e) => !activeScene || e.scene === activeScene)
+      .filter((e) => !dayFilter || e.day === dayFilter)
+      .filter((e) => {
         if (!ratingFilter) return true;
         const r = ratings.get(e.artistName);
         if (ratingFilter === "unrated") return !r;
         return r?.rating === ratingFilter;
-      }
-    );
-  }, [activeScene, ratingFilter, ratings]);
+      })
+      .sort((a, b) => {
+        if (a.day !== b.day) return (a.day ?? "").localeCompare(b.day ?? "");
+        return (a.startTime ?? "").localeCompare(b.startTime ?? "");
+      });
+  }, [activeScene, dayFilter, ratingFilter, ratings]);
 
   // Grouper par scène (pour la vue "Toutes")
   const byScene = useMemo(() => {
@@ -649,6 +661,62 @@ export function ProgrammationScreen({ onBack }: Props) {
         })}
       </div>
 
+      {/* ── Filtres jour (pills) ── */}
+      <div
+        className="no-scrollbar"
+        style={{
+          flexShrink: 0,
+          display: "flex",
+          gap: 6,
+          overflowX: "auto",
+          padding: "4px 16px 6px",
+        }}
+      >
+        <button
+          onClick={() => setDayFilter("")}
+          style={{
+            flexShrink: 0,
+            padding: "4px 12px",
+            borderRadius: 999,
+            background: !dayFilter ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+            border: !dayFilter ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(255,255,255,0.08)",
+            color: !dayFilter ? "white" : "rgba(255,255,255,0.45)",
+            fontSize: 11,
+            fontWeight: !dayFilter ? 600 : 400,
+            cursor: "pointer",
+            fontFamily: "inherit",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {t("programmation.dayAll")}
+        </button>
+        {availableDays.map((day) => {
+          const active = dayFilter === day;
+          const label = DAY_LABELS[day] ?? day;
+          return (
+            <button
+              key={day}
+              onClick={() => setDayFilter(active ? "" : day)}
+              style={{
+                flexShrink: 0,
+                padding: "4px 12px",
+                borderRadius: 999,
+                background: active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+                border: active ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(255,255,255,0.08)",
+                color: active ? "white" : "rgba(255,255,255,0.45)",
+                fontSize: 11,
+                fontWeight: active ? 600 : 400,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Filtres notation (pills) ── */}
       <div
         className="no-scrollbar"
@@ -714,11 +782,11 @@ export function ProgrammationScreen({ onBack }: Props) {
           </div>
         )}
 
-        {/* Scène sélectionnée → liste plate */}
-        {hasData && activeScene && filteredArtists.length > 0 &&
+        {/* Scène sélectionnée, ou filtre jour actif → liste plate triée */}
+        {hasData && (activeScene || dayFilter) && filteredArtists.length > 0 &&
           filteredArtists.map((entry) => (
             <ArtistCard
-              key={`${entry.artistName}-${entry.scene}`}
+              key={`${entry.artistName}-${entry.scene}-${entry.day ?? ""}`}
               entry={entry}
               rating={ratings.get(entry.artistName)}
               onClick={() => openDetail(entry)}
@@ -726,8 +794,8 @@ export function ProgrammationScreen({ onBack }: Props) {
           ))
         }
 
-        {/* Vue "Toutes" → groupé par scène */}
-        {hasData && !activeScene && filteredArtists.length > 0 &&
+        {/* Vue "Toutes" sans filtre jour → groupé par scène */}
+        {hasData && !activeScene && !dayFilter && filteredArtists.length > 0 &&
           scenes
             .filter(({ key }) => byScene[key]?.length > 0)
             .map(({ key, emoji }) => (

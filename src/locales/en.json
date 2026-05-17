@@ -601,7 +601,8 @@
     "ratingUnrated": "Unrated",
     "detailRateTitle": "My take",
     "detailComment": "Notes, SoundCloud link…",
-    "detailBack": "← List"
+    "detailBack": "← List",
+    "dayAll": "All days"
   },
   "comingSoon": {
     "title": "Under construction",

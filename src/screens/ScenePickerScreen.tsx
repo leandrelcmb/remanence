@@ -7,12 +7,11 @@ import { softHaptic } from "../app/flow/haptics";
 
 // ── Couleur d'accent par scène ────────────────────────────────────────────────
 const SCENE_COLORS: Record<string, string> = {
-  "Main Stage":     "#FFD60A",
-  "Dragon Nest":    "#FF6B35",
-  "Chill Out Dome": "#5E5CE6",
-  "Pumpui":         "#34C759",
-  "Cooking Groove": "#FF9500",
-  "Ambyss":         "#00C7BE",
+  "Ozora Stage": "#BF5AF2",
+  "Pumpui":      "#FF6B35",
+  "The Dome":    "#00C7BE",
+  "Dragon Nest": "#34C759",
+  "Ambyss":      "#5E5CE6",
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -267,6 +266,11 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
                     {entry.style && (
                       <div style={{ fontSize: 12, opacity: 0.45, marginTop: 2 }}>
                         {entry.style}
+                      </div>
+                    )}
+                    {entry.day && entry.startTime && (
+                      <div style={{ fontSize: 11, opacity: 0.40, marginTop: 2 }}>
+                        {entry.day} · {entry.startTime}
                       </div>
                     )}
                   </div>

@@ -1,17 +1,2 @@
-export const ARTISTS = [
-  "Astral Projection",
-  "Ace Ventura",
-  "Astrix",
-  "Ott",
-  "Shpongle",
-  "Infected Mushroom",
-  "Vini Vici",
-  "Liquid Soul",
-  "Captain Hook",
-  "Symbolic",
-  "Neelix",
-  "Carbon Based Lifeforms",
-  "Solar Fields",
-  "Tipper",
-  "Bluetech",
-];
+import { TIMETABLE } from "./timetable";
+export const ARTISTS = [...new Set(TIMETABLE.map((e) => e.artistName))].sort();
