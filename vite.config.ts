@@ -3,6 +3,20 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  build: {
+    // PWA precaches tout → la taille d'un chunk individuel n'impacte pas le TTI.
+    // 700 kB évite le warning trompeur sur le chunk timetable+app.
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-i18n':  ['i18next', 'react-i18next'],
+          'vendor-idb':   ['idb'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
