@@ -619,7 +619,12 @@
     "recoInHoursExact": "Dans {{h}}h",
     "recoEmpty": "Aucun set à recommander pour l'instant",
     "recoOutsideFestival": "Le festival n'est pas encore commencé ou est terminé",
-    "recoNoMood": "Aucun set pour ce mood en ce moment"
+    "recoNoMood": "Aucun set pour ce mood en ce moment",
+    "concurrent": "En même temps",
+    "concurrentEmpty": "Aucun autre set prévu à ce moment",
+    "wikiAbout": "À propos",
+    "wikiReadMore": "Lire plus",
+    "wikiCollapse": "Réduire"
   },
   "comingSoon": {
     "title": "En construction",

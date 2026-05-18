@@ -619,7 +619,8 @@
     "recoInHoursExact": "In {{h}}h",
     "recoEmpty": "No sets to recommend right now",
     "recoOutsideFestival": "The festival hasn't started yet or has ended",
-    "recoNoMood": "No sets matching this vibe right now"
+    "recoNoMood": "No sets matching this vibe right now",
+    "concurrent": "Playing at the same time"
   },
   "comingSoon": {
     "title": "Under construction",

@@ -77,6 +77,36 @@ function formatTimeUntil(minutesUntil: number, t: (k: string, v?: Record<string,
   return t("programmation.recoIn", { min: rounded });
 }
 
+// ── Helpers concurrent artists ────────────────────────────────────────────────
+// Convertit HH:MM en minutes depuis le début du jour festival (10h00 = 0)
+function festivalMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h >= 10 ? (h - 10) * 60 + m : (h + 24 - 10) * 60 + m;
+}
+
+// ── Hook bio Wikipédia FR ─────────────────────────────────────────────────────
+function useFrWikiSummary(artistName: string, enabled: boolean): string | null {
+  const [summary, setSummary] = useState<string | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    setSummary(null);
+    const controller = new AbortController();
+    fetch(
+      `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(artistName)}`,
+      { signal: controller.signal }
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { extract?: string; type?: string } | null) => {
+        if (data?.extract && data.type !== "disambiguation" && data.extract.length > 80) {
+          setSummary(data.extract);
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [artistName, enabled]);
+  return summary;
+}
+
 type RecoEntry = {
   entry:        TimetableEntry;
   status:       "now" | "soon";
@@ -283,18 +313,42 @@ function SceneSection({
 
 // ── ArtistDetail ──────────────────────────────────────────────────────────────
 function ArtistDetail({
-  entry, rating, onBack, onRatingChange,
+  entry, rating, ratings, onBack, onRatingChange, onSelectArtist,
 }: {
-  entry:          TimetableEntry;
-  rating?:        LineupRating;
-  onBack:         () => void;
-  onRatingChange: (newRating: RatingValue, comment: string) => void;
+  entry:           TimetableEntry;
+  rating?:         LineupRating;
+  ratings:         Map<string, LineupRating>;
+  onBack:          () => void;
+  onRatingChange:  (newRating: RatingValue, comment: string) => void;
+  onSelectArtist:  (e: TimetableEntry) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isFr     = i18n.language.startsWith("fr");
   const color     = SCENE_COLORS[entry.scene] ?? "#ffffff";
   const sceneInfo = [...SCENES].find((s) => s.key === entry.scene);
-  const [comment, setComment] = useState(rating?.comment ?? "");
+  const [comment, setComment]       = useState(rating?.comment ?? "");
+  const [wikiExpanded, setWikiExpanded] = useState(false);
   const currentRating = rating?.rating;
+
+  // ── Artistes en même temps ────────────────────────────────────────────────
+  const concurrent = useMemo(() => {
+    if (!entry.day || !entry.startTime) return [];
+    const base = festivalMinutes(entry.startTime);
+    return TIMETABLE
+      .filter((e) =>
+        e.scene !== entry.scene &&
+        e.day === entry.day &&
+        e.startTime !== undefined &&
+        Math.abs(festivalMinutes(e.startTime!) - base) <= 90
+      )
+      .sort((a, b) =>
+        Math.abs(festivalMinutes(a.startTime!) - base) -
+        Math.abs(festivalMinutes(b.startTime!) - base)
+      );
+  }, [entry]);
+
+  // ── Bio Wikipédia (FR uniquement) ────────────────────────────────────────
+  const wikiSummary = useFrWikiSummary(entry.artistName, isFr);
 
   const ratingLabels: Record<RatingValue, string> = {
     go:    t("programmation.ratingGo"),
@@ -428,6 +482,105 @@ function ArtistDetail({
             }}
           />
         </div>
+
+        {/* ── Bio Wikipedia (FR uniquement) ── */}
+        {isFr && wikiSummary && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.07em",
+              opacity: 0.45, marginBottom: 10, textTransform: "uppercase",
+            }}>
+              {t("programmation.wikiAbout")}
+            </div>
+            <div style={{
+              fontSize: 13, lineHeight: 1.65, opacity: 0.68,
+              display: wikiExpanded ? "block" : "-webkit-box",
+              overflow: "hidden",
+              WebkitLineClamp: wikiExpanded ? undefined : 4,
+              WebkitBoxOrient: wikiExpanded ? undefined : "vertical",
+            } as React.CSSProperties}>
+              {wikiSummary}
+            </div>
+            {wikiSummary.length > 280 && (
+              <button
+                onClick={() => setWikiExpanded((v) => !v)}
+                style={{
+                  marginTop: 6, fontSize: 12, color: "#BF5AF2",
+                  background: "none", border: "none",
+                  cursor: "pointer", padding: 0, fontFamily: "inherit",
+                }}
+              >
+                {wikiExpanded ? t("programmation.wikiCollapse") : t("programmation.wikiReadMore")}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Artistes en même temps ── */}
+        {concurrent.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.07em",
+              opacity: 0.45, marginBottom: 12, textTransform: "uppercase",
+            }}>
+              {t("programmation.concurrent")}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {concurrent.map((e) => {
+                const c   = SCENE_COLORS[e.scene] ?? "#ffffff";
+                const r   = ratings.get(e.artistName);
+                const diffMin = festivalMinutes(e.startTime!) - festivalMinutes(entry.startTime!);
+                const diffLabel = diffMin === 0
+                  ? "●"
+                  : diffMin > 0
+                    ? `+${diffMin}min`
+                    : `${diffMin}min`;
+                return (
+                  <button
+                    key={`${e.artistName}-${e.scene}`}
+                    onClick={() => onSelectArtist(e)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "12px 14px", borderRadius: 14,
+                      background: "rgba(255,255,255,0.04)",
+                      border: `1px solid ${c}30`,
+                      color: "white", cursor: "pointer",
+                      fontFamily: "inherit", textAlign: "left", width: "100%",
+                    }}
+                  >
+                    <div style={{
+                      width: 8, height: 8, borderRadius: "50%",
+                      background: c, boxShadow: `0 0 6px ${c}88`, flexShrink: 0,
+                    }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{e.artistName}</span>
+                        {e.legend && (
+                          <span style={{
+                            fontSize: 9, fontWeight: 700,
+                            padding: "1px 5px", borderRadius: 999,
+                            background: "rgba(255,200,0,0.15)", color: "#FFD60A",
+                            border: "1px solid rgba(255,200,0,0.25)",
+                          }}>⭐</span>
+                        )}
+                        {r && <span style={{ fontSize: 13 }}>{RATING_EMOJI[r.rating]}</span>}
+                      </div>
+                      <div style={{ fontSize: 11, opacity: 0.42, marginTop: 2 }}>
+                        {e.scene} · {e.startTime}
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: 11, opacity: 0.38, flexShrink: 0,
+                      fontVariantNumeric: "tabular-nums",
+                    }}>
+                      {diffLabel}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Bouton SoundCloud */}
         <a
@@ -616,10 +769,12 @@ export function ProgrammationScreen({ onBack }: Props) {
       <ArtistDetail
         entry={selectedArtist}
         rating={ratings.get(selectedArtist.artistName)}
+        ratings={ratings}
         onBack={closeDetail}
         onRatingChange={(newRating, comment) =>
           handleRatingChange(selectedArtist.artistName, newRating, comment)
         }
+        onSelectArtist={(e) => setSelectedArtist(e)}
       />
     );
   }
