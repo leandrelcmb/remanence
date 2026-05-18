@@ -304,10 +304,9 @@ function ArtistDetail({
 
   return (
     <div style={{
-      position: "fixed", inset: 0,
-      background: "#0a0a0f",
+      height: "100dvh",
       display: "flex", flexDirection: "column",
-      zIndex: 50,
+      overflow: "hidden",
     }}>
       {/* Header */}
       <div style={{
