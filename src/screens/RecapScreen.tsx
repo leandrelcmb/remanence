@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { JournalItem } from "../core/store/service";
 import type { Festival, UserProfile } from "../core/models/types";
 import { listFestivalContacts, getEntriesWithPhotos } from "../core/store/service";
+import { listAllLineupRatings } from "../core/store/repo";
+import { TIMETABLE } from "../app/data/timetable";
 import { energyTint } from "../app/ui/EnergyDots";
 import { formatTime } from "./utils";
 
@@ -39,6 +41,14 @@ const SECTION_TITLE: React.CSSProperties = {
   opacity: 0.40,
   margin: "0 0 12px 0",
 };
+
+// ── Helpers CSV ───────────────────────────────────────────────────────────────
+
+function csvEscape(s: string): string {
+  if (!s) return "";
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -112,8 +122,9 @@ function StatCard({ value, label }: { value: string; label: string }) {
 
 export function RecapScreen({ journal, festival, user, festivalId, onBack }: Props) {
   const { t } = useTranslation();
-  const [contactCount, setContactCount] = useState<number | null>(null);
-  const [exporting, setExporting] = useState(false);
+  const [contactCount, setContactCount]         = useState<number | null>(null);
+  const [exporting, setExporting]               = useState(false);
+  const [exportingAnalysis, setExportingAnalysis] = useState(false);
 
   const handleExportPhotos = useCallback(async () => {
     setExporting(true);
@@ -146,6 +157,92 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
       setExporting(false);
     }
   }, [festivalId]);
+
+  const handleExportAnalysis = useCallback(async () => {
+    setExportingAnalysis(true);
+    try {
+      const ratings    = await listAllLineupRatings();
+      const ratingsMap = new Map(ratings.map((r) => [r.artistName, r]));
+
+      // Union : artistes notés OU vus
+      const allNames = new Set([
+        ...ratings.map((r) => r.artistName),
+        ...journal.map((j) => j.artistName),
+      ]);
+
+      const RATING_LABEL: Record<string, string> = {
+        go: "Incontournable", maybe: "Peut-être", skip: "À éviter",
+      };
+
+      const header = [
+        "Artiste", "Sous-genre", "Scène programmée", "Heure programmée",
+        "Notation", "Commentaire",
+        "Vu au festival", "Scène vue", "Heure vue",
+        "Énergie (1-10)", "Focus", "Ressenti", "Apprentissage",
+      ].map(csvEscape).join(",");
+
+      const rows: string[] = [header];
+
+      for (const name of [...allNames].sort()) {
+        const rating  = ratingsMap.get(name);
+        const entries = journal.filter((j) => j.artistName === name);
+        const tEntry  = TIMETABLE.find((e) => e.artistName === name);
+
+        if (entries.length === 0) {
+          rows.push([
+            csvEscape(name),
+            csvEscape(tEntry?.style ?? ""),
+            csvEscape(tEntry?.scene ?? ""),
+            csvEscape(tEntry?.startTime ?? ""),
+            csvEscape(RATING_LABEL[rating?.rating ?? ""] ?? ""),
+            csvEscape(rating?.comment ?? ""),
+            "Non", "", "", "", "", "", "",
+          ].join(","));
+        } else {
+          for (const e of entries) {
+            const heure = e.startTime
+              ? new Date(e.startTime).toLocaleString("fr-FR", {
+                  day: "2-digit", month: "2-digit",
+                  hour: "2-digit", minute: "2-digit",
+                })
+              : "";
+            rows.push([
+              csvEscape(name),
+              csvEscape(tEntry?.style ?? e.style ?? ""),
+              csvEscape(tEntry?.scene ?? ""),
+              csvEscape(tEntry?.startTime ?? ""),
+              csvEscape(RATING_LABEL[rating?.rating ?? ""] ?? "Non noté"),
+              csvEscape(rating?.comment ?? ""),
+              "Oui",
+              csvEscape(e.stageName),
+              csvEscape(heure),
+              String(e.energy),
+              csvEscape(e.focus),
+              csvEscape(e.feelingText),
+              csvEscape(e.learningText),
+            ].join(","));
+          }
+        }
+      }
+
+      // BOM UTF-8 pour compatibilité Excel / Numbers
+      const blob = new Blob(["\uFEFF" + rows.join("\n")], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement("a");
+      a.href     = url;
+      a.download = `remanence-${(festival?.name ?? "festival")
+        .replace(/\s+/g, "-")
+        .toLowerCase()}-analyse.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setExportingAnalysis(false);
+    }
+  }, [journal, festival]);
 
   // Fetch du nombre de contacts (lecture seule)
   useEffect(() => {
@@ -388,6 +485,29 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
             </div>
           </section>
         )}
+
+        {/* ── F. ANALYSE ── */}
+        <section>
+          <p style={SECTION_TITLE}>{t("recap.sectionAnalysis")}</p>
+          <p style={{ fontSize: 12, opacity: 0.45, margin: "0 0 14px", lineHeight: 1.6 }}>
+            {t("recap.analysisHint")}
+          </p>
+          <button
+            onClick={handleExportAnalysis}
+            disabled={exportingAnalysis}
+            style={{
+              width: "100%", borderRadius: 999, padding: "15px 20px", border: "none",
+              background: exportingAnalysis ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.88)",
+              color: exportingAnalysis ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.85)",
+              fontSize: 15, fontWeight: 600,
+              cursor: exportingAnalysis ? "not-allowed" : "pointer",
+              fontFamily: "inherit", letterSpacing: "0.02em",
+              opacity: exportingAnalysis ? 0.6 : 1,
+            }}
+          >
+            {exportingAnalysis ? t("recap.exportingAnalysis") : t("recap.exportAnalysis")}
+          </button>
+        </section>
 
         {/* Signature discrète */}
         {user && (

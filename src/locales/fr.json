@@ -569,7 +569,11 @@
     "energyPeaks": "Tes pics d'énergie",
     "capturedMoments": "Instants capturés",
     "exporting": "Export en cours…",
-    "exportPhotos": "Exporter mes photos 📸"
+    "exportPhotos": "Exporter mes photos 📸",
+    "sectionAnalysis": "Analyse",
+    "analysisHint": "Croise tes notations pré-festival avec les sets que tu as vécus. Ouvre le fichier .csv dans Excel ou Numbers.",
+    "exportAnalysis": "📊 Exporter l'analyse",
+    "exportingAnalysis": "Génération du fichier…"
   },
   "festivalPicker": {
     "title": "Festivals 🪩",
