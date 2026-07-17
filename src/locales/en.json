@@ -40,6 +40,7 @@
     "games": "Games",
     "gameActive": "in progress",
     "gameResume": "remaining · Resume →",
+    "gameResumeFree": "Free hunt · Resume →",
     "changeFestival": "change"
   },
   "flow": {

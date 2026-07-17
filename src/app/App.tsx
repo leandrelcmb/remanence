@@ -40,7 +40,7 @@ import { ReductionRisquesScreen } from "../screens/ReductionRisquesScreen";
 import { ProgrammationScreen } from "../screens/ProgrammationScreen";
 import { ComingSoonScreen } from "../screens/ComingSoonScreen";
 import type { ChasseType, ChasseActiveSession } from "../core/models/chasseTypes";
-import { getActiveChasse, clearActiveChasse } from "../core/store/repo";
+import { getActiveChasse } from "../core/store/repo";
 import { FlowProgress } from "./ui/FlowProgress";
 import { ScreenTransition } from "./ui/ScreenTransition";
 import type { AnimDir } from "./ui/ScreenTransition";
@@ -112,13 +112,11 @@ export default function App() {
   }, [haloColor]);
 
   // Charger la session de chasse active au montage
+  // (la session perdure même si le timer d'1h est écoulé — seul le bouton
+  //  "Annuler la partie" la réinitialise)
   useEffect(() => {
     getActiveChasse().then((s) => {
-      if (s && s.timerExpiresAt > Date.now()) {
-        setActiveChasse(s);
-      } else if (s) {
-        clearActiveChasse(); // expirée → nettoyer silencieusement
-      }
+      if (s) setActiveChasse(s);
     });
   }, []);
 
@@ -531,9 +529,7 @@ export default function App() {
                 // (ne pas setActiveChasse(null) avant l'async : ça effacerait
                 //  temporairement la session et briserait le retour immédiat)
                 navigate("games", "backward");
-                getActiveChasse().then((s) =>
-                  setActiveChasse(s && s.timerExpiresAt > Date.now() ? s : null)
-                );
+                getActiveChasse().then((s) => setActiveChasse(s ?? null));
               }}
             />
           )}

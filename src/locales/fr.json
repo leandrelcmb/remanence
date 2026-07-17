@@ -40,6 +40,7 @@
     "games": "Jeux",
     "gameActive": "en cours",
     "gameResume": "restantes · Reprendre →",
+    "gameResumeFree": "Chasse libre · Reprendre →",
     "changeFestival": "changer"
   },
   "flow": {

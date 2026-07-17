@@ -111,7 +111,9 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
   const haloLight   = toHex(lighten(r, 0.22), lighten(g, 0.22), lighten(b, 0.22));
   const haloGlow    = `rgba(${r},${g},${b},0.22)`;
   const haloGlowSft = `rgba(${r},${g},${b},0.16)`;
-  const isResuming = !!resumeSession && resumeSession.timerExpiresAt > Date.now();
+  // La session perdure au-delà du timer d'1h : on reprend toujours si elle existe.
+  // Timer écoulé = chasse libre (∞), seul "Annuler la partie" réinitialise.
+  const isResuming = !!resumeSession;
 
   const [activeType, setActiveType] = useState<ChasseType>(
     isResuming ? resumeSession!.chasseType : chasseType
@@ -508,15 +510,15 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
                   {result.icon} {t(`chasse.items.${activeType}.${result.label}.label`, { defaultValue: result.label })}
                 </div>
               </div>
-              {/* Timer */}
+              {/* Timer — ∞ quand le compte à rebours est écoulé (chasse libre) */}
               <div style={{
                 fontSize: 26,
                 fontWeight: 700,
                 fontVariantNumeric: "tabular-nums",
-                color: timer < 300 ? "#FF3B30" : result.color,
+                color: timer > 0 && timer < 300 ? "#FF3B30" : result.color,
                 letterSpacing: "0.04em",
               }}>
-                {timerStr}
+                {timer > 0 ? timerStr : "∞"}
               </div>
             </div>
 

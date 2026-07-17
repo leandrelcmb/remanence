@@ -547,7 +547,7 @@ export function LandingScreen({
           <NavCard emoji="🎮" label={t('landing.games')}   onClick={onGames}         cardId="5" />
         </div>
 
-        {activeChasse && activeChasse.timerExpiresAt > Date.now() && (
+        {activeChasse && (
           <button
             onClick={onResumeChasse}
             style={{
@@ -577,7 +577,9 @@ export function LandingScreen({
                 {activeChasse.resultIcon} {activeChasse.resultLabel} {t('landing.gameActive')}
               </div>
               <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
-                {formatRemainingTime(activeChasse.timerExpiresAt)} {t('landing.gameResume')}
+                {activeChasse.timerExpiresAt > Date.now()
+                  ? `${formatRemainingTime(activeChasse.timerExpiresAt)} ${t('landing.gameResume')}`
+                  : t('landing.gameResumeFree')}
               </div>
             </div>
           </button>
