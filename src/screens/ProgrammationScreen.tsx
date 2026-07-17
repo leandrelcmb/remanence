@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { SCENES, TIMETABLE, DAY_LABELS } from "../app/data/timetable";
 import type { TimetableEntry } from "../app/data/timetable";
@@ -16,8 +16,9 @@ const SCENE_COLORS: Record<string, string> = {
   "Ozora Stage": "#BF5AF2",
   "Pumpui":      "#FF6B35",
   "The Dome":    "#00C7BE",
-  "Dragon Nest": "#34C759",
-  "Ambyss":      "#5E5CE6",
+  "Dragon Nest":    "#34C759",
+  "Cooking Groove": "#FFD60A",
+  "Ambyss":         "#5E5CE6",
 };
 
 const RATING_EMOJI: Record<RatingValue, string> = {
@@ -660,6 +661,8 @@ export function ProgrammationScreen({ onBack }: Props) {
   const [now,             setNow]             = useState<Date>(() => new Date());
   const [ratings,         setRatings]         = useState<Map<string, LineupRating>>(new Map());
   const [selectedArtist,  setSelectedArtist]  = useState<TimetableEntry | null>(null);
+  const [ioMsg,           setIoMsg]           = useState<string | null>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   const scenes  = [...SCENES] as Array<{ key: string; emoji: string }>;
   const hasData = TIMETABLE.length > 0;
@@ -754,6 +757,61 @@ export function ProgrammationScreen({ onBack }: Props) {
   function openDetail(entry: TimetableEntry) { setSelectedArtist(entry); }
   function closeDetail()                      { setSelectedArtist(null); }
 
+  // ── Export / import des notations (sauvegarde avant réinstallation) ────────
+  function flashIoMsg(msg: string) {
+    setIoMsg(msg);
+    setTimeout(() => setIoMsg(null), 3500);
+  }
+
+  function handleExportRatings() {
+    const list = [...ratings.values()];
+    const payload = {
+      format: "remanence-lineup-ratings",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      ratings: list,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = "remanence-notes-artistes.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    flashIoMsg(t("programmation.exportDone", { count: list.length }));
+  }
+
+  async function handleImportRatings(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const list: unknown = Array.isArray(data) ? data : data?.ratings;
+      if (!Array.isArray(list)) throw new Error("format");
+      let count = 0;
+      const next = new Map(ratings);
+      for (const r of list) {
+        if (!r || typeof r.artistName !== "string" || !["go", "maybe", "skip"].includes(r.rating)) continue;
+        const clean: LineupRating = {
+          artistName: r.artistName,
+          rating:     r.rating,
+          comment:    typeof r.comment   === "string" ? r.comment   : "",
+          updatedAt:  typeof r.updatedAt === "string" ? r.updatedAt : new Date().toISOString(),
+        };
+        await setLineupRating(clean);
+        next.set(clean.artistName, clean);
+        count++;
+      }
+      setRatings(next);
+      flashIoMsg(t("programmation.importDone", { count }));
+    } catch {
+      flashIoMsg(t("programmation.importError"));
+    }
+  }
+
   // ── Pills de filtre notation ───────────────────────────────────────────────
   const ratingFilters: Array<{ value: RatingFilter; label: string }> = [
     { value: "",        label: t("programmation.ratingAll") },
@@ -803,17 +861,68 @@ export function ProgrammationScreen({ onBack }: Props) {
               : t("programmation.comingSoon")}
           </div>
         </div>
-        <button
-          onClick={onBack}
-          style={{
-            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)",
-            borderRadius: 999, padding: "8px 16px",
-            fontSize: 13, color: "white", cursor: "pointer", fontFamily: "inherit",
-          }}
-        >
-          {t("programmation.back")}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Export / import des notations */}
+          <button
+            onClick={handleExportRatings}
+            title={t("programmation.exportRatings")}
+            aria-label={t("programmation.exportRatings")}
+            style={{
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)",
+              borderRadius: 999, width: 36, height: 36,
+              fontSize: 15, cursor: "pointer", fontFamily: "inherit",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            💾
+          </button>
+          <button
+            onClick={() => importFileRef.current?.click()}
+            title={t("programmation.importRatings")}
+            aria-label={t("programmation.importRatings")}
+            style={{
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)",
+              borderRadius: 999, width: 36, height: 36,
+              fontSize: 15, cursor: "pointer", fontFamily: "inherit",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            📥
+          </button>
+          <input
+            ref={importFileRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: "none" }}
+            onChange={handleImportRatings}
+          />
+          <button
+            onClick={onBack}
+            style={{
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)",
+              borderRadius: 999, padding: "8px 16px",
+              fontSize: 13, color: "white", cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            {t("programmation.back")}
+          </button>
+        </div>
       </div>
+
+      {/* ── Confirmation export/import ── */}
+      {ioMsg && (
+        <div style={{
+          flexShrink: 0,
+          padding: "8px 16px",
+          fontSize: 12,
+          textAlign: "center",
+          color: "rgba(255,255,255,0.85)",
+          background: "rgba(52,199,89,0.14)",
+          borderBottom: "1px solid rgba(52,199,89,0.25)",
+        }}>
+          {ioMsg}
+        </div>
+      )}
 
       {/* ── Onglets ── */}
       <div style={{

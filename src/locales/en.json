@@ -625,7 +625,13 @@
     "recoEmpty": "No sets to recommend right now",
     "recoOutsideFestival": "The festival hasn't started yet or has ended",
     "recoNoMood": "No sets matching this vibe right now",
-    "concurrent": "Playing at the same time"
+    "concurrent": "Playing at the same time",
+    "concurrentEmpty": "No other set scheduled at that time",
+    "exportRatings": "Back up my ratings (.json)",
+    "importRatings": "Import my ratings",
+    "exportDone": "💾 {{count}} rating(s) exported — keep this file safe",
+    "importDone": "✓ {{count}} rating(s) imported",
+    "importError": "Invalid file — pick a Rémanence .json export"
   },
   "comingSoon": {
     "title": "Under construction",

@@ -629,7 +629,12 @@
     "concurrentEmpty": "Aucun autre set prévu à ce moment",
     "wikiAbout": "À propos",
     "wikiReadMore": "Lire plus",
-    "wikiCollapse": "Réduire"
+    "wikiCollapse": "Réduire",
+    "exportRatings": "Sauvegarder mes notes (.json)",
+    "importRatings": "Importer mes notes",
+    "exportDone": "💾 {{count}} note(s) exportée(s) — garde ce fichier précieusement",
+    "importDone": "✓ {{count}} note(s) importée(s)",
+    "importError": "Fichier invalide — choisis un export .json de Rémanence"
   },
   "comingSoon": {
     "title": "En construction",
