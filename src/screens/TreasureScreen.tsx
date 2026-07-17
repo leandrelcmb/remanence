@@ -1,6 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+
+// ── Persistance de la progression ─────────────────────────────────────────────
+// La chasse se joue sur toute la durée du festival : la progression survit
+// aux allers-retours d'écran et aux fermetures de l'app. Seul le bouton
+// "Recommencer" la remet à zéro.
+
+const STORAGE_KEY = "remanence.treasureFound";
+
+function loadFound(): Set<number> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set(arr.filter((n) => Number.isInteger(n)));
+    }
+  } catch { /* stockage corrompu → repartir de zéro */ }
+  return new Set();
+}
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -79,9 +97,16 @@ export function TreasureScreen({ onBack }: Props) {
   const { t } = useTranslation();
   const secretTexts = t('treasure.secrets', { returnObjects: true }) as string[];
 
-  const [found,        setFound]        = useState<Set<number>>(() => new Set());
+  const [found,        setFound]        = useState<Set<number>>(loadFound);
   const [activeFilter, setActiveFilter] = useState<Filter>("tous");
   const [lastRevealed, setLastRevealed] = useState<number | null>(null);
+
+  // Sauvegarde automatique à chaque révélation (ou reset)
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...found]));
+    } catch { /* quota plein — tant pis, la session en cours reste utilisable */ }
+  }, [found]);
 
   const totalAll     = SECRETS.length;
   const countAll     = found.size;
