@@ -16,6 +16,7 @@ export type TimetableEntry = {
     | "Pumpui"
     | "The Dome"
     | "Dragon Nest"
+    | "Cooking Groove"
     | "Ambyss";
   style:      string;
   day?:       string;
