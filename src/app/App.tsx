@@ -303,7 +303,9 @@ export default function App() {
       <div style={{ position: "relative", zIndex: 1, padding: (screen === "journal" || screen === "contacts" || screen === "recap" || screen === "games" || screen === "introspection" || screen === "treasure" || screen === "theories" || screen === "sante" || screen === "chasse" || screen === "comingSoon" || screen === "divers" || screen === "anecdotes" || screen === "constellation" || screen === "scenePicker" || screen === "programmation" || screen === "risques") ? 0 : "40px 12px" }}>
 
         {/* Indicateur de progression dans le flux de capture */}
-        {isFlowScreen && <FlowProgress screen={screen} express={expressMode} />}
+        {isFlowScreen && (
+          <FlowProgress screen={screen} express={expressMode} overlay={screen === "scenePicker"} />
+        )}
 
         {/* ── Écran actif avec animation ── */}
         {/* Le div extérieur porte le fade-out (cross-fade) ; ScreenTransition porte le fade-in */}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from 'react-i18next';
 import type { Draft } from "../app/flow/types";
-import { SCENES, artistsByScene } from "../app/data/timetable";
+import { SCENES, DAY_LABELS, artistsByScene } from "../app/data/timetable";
 import { ARTISTS } from "../app/data/artists";
 import { softHaptic } from "../app/flow/haptics";
 
@@ -10,8 +10,9 @@ const SCENE_COLORS: Record<string, string> = {
   "Ozora Stage": "#BF5AF2",
   "Pumpui":      "#FF6B35",
   "The Dome":    "#00C7BE",
-  "Dragon Nest": "#34C759",
-  "Ambyss":      "#5E5CE6",
+  "Dragon Nest":    "#34C759",
+  "Cooking Groove": "#FFD60A",
+  "Ambyss":         "#5E5CE6",
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
   const [phase, setPhase]               = useState<"scene" | "artist">("scene");
   const [selectedScene, setSelectedScene] = useState<string>("");
   const [query, setQuery]               = useState("");
+  const [dayFilter, setDayFilter]       = useState<string>("");
 
   // ── Navigation interne ──────────────────────────────────────────────────────
   function goToArtist(sceneName: string) {
@@ -35,12 +37,14 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
     setSelectedScene(sceneName);
     onChangeDraft({ stageName: sceneName, artistName: "", style: "", ephemeral: false });
     setQuery("");
+    setDayFilter("");
     setPhase("artist");
   }
 
   function goBackToScene() {
     setPhase("scene");
     setQuery("");
+    setDayFilter("");
     onChangeDraft({ artistName: "", stageName: "", style: "", ephemeral: false });
   }
 
@@ -64,11 +68,14 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
   const sceneArtists  = artistsByScene(selectedScene);
   const hasSceneData  = sceneArtists.length > 0;
 
-  // Avec timetable → filtrage sur sceneArtists
+  // Jours disponibles pour cette scène (pour les pastilles de filtre)
+  const sceneDays = [...new Set(sceneArtists.filter((e) => e.day).map((e) => e.day!))].sort();
+
+  // Avec timetable → filtrage jour + recherche sur sceneArtists
   const filteredTimetable = hasSceneData
-    ? (query
-        ? sceneArtists.filter((a) => a.artistName.toLowerCase().includes(query.toLowerCase()))
-        : sceneArtists)
+    ? sceneArtists
+        .filter((a) => !dayFilter || a.day === dayFilter)
+        .filter((a) => !query || a.artistName.toLowerCase().includes(query.toLowerCase()))
     : [];
 
   // Sans timetable → fallback sur la liste générale (saisie libre)
@@ -80,7 +87,7 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
   const sceneEmoji = [...SCENES].find((s) => s.key === selectedScene)?.emoji ?? "";
 
   return (
-    <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
 
       {/* ── Header fixe ── */}
       <div style={{
@@ -121,7 +128,9 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "20px 16px 40px",
+          // Marge basse élargie en phase artiste pour que le dernier item
+          // reste accessible sous le bouton flottant
+          padding: phase === "artist" ? "20px 16px 130px" : "20px 16px 40px",
           display: "flex",
           flexDirection: "column",
           gap: 10,
@@ -235,12 +244,50 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
               }}
             />
 
+            {/* Pastilles de filtre par jour */}
+            {sceneDays.length > 0 && (
+              <div className="no-scrollbar" style={{
+                display: "flex",
+                gap: 8,
+                overflowX: "auto",
+                flexShrink: 0,
+                margin: "2px 0",
+              }}>
+                {["", ...sceneDays].map((day) => {
+                  const active = dayFilter === day;
+                  return (
+                    <button
+                      key={day || "all"}
+                      onClick={() => setDayFilter(day)}
+                      style={{
+                        flexShrink: 0,
+                        borderRadius: 999,
+                        padding: "7px 14px",
+                        fontSize: 12,
+                        fontWeight: active ? 700 : 400,
+                        background: active ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.05)",
+                        border: active
+                          ? "1px solid rgba(255,255,255,0.40)"
+                          : "1px solid rgba(255,255,255,0.10)",
+                        color: active ? "white" : "rgba(255,255,255,0.55)",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {day === "" ? t('programmation.dayAll') : (DAY_LABELS[day] ?? day)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Artistes de la timetable */}
             {hasSceneData && filteredTimetable.map((entry) => {
               const selected = draft.artistName === entry.artistName;
               return (
                 <button
-                  key={entry.artistName}
+                  key={`${entry.artistName}-${entry.day ?? ""}-${entry.startTime ?? ""}`}
                   onClick={() => handleArtistTap(entry.artistName, entry.style)}
                   style={{
                     display: "flex",
@@ -308,6 +355,19 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
               );
             })}
 
+            {/* Aucun résultat pour ce filtre / cette recherche */}
+            {hasSceneData && filteredTimetable.length === 0 && (
+              <div style={{
+                textAlign: "center",
+                opacity: 0.35,
+                fontSize: 13,
+                padding: "24px 0",
+                fontStyle: "italic",
+              }}>
+                {t('programmation.noArtists')}
+              </div>
+            )}
+
             {/* Placeholder si timetable vide et pas de saisie */}
             {!hasSceneData && !query && (
               <div style={{
@@ -320,36 +380,51 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
                 {t('scenePicker.artistHint')}
               </div>
             )}
-
-            {/* Bouton de validation */}
-            <div style={{ marginTop: 8 }}>
-              <button
-                onClick={handleValidate}
-                disabled={!draft.artistName.trim()}
-                style={{
-                  width: "100%",
-                  borderRadius: 999,
-                  padding: "16px 20px",
-                  border: "none",
-                  background: draft.artistName.trim()
-                    ? "rgba(255,255,255,0.90)"
-                    : "rgba(255,255,255,0.12)",
-                  color: draft.artistName.trim()
-                    ? "rgba(0,0,0,0.85)"
-                    : "rgba(255,255,255,0.35)",
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: draft.artistName.trim() ? "pointer" : "not-allowed",
-                  fontFamily: "inherit",
-                  letterSpacing: "0.03em",
-                }}
-              >
-                {t('scenePicker.validate')}
-              </button>
-            </div>
           </>
         )}
       </div>
+
+      {/* ── Bouton de validation flottant ──────────────────────────────────────
+          Rendu UNE seule fois, en overlay au-dessus du scroll : il apparaît dès
+          qu'un artiste est choisi et reste visible quelle que soit la position
+          de scroll. L'ancien bouton en bas de liste a été supprimé (pas de
+          doublon possible). */}
+      {phase === "artist" && draft.artistName.trim() !== "" && (
+        <div style={{
+          position: "absolute",
+          left: 0, right: 0, bottom: 0,
+          padding: "28px 16px calc(18px + env(safe-area-inset-bottom))",
+          background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.75) 100%)",
+          zIndex: 10,
+          animation: "scenePickerValidateIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both",
+        }}>
+          <style>{`
+            @keyframes scenePickerValidateIn {
+              from { transform: translateY(72px); opacity: 0; }
+              to   { transform: translateY(0);    opacity: 1; }
+            }
+          `}</style>
+          <button
+            onClick={handleValidate}
+            style={{
+              width: "100%",
+              borderRadius: 999,
+              padding: "16px 20px",
+              border: "none",
+              background: "rgba(255,255,255,0.90)",
+              color: "rgba(0,0,0,0.85)",
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              letterSpacing: "0.03em",
+              boxShadow: "0 6px 24px rgba(0,0,0,0.45)",
+            }}
+          >
+            {t('scenePicker.validate')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

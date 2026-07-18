@@ -3,7 +3,13 @@ import type { FlowScreen } from "../flow/types";
 const FULL_STEPS: FlowScreen[]    = ["capture", "scenePicker", "colorEnergy", "focus", "text"];
 const EXPRESS_STEPS: FlowScreen[] = ["capture", "scenePicker", "colorEnergy", "focus"];
 
-export function FlowProgress({ screen, express = false }: { screen: FlowScreen; express?: boolean }) {
+export function FlowProgress({ screen, express = false, overlay = false }: {
+  screen: FlowScreen;
+  express?: boolean;
+  /** true = flotte au-dessus de l'écran sans prendre de hauteur
+      (pour les écrans plein-écran en 100dvh comme scenePicker) */
+  overlay?: boolean;
+}) {
   const steps = express ? EXPRESS_STEPS : FULL_STEPS;
   const currentIdx = steps.indexOf(screen);
   if (currentIdx === -1) return null;
@@ -15,7 +21,9 @@ export function FlowProgress({ screen, express = false }: { screen: FlowScreen; 
         justifyContent: "center",
         alignItems: "center",
         gap: 6,
-        marginBottom: 28,
+        ...(overlay
+          ? { position: "absolute", top: 12, left: 0, right: 0, zIndex: 20, pointerEvents: "none" }
+          : { marginBottom: 28 }),
       }}
     >
       {steps.map((_, i) => {
