@@ -275,7 +275,9 @@ export function ScenePickerScreen({ draft, onChangeDraft, onNext, onBack }: Prop
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {day === "" ? t('programmation.dayAll') : (DAY_LABELS[day] ?? day)}
+                      {day === ""
+                        ? t('programmation.dayAll')
+                        : (DAY_LABELS[day] ? `${day} — ${DAY_LABELS[day]}` : day)}
                     </button>
                   );
                 })}
