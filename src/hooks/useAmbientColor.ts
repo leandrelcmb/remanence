@@ -9,12 +9,15 @@ export function useAmbientColor({
   journal,
   selectedItem,
   lastSavedColor,
+  ambientOverride = null,
 }: {
   screen: FlowScreen;
   draft: Draft;
   journal: JournalItem[];
   selectedItem: JournalItem | null;
   lastSavedColor: string | null;
+  /** Couleur imposée par un écran (ex: page couleur de la Constellation) — prioritaire sur tout */
+  ambientOverride?: string | null;
 }) {
   const displayDraftColor = useMemo(
     () => energyTint(draft.colorHex, draft.energy),
@@ -30,6 +33,7 @@ export function useAmbientColor({
   }, [journal, displayDraftColor]);
 
   const haloColor = useMemo(() => {
+    if (ambientOverride) return ambientOverride;
     if (screen === "detail" && selectedItem) {
       return energyTint(selectedItem.colorHex, selectedItem.energy);
     }
@@ -56,7 +60,7 @@ export function useAmbientColor({
       return latestJournalColor;
     }
     return displayDraftColor;
-  }, [screen, selectedItem, displayDraftColor, latestJournalColor, lastSavedColor]);
+  }, [screen, selectedItem, displayDraftColor, latestJournalColor, lastSavedColor, ambientOverride]);
 
   const haloOpacity = useMemo(() => {
     if (screen === "focus" && !draft.focus) return 0.07; // halo discret avant le choix

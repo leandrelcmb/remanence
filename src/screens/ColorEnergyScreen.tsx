@@ -5,7 +5,8 @@ import { RoundButton } from "../app/ui/RoundButton";
 import type { Draft } from "../app/flow/types";
 
 // ── Palette ───────────────────────────────────────────────────────────────────
-const RGB_COLORS = [
+// Exportée : l'onglet Couleurs de la Constellation reprend le même ordre de pages
+export const RGB_COLORS = [
   "#FF3B30",
   "#FF9500",
   "#FFD60A",

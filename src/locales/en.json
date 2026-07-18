@@ -128,7 +128,13 @@
     "star_other": "stars",
     "total": "in total",
     "empty": "Your constellation will appear here after your first memories ✨",
-    "emptyFiltered": "No stars match the selected filters."
+    "emptyFiltered": "No stars match the selected filters.",
+    "tabCarte": "Sky map",
+    "tabCouleurs": "Colors",
+    "legendCalm": "calm",
+    "legendIntense": "intense",
+    "previewOpen": "Open memory →",
+    "resetZoom": "Reset zoom"
   },
   "games": {
     "title": "Games 🎮",

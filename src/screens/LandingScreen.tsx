@@ -563,6 +563,8 @@ export function LandingScreen({
               fontFamily: "inherit",
               width: "100%",
               marginTop: 4,
+              // Dernier de la séquence d'entrée (0.1 → 0.22 → 0.35 → 0.45 → 0.55)
+              animation: "landingGridFade 0.7s cubic-bezier(0.22,1,0.36,1) 0.55s both",
             }}
           >
             <div style={{

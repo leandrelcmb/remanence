@@ -30,7 +30,8 @@ const RATING_EMOJI: Record<RatingValue, string> = {
 // ── Festival calendar helpers ─────────────────────────────────────────────────
 // La journée festival court de 10h00 à 09h59 le lendemain.
 
-const CALENDAR_TO_FESTIVAL_DAY: Record<string, string> = {
+// Exporté : les repères de jour de la Constellation réutilisent le même mapping
+export const CALENDAR_TO_FESTIVAL_DAY: Record<string, string> = {
   "2026-07-25": "Day -1",
   "2026-07-26": "Day 0",
   "2026-07-27": "Day 1",

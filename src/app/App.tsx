@@ -95,6 +95,9 @@ export default function App() {
   // Session de chasse active (persistée dans IndexedDB)
   const [activeChasse, setActiveChasse] = useState<ChasseActiveSession | null>(null);
 
+  // Couleur imposée au halo par un écran (ex: page couleur de la Constellation)
+  const [ambientOverride, setAmbientOverride] = useState<string | null>(null);
+
   const { draft, setDraft, resetDraft, artistSuggestions, handleCameraPhoto, handleGalleryPhoto } = useDraftFlow();
   const { booting, profileReady, saveProfile, user, festivalId, festival, festivals, journal, refreshJournal, createFestival, switchFestival } = useJournal();
   const { haloColor, haloOpacity, haloScale, haloCenterY, latestJournalColor } = useAmbientColor({
@@ -103,6 +106,7 @@ export default function App() {
     journal,
     selectedItem,
     lastSavedColor,
+    ambientOverride,
   });
 
   // Expose la couleur du halo en CSS custom property pour les RoundButton primaires
@@ -122,6 +126,7 @@ export default function App() {
 
   /** Navigation avec direction d'animation */
   function navigate(target: FlowScreen, dir: AnimDir = "neutral") {
+    setAmbientOverride(null); // aucun écran ne conserve l'override après navigation
     setAnimDir(dir);
     setScreen(target);
   }
@@ -459,6 +464,7 @@ export default function App() {
               festivalEnd={festival?.endDate ?? ""}
               onSelectStar={(item) => openDetail(item, "constellation")}
               onBack={() => navigate("landing", "backward")}
+              onAmbientColor={setAmbientOverride}
             />
           )}
 

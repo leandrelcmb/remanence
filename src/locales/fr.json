@@ -128,7 +128,13 @@
     "star_other": "étoiles",
     "total": "au total",
     "empty": "Ta constellation apparaîtra ici après tes premiers souvenirs ✨",
-    "emptyFiltered": "Aucune étoile ne correspond aux filtres sélectionnés."
+    "emptyFiltered": "Aucune étoile ne correspond aux filtres sélectionnés.",
+    "tabCarte": "Carte du ciel",
+    "tabCouleurs": "Couleurs",
+    "legendCalm": "calme",
+    "legendIntense": "intense",
+    "previewOpen": "Voir le souvenir →",
+    "resetZoom": "Réinitialiser le zoom"
   },
   "games": {
     "title": "Jeux 🎮",

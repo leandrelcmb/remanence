@@ -1,7 +1,9 @@
-import { useRef, useState, useMemo, type ReactNode, type TouchEvent as ReactTouchEvent } from "react";
+import { useRef, useState, useMemo, useEffect, type ReactNode, type TouchEvent as ReactTouchEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { useTranslation } from 'react-i18next';
 import type { JournalItem } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
+import { RGB_COLORS } from "./ColorEnergyScreen";
+import { CALENDAR_TO_FESTIVAL_DAY } from "./ProgrammationScreen";
 import { formatTime } from "./utils";
 
 // ── Filtres ───────────────────────────────────────────────────────────────────
@@ -49,6 +51,8 @@ type Props = {
   festivalEnd: string;   // ISO date
   onSelectStar: (item: JournalItem) => void;
   onBack: () => void;
+  /** Impose une couleur au halo de l'app (null = comportement normal) */
+  onAmbientColor: (color: string | null) => void;
 };
 
 function clamp(n: number, min: number, max: number) {
@@ -91,22 +95,30 @@ export function ConstellationScreen({
   festivalEnd,
   onSelectStar,
   onBack,
+  onAmbientColor,
 }: Props) {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<"carte" | "couleurs">("carte");
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPinching, setIsPinching] = useState(false);
+  const [previewStar, setPreviewStar] = useState<JournalItem | null>(null);
+  const [activeColorIdx, setActiveColorIdx] = useState(0);
+  const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
 
   // ── Filtres ──
   const [activeFocus, setActiveFocus] = useState<string[]>([]);
   const [activeStage, setActiveStage] = useState<string[]>([]);
 
   function toggleFocus(key: string) {
+    setPreviewStar(null);
     setActiveFocus((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     );
   }
   function toggleStage(name: string) {
+    setPreviewStar(null);
     setActiveStage((prev) =>
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
     );
@@ -136,6 +148,7 @@ export function ConstellationScreen({
 
   function handleTouchStart(e: ReactTouchEvent<HTMLDivElement>) {
     if (e.touches.length !== 2) return;
+    setPreviewStar(null); // le pinch ferme l'aperçu
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
@@ -249,34 +262,137 @@ export function ConstellationScreen({
     });
   }, [filteredJournal, constellationBounds]);
 
-  const links = useMemo(() => {
+  // ── Fil du voyage : segments chronologiques entre étoiles ──────────────────
+  const journeyLinks = useMemo(() => {
+    const ordered = [...stars].sort(
+      (a, b) => new Date(a.item.startTime).getTime() - new Date(b.item.startTime).getTime()
+    );
     const result: Array<{
       a: (typeof stars)[number];
       b: (typeof stars)[number];
-      opacity: number;
       duration: number;
     }> = [];
-
-    for (let i = 0; i < stars.length; i++) {
-      for (let j = i + 1; j < stars.length; j++) {
-        const a = stars[i];
-        const b = stars[j];
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const maxDistance = 18;
-
-        if (distance < maxDistance) {
-          const ratio = 1 - distance / maxDistance;
-          const opacity = 0.03 + ratio * 0.24;
-          const duration = 3.4 + ((i + j) % 4) * 0.7;
-          result.push({ a, b, opacity, duration });
-        }
-      }
+    for (let i = 0; i < ordered.length - 1; i++) {
+      result.push({ a: ordered[i], b: ordered[i + 1], duration: 3.4 + (i % 4) * 0.7 });
     }
-
     return result;
   }, [stars]);
+
+  // ── Repères de jour (10h00 locale = début de journée festival) ─────────────
+  const dayLines = useMemo(() => {
+    if (!constellationBounds || !festStart || !festEnd) return [];
+    // Uniquement quand l'axe Y suit les bornes du festival
+    if (constellationBounds.min !== festStart) return [];
+
+    const lines: Array<{ y: number; label: string }> = [];
+    const span = constellationBounds.max - constellationBounds.min;
+    if (span <= 0) return lines;
+
+    // Une frontière par jour calendaire à 10h00 (début de journée festival) ;
+    // label via le mapping officiel date → Day X de la programmation
+    const first = new Date(festStart);
+    first.setHours(10, 0, 0, 0);
+
+    for (let n = 0; n <= 20; n++) {
+      const boundaryDate = new Date(first.getTime() + n * 24 * 60 * 60 * 1000);
+      const boundary = boundaryDate.getTime();
+      if (boundary > constellationBounds.max) break;
+      if (boundary < constellationBounds.min) continue;
+      const yyyy = boundaryDate.getFullYear();
+      const mm   = String(boundaryDate.getMonth() + 1).padStart(2, "0");
+      const dd   = String(boundaryDate.getDate()).padStart(2, "0");
+      const label = CALENDAR_TO_FESTIVAL_DAY[`${yyyy}-${mm}-${dd}`];
+      if (!label) continue; // hors période timetable → pas de repère
+      const ratio = (boundary - constellationBounds.min) / span;
+      lines.push({ y: 92 - ratio * 84, label });
+    }
+    return lines;
+  }, [constellationBounds, festStart, festEnd]);
+
+  // ── Double-tap : zoom ancré / dézoom (fond du canvas) ──────────────────────
+  function handleCanvasClick(e: ReactMouseEvent<HTMLDivElement>) {
+    setPreviewStar(null); // tap hors étoile → ferme l'aperçu
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const now = Date.now();
+    const last = lastTapRef.current;
+    lastTapRef.current = { time: now, x, y };
+
+    if (last && now - last.time < 300 && Math.abs(x - last.x) < 30 && Math.abs(y - last.y) < 30) {
+      lastTapRef.current = null;
+      if (zoom > 1) {
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+      } else {
+        // Même formule d'ancrage que le pinch : pan2 = p*(1-ratio) + pan1*ratio
+        const targetZoom = 2.2;
+        const ratio = targetZoom / zoom;
+        const maxPanX = (rect.width / 2) * (targetZoom - 1);
+        const maxPanY = (rect.height / 2) * (targetZoom - 1);
+        setZoom(targetZoom);
+        setPan({
+          x: clamp(x * (1 - ratio) + pan.x * ratio, -maxPanX, maxPanX),
+          y: clamp(y * (1 - ratio) + pan.y * ratio, -maxPanY, maxPanY),
+        });
+      }
+    }
+  }
+
+  function resetView() {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }
+
+  // ── Onglet Couleurs : pages groupées par couleur de souvenir ───────────────
+  const colorPages = useMemo(() => {
+    const groups = new Map<string, JournalItem[]>();
+    for (const item of journal) {
+      const key = item.colorHex;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
+    }
+    // Ordre du picker, puis d'éventuelles couleurs hors palette
+    const orderedKeys = [
+      ...RGB_COLORS.filter((c) => groups.has(c)),
+      ...[...groups.keys()].filter((c) => !(RGB_COLORS as readonly string[]).includes(c)),
+    ];
+    return orderedKeys.map((color) => {
+      const items = groups.get(color)!;
+      // Artistes dédupliqués — on garde le souvenir le plus intense
+      const byArtist = new Map<string, JournalItem>();
+      for (const it of items) {
+        const cur = byArtist.get(it.artistName);
+        if (!cur || it.energy > cur.energy) byArtist.set(it.artistName, it);
+      }
+      const avgEnergy = Math.round(items.reduce((s, it) => s + it.energy, 0) / items.length);
+      return { color, artists: [...byArtist.values()], avgEnergy };
+    });
+  }, [journal]);
+
+  // Halo adaptatif : suit la page couleur active, se nettoie en quittant
+  useEffect(() => {
+    if (activeTab === "couleurs" && colorPages[activeColorIdx]) {
+      const page = colorPages[activeColorIdx];
+      onAmbientColor(energyTint(page.color, page.avgEnergy));
+    } else {
+      onAmbientColor(null);
+    }
+    return () => onAmbientColor(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, activeColorIdx, colorPages]);
+
+  // Swipe horizontal : index de page actif dérivé du scroll (throttlé)
+  function handlePagesScroll(e: React.UIEvent<HTMLDivElement>) {
+    const el = e.currentTarget;
+    if (scrollRafRef.current !== null) return;
+    scrollRafRef.current = window.setTimeout(() => {
+      scrollRafRef.current = null;
+      const idx = clamp(Math.round(el.scrollLeft / el.clientWidth), 0, colorPages.length - 1);
+      setActiveColorIdx((prev) => (prev === idx ? prev : idx));
+    }, 80);
+  }
 
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -311,6 +427,37 @@ export function ConstellationScreen({
         </button>
       </div>
 
+      {/* ── Onglets Carte / Couleurs ── */}
+      <div style={{
+        flexShrink: 0,
+        display: "flex",
+        padding: "8px 16px 0",
+        gap: 6,
+      }}>
+        {(["carte", "couleurs"] as const).map((tab) => {
+          const active = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                flex: 1,
+                padding: "8px 6px",
+                borderRadius: 10,
+                background: active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+                border: active ? "1px solid rgba(255,255,255,0.28)" : "1px solid rgba(255,255,255,0.08)",
+                color: active ? "white" : "rgba(255,255,255,0.45)",
+                fontSize: 12, fontWeight: active ? 700 : 400,
+                cursor: "pointer", fontFamily: "inherit",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {tab === "carte" ? t('constellation.tabCarte') : t('constellation.tabCouleurs')}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Corps ── */}
       <div style={{
         flex: 1,
@@ -321,6 +468,9 @@ export function ConstellationScreen({
         gap: 12,
         minHeight: 0,
       }}>
+
+      {activeTab === "carte" && (
+      <>
 
       {/* ── Filtres ── */}
       {journal.length > 0 && (
@@ -364,6 +514,7 @@ export function ConstellationScreen({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
+        onClick={handleCanvasClick}
         style={{
           flex: 1,
           minHeight: 0,
@@ -408,7 +559,7 @@ export function ConstellationScreen({
             transition: isPinching ? "none" : "transform 0.18s ease-out",
           }}
         >
-          {/* Liaisons entre étoiles proches */}
+          {/* Lignes de jour + fil du voyage */}
           <svg
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
@@ -420,7 +571,18 @@ export function ConstellationScreen({
               pointerEvents: "none",
             }}
           >
-            {links.map((link, index) => (
+            {/* Repères horizontaux de jour (10h00 = début de journée festival) */}
+            {dayLines.map((line) => (
+              <line
+                key={`day-${line.label}`}
+                x1={0} y1={line.y} x2={100} y2={line.y}
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="0.18"
+              />
+            ))}
+
+            {/* Fil du voyage : trajectoire chronologique */}
+            {journeyLinks.map((link, index) => (
               <line
                 key={`${link.a.item.id}-${link.b.item.id}-${index}`}
                 x1={link.a.x}
@@ -428,18 +590,41 @@ export function ConstellationScreen({
                 x2={link.b.x}
                 y2={link.b.y}
                 stroke={link.a.displayColor}
-                strokeOpacity={link.opacity}
-                strokeWidth="0.22"
+                strokeOpacity={0.22}
+                strokeWidth="0.3"
                 style={{ animation: `linkBreath ${link.duration}s ease-in-out infinite` }}
               />
             ))}
           </svg>
 
+          {/* Labels "Day X" des repères de jour */}
+          {dayLines.map((line) => (
+            <div
+              key={`daylabel-${line.label}`}
+              style={{
+                position: "absolute",
+                left: "2%",
+                top: `${line.y}%`,
+                transform: "translateY(calc(-100% - 2px))",
+                fontSize: 8,
+                opacity: 0.25,
+                letterSpacing: "0.08em",
+                pointerEvents: "none",
+                fontWeight: 600,
+              }}
+            >
+              {line.label}
+            </div>
+          ))}
+
           {/* Étoiles */}
           {stars.map((star) => (
             <div
               key={star.item.id}
-              onClick={() => onSelectStar(star.item)}
+              onClick={(e) => {
+                e.stopPropagation(); // ne pas déclencher le double-tap du canvas
+                setPreviewStar((prev) => (prev?.id === star.item.id ? null : star.item));
+              }}
               title={`${star.item.artistName} · ${formatTime(star.item.startTime)}`}
               style={{
                 position: "absolute",
@@ -462,8 +647,8 @@ export function ConstellationScreen({
             </div>
           ))}
 
-          {/* Noms d'artistes — apparaissent à partir de zoom ≥ 2.0 */}
-          {zoom >= 2.0 && stars.map((star) => (
+          {/* Noms d'artistes — étoiles intenses (≥8) toujours visibles, les autres à partir de zoom ≥ 2.0 */}
+          {stars.filter((star) => zoom >= 2.0 || star.item.energy >= 8).map((star) => (
             <div
               key={`label-${star.item.id}`}
               style={{
@@ -471,9 +656,9 @@ export function ConstellationScreen({
                 left: `${star.x}%`,
                 top: `${star.y}%`,
                 transform: `translate(-50%, calc(-50% - ${star.starSize / 2 + 10}px))`,
-                fontSize: 8,
+                fontSize: zoom >= 2.0 ? 8 : 9,
                 color: star.displayColor,
-                opacity: Math.min(1, (zoom - 2.0) * 3),
+                opacity: zoom >= 2.0 ? Math.min(1, (zoom - 2.0) * 3) : 0.65,
                 whiteSpace: "nowrap",
                 textShadow: "0 0 8px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,1)",
                 pointerEvents: "none",
@@ -485,7 +670,223 @@ export function ConstellationScreen({
             </div>
           ))}
         </div>
+
+        {/* ── Aperçu du souvenir sélectionné (mini-carte) ── */}
+        {previewStar && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectStar(previewStar);
+            }}
+            style={{
+              position: "absolute",
+              left: 12, right: 12, bottom: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              padding: "10px 12px",
+              borderRadius: 16,
+              background: "rgba(10,4,26,0.82)",
+              backdropFilter: "blur(14px)",
+              border: `1px solid ${energyTint(previewStar.colorHex, previewStar.energy)}66`,
+              boxShadow: `0 4px 24px rgba(0,0,0,0.5), 0 0 18px ${energyTint(previewStar.colorHex, previewStar.energy)}33`,
+              cursor: "pointer",
+              zIndex: 5,
+            }}
+          >
+            {previewStar.photo && (
+              <img
+                src={previewStar.photo}
+                alt=""
+                style={{
+                  width: 48, height: 48,
+                  borderRadius: 10,
+                  objectFit: "cover",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontSize: 14, fontWeight: 700,
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+              }}>
+                {previewStar.artistName}
+              </div>
+              <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+                {formatTime(previewStar.startTime)} · ⚡ {previewStar.energy}/10
+              </div>
+              <div style={{
+                fontSize: 11, marginTop: 3,
+                color: energyTint(previewStar.colorHex, previewStar.energy),
+              }}>
+                {t('constellation.previewOpen')}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Reset zoom ── */}
+        {zoom > 1 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              resetView();
+            }}
+            aria-label={t('constellation.resetZoom')}
+            style={{
+              position: "absolute",
+              right: 12,
+              top: 12,
+              width: 36, height: 36,
+              borderRadius: "50%",
+              background: "rgba(10,4,26,0.72)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              color: "white",
+              fontSize: 16,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              zIndex: 5,
+            }}
+          >
+            ⤾
+          </button>
+        )}
       </div>
+
+      {/* ── Légende énergie ── */}
+      {filteredJournal.length > 0 && (
+        <div style={{
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          fontSize: 10,
+          opacity: 0.35,
+          letterSpacing: "0.05em",
+        }}>
+          <span>{t('constellation.legendCalm')}</span>
+          <span style={{ fontSize: 8 }}>✦</span>
+          <span style={{ opacity: 0.6 }}>———</span>
+          <span style={{ fontSize: 13 }}>✦</span>
+          <span>{t('constellation.legendIntense')}</span>
+        </div>
+      )}
+
+      </>
+      )}
+
+      {/* ── Onglet Couleurs : nuages d'artistes par couleur ── */}
+      {activeTab === "couleurs" && (
+        <>
+          {colorPages.length === 0 && (
+            <div style={{
+              flex: 1,
+              display: "grid",
+              placeItems: "center",
+              opacity: 0.6,
+              textAlign: "center",
+              padding: 20,
+            }}>
+              {t('constellation.empty')}
+            </div>
+          )}
+
+          {colorPages.length > 0 && (
+            <>
+              {/* Pages swipables (scroll-snap natif) */}
+              <div
+                className="no-scrollbar"
+                onScroll={handlePagesScroll}
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  overflowX: "auto",
+                  scrollSnapType: "x mandatory",
+                  borderRadius: 20,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                {colorPages.map((page) => (
+                  <div
+                    key={page.color}
+                    style={{
+                      flex: "0 0 100%",
+                      scrollSnapAlign: "center",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      alignContent: "center",
+                      justifyContent: "center",
+                      gap: "14px 18px",
+                      padding: 24,
+                      background: `radial-gradient(circle at 50% 45%, ${page.color}26 0%, rgba(7,0,20,0.6) 70%)`,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {page.artists.map((item, i) => {
+                      const tinted = energyTint(page.color, item.energy);
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => onSelectStar(item)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            fontSize: 14 + item.energy * 2,
+                            fontWeight: item.energy >= 7 ? 700 : 400,
+                            color: tinted,
+                            textShadow: `0 0 ${6 + item.energy * 2.4}px ${tinted}`,
+                            opacity: 0.55 + item.energy * 0.045,
+                            transform: `rotate(${((i * 37) % 13) - 6}deg) translateY(${((i * 53) % 17) - 8}px)`,
+                            whiteSpace: "nowrap",
+                            maxWidth: "100%",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {item.artistName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
+              {/* Indicateur de pages */}
+              <div style={{
+                flexShrink: 0,
+                display: "flex",
+                justifyContent: "center",
+                gap: 8,
+                paddingTop: 2,
+              }}>
+                {colorPages.map((page, i) => (
+                  <div
+                    key={page.color}
+                    style={{
+                      width: i === activeColorIdx ? 14 : 7,
+                      height: 7,
+                      borderRadius: 999,
+                      background: page.color,
+                      opacity: i === activeColorIdx ? 1 : 0.35,
+                      boxShadow: i === activeColorIdx ? `0 0 8px ${page.color}` : "none",
+                      transition: "all 0.25s ease",
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
 
       </div>
     </div>
