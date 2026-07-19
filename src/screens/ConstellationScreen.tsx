@@ -4,6 +4,7 @@ import type { JournalItem } from "../core/store/service";
 import { energyTint } from "../app/ui/EnergyDots";
 import { RGB_COLORS } from "./ColorEnergyScreen";
 import { CALENDAR_TO_FESTIVAL_DAY } from "./ProgrammationScreen";
+import { SCENES } from "../app/data/timetable";
 import { formatTime } from "./utils";
 
 // ── Filtres ───────────────────────────────────────────────────────────────────
@@ -98,14 +99,16 @@ export function ConstellationScreen({
   onAmbientColor,
 }: Props) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"carte" | "couleurs">("carte");
+  const [activeTab, setActiveTab] = useState<"carte" | "scenes" | "couleurs">("carte");
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPinching, setIsPinching] = useState(false);
   const [previewStar, setPreviewStar] = useState<JournalItem | null>(null);
   const [activeColorIdx, setActiveColorIdx] = useState(0);
+  const [activeSceneIdx, setActiveSceneIdx] = useState(0);
   const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
   const scrollRafRef = useRef<number | null>(null);
+  const sceneScrollRef = useRef<number | null>(null);
 
   // ── Filtres ──
   const [activeFocus, setActiveFocus] = useState<string[]>([]);
@@ -371,17 +374,95 @@ export function ConstellationScreen({
     });
   }, [journal]);
 
-  // Halo adaptatif : suit la page couleur active, se nettoie en quittant
+  // ── Onglet Scènes : pages "affiche lineup" groupées par scène ──────────────
+  const scenePages = useMemo(() => {
+    const groups = new Map<string, JournalItem[]>();
+    for (const item of journal) {
+      const key = item.stageName || "Éphémère";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
+    }
+
+    // Ordre : scènes officielles, puis Éphémère, puis le reste
+    const officialKeys = SCENES.map((s) => s.key as string).filter((k) => groups.has(k));
+    const restKeys = [...groups.keys()]
+      .filter((k) => !officialKeys.includes(k) && k !== "Éphémère")
+      .sort();
+    const orderedKeys = [
+      ...officialKeys,
+      ...(groups.has("Éphémère") ? ["Éphémère"] : []),
+      ...restKeys,
+    ];
+
+    const emojiFor = (stage: string) =>
+      SCENES.find((s) => s.key === stage)?.emoji ?? (stage === "Éphémère" ? "✨" : "🎪");
+
+    return orderedKeys.map((stage) => {
+      const items = groups.get(stage)!;
+
+      // Têtes d'affiche : artistes dédupliqués (souvenir le plus intense), énergie décroissante
+      const byArtist = new Map<string, JournalItem>();
+      for (const it of items) {
+        const cur = byArtist.get(it.artistName);
+        if (!cur || it.energy > cur.energy) byArtist.set(it.artistName, it);
+      }
+      const artists = [...byArtist.values()].sort((a, b) => b.energy - a.energy);
+
+      // Couleur du halo — règle : la plus choisie → la plus intense → la dernière sélectionnée
+      const byColor = new Map<string, JournalItem[]>();
+      for (const it of items) {
+        if (!byColor.has(it.colorHex)) byColor.set(it.colorHex, []);
+        byColor.get(it.colorHex)!.push(it);
+      }
+      const maxCount = Math.max(...[...byColor.values()].map((l) => l.length));
+      let candidates = [...byColor.entries()].filter(([, l]) => l.length === maxCount);
+      if (candidates.length > 1) {
+        const maxEnergyOf = (l: JournalItem[]) => Math.max(...l.map((it) => it.energy));
+        const topEnergy = Math.max(...candidates.map(([, l]) => maxEnergyOf(l)));
+        candidates = candidates.filter(([, l]) => maxEnergyOf(l) === topEnergy);
+      }
+      if (candidates.length > 1) {
+        const lastOf = (l: JournalItem[]) =>
+          Math.max(...l.map((it) => new Date(it.createdAt).getTime()));
+        candidates.sort(([, a], [, b]) => lastOf(b) - lastOf(a));
+      }
+      const [winnerColor, winnerItems] = candidates[0];
+      const avgEnergy = Math.round(
+        winnerItems.reduce((s, it) => s + it.energy, 0) / winnerItems.length
+      );
+
+      return {
+        stage,
+        emoji: emojiFor(stage),
+        artists,
+        haloColor: energyTint(winnerColor, avgEnergy),
+      };
+    });
+  }, [journal]);
+
+  function handleScenesScroll(e: React.UIEvent<HTMLDivElement>) {
+    const el = e.currentTarget;
+    if (sceneScrollRef.current !== null) return;
+    sceneScrollRef.current = window.setTimeout(() => {
+      sceneScrollRef.current = null;
+      const idx = clamp(Math.round(el.scrollLeft / el.clientWidth), 0, scenePages.length - 1);
+      setActiveSceneIdx((prev) => (prev === idx ? prev : idx));
+    }, 80);
+  }
+
+  // Halo adaptatif : suit la page active (Couleurs ou Scènes), se nettoie en quittant
   useEffect(() => {
     if (activeTab === "couleurs" && colorPages[activeColorIdx]) {
       const page = colorPages[activeColorIdx];
       onAmbientColor(energyTint(page.color, page.avgEnergy));
+    } else if (activeTab === "scenes" && scenePages[activeSceneIdx]) {
+      onAmbientColor(scenePages[activeSceneIdx].haloColor);
     } else {
       onAmbientColor(null);
     }
     return () => onAmbientColor(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, activeColorIdx, colorPages]);
+  }, [activeTab, activeColorIdx, colorPages, activeSceneIdx, scenePages]);
 
   // Swipe horizontal : index de page actif dérivé du scroll (throttlé)
   function handlePagesScroll(e: React.UIEvent<HTMLDivElement>) {
@@ -434,8 +515,13 @@ export function ConstellationScreen({
         padding: "8px 16px 0",
         gap: 6,
       }}>
-        {(["carte", "couleurs"] as const).map((tab) => {
+        {(["carte", "scenes", "couleurs"] as const).map((tab) => {
           const active = activeTab === tab;
+          const labels = {
+            carte:    t('constellation.tabCarte'),
+            scenes:   t('constellation.tabScenes'),
+            couleurs: t('constellation.tabCouleurs'),
+          };
           return (
             <button
               key={tab}
@@ -452,7 +538,7 @@ export function ConstellationScreen({
                 whiteSpace: "nowrap",
               }}
             >
-              {tab === "carte" ? t('constellation.tabCarte') : t('constellation.tabCouleurs')}
+              {labels[tab]}
             </button>
           );
         })}
@@ -777,6 +863,133 @@ export function ConstellationScreen({
       )}
 
       </>
+      )}
+
+      {/* ── Onglet Scènes : affiches lineup par scène ── */}
+      {activeTab === "scenes" && (
+        <>
+          {scenePages.length === 0 && (
+            <div style={{
+              flex: 1,
+              display: "grid",
+              placeItems: "center",
+              opacity: 0.6,
+              textAlign: "center",
+              padding: 20,
+            }}>
+              {t('constellation.empty')}
+            </div>
+          )}
+
+          {scenePages.length > 0 && (
+            <>
+              {/* Pages swipables (scroll-snap natif) */}
+              <div
+                className="no-scrollbar"
+                onScroll={handleScenesScroll}
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  overflowX: "auto",
+                  scrollSnapType: "x mandatory",
+                  borderRadius: 20,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                {scenePages.map((page) => (
+                  <div
+                    key={page.stage}
+                    className="no-scrollbar"
+                    style={{
+                      flex: "0 0 100%",
+                      scrollSnapAlign: "center",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      padding: "28px 16px",
+                      background: `linear-gradient(180deg, ${page.haloColor}1f 0%, rgba(7,0,20,0.72) 55%, ${page.haloColor}14 100%)`,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {/* En-tête de l'affiche */}
+                    <div style={{ fontSize: 40, lineHeight: 1, marginBottom: 2 }}>{page.emoji}</div>
+                    <div style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.35em",
+                      opacity: 0.85,
+                      textAlign: "center",
+                      marginBottom: 12,
+                      paddingLeft: "0.35em", // compense le letterSpacing du dernier caractère
+                    }}>
+                      {page.stage}
+                    </div>
+
+                    {/* Lineup : énergie décroissante, chaque nom dans la couleur de SON souvenir */}
+                    {page.artists.map((item, i) => {
+                      const tinted = energyTint(item.colorHex, item.energy);
+                      const headline = i < 2 && item.energy >= 7;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => onSelectStar(item)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            fontSize: 13 + item.energy * 2.6,
+                            fontWeight: item.energy >= 7 ? 800 : 400,
+                            textTransform: headline ? "uppercase" : "none",
+                            letterSpacing: headline ? "0.06em" : "0.02em",
+                            color: tinted,
+                            textShadow: `0 0 ${6 + item.energy * 2.6}px ${tinted}`,
+                            lineHeight: 1.25,
+                            whiteSpace: "nowrap",
+                            maxWidth: "100%",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {item.artistName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
+              {/* Indicateur de pages : emojis de scène */}
+              <div style={{
+                flexShrink: 0,
+                display: "flex",
+                justifyContent: "center",
+                gap: 10,
+                paddingTop: 2,
+              }}>
+                {scenePages.map((page, i) => (
+                  <div
+                    key={page.stage}
+                    style={{
+                      fontSize: i === activeSceneIdx ? 18 : 13,
+                      opacity: i === activeSceneIdx ? 1 : 0.4,
+                      filter: i === activeSceneIdx ? `drop-shadow(0 0 6px ${page.haloColor})` : "none",
+                      transition: "all 0.25s ease",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {page.emoji}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )}
 
       {/* ── Onglet Couleurs : nuages d'artistes par couleur ── */}

@@ -69,6 +69,10 @@ const CSS = `
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+@keyframes ornamentBreath {
+  0%, 100% { opacity: 0.65; }
+  50%       { opacity: 1;    }
+}
 `;
 
 // ── Utilitaires couleur ───────────────────────────────────────────────────────
@@ -99,7 +103,6 @@ function toHex(r: number, g: number, b: number): string {
 
 // ── Formes SVG sparkles ────────────────────────────────────────────────────────
 
-const STAR8    = "M0,-14 L3.5,-5.5 L13,-5.5 L5.5,0 L8.5,10 L0,5 L-8.5,10 L-5.5,0 L-13,-5.5 L-3.5,-5.5 Z";
 const STAR5    = "M0,-8 L1.8,-3 L7,-3 L3,0 L4.5,5 L0,2.5 L-4.5,5 L-3,0 L-7,-3 L-1.8,-3 Z";
 const SP_CROSS   = "M0,-5 L0.6,-0.6 L4,0 L0.6,0.6 L0,5 L-0.6,0.6 L-4,0 L-0.6,-0.6 Z";
 const SP_DIAMOND = "M0,-3.5 L2.5,0 L0,3.5 L-2.5,0 Z";
@@ -108,8 +111,39 @@ const SP_MOBILE  = "M0,-3.5 L0.8,-0.8 L3.5,0 L0.8,0.8 L0,3.5 L-0.8,0.8 L-3.5,0 L
 
 // ── OrnamentBorder ─────────────────────────────────────────────────────────────
 
+// Motif "graine de vie" partielle pour un coin : 3 cercles entrelacés + spirale
+// fine. Dessiné pour le coin haut-gauche, réutilisé via translate + scale(±1).
+function CornerSacred({ c, cL }: { c: (a: number) => string; cL: (a: number) => string }) {
+  return (
+    <>
+      <circle cx="30" cy="30" r="16" stroke={c(0.40)}  strokeWidth="0.8" fill="none"/>
+      <circle cx="46" cy="24" r="16" stroke={cL(0.26)} strokeWidth="0.6" fill="none"/>
+      <circle cx="24" cy="46" r="16" stroke={cL(0.26)} strokeWidth="0.6" fill="none"/>
+      {/* Spirale d'approche depuis le coin */}
+      <path
+        d="M12,12 Q34,10 40,28 Q44,42 32,46 Q22,49 19,40 Q17,32 25,31 Q30,30.5 31,35"
+        stroke={c(0.32)} strokeWidth="0.7" fill="none"
+      />
+    </>
+  );
+}
+
 function OrnamentBorder({ haloColor }: { haloColor: string }) {
   const [r, g, b] = parseColor(haloColor);
+
+  // Dimensions réelles du viewport (largeur plafonnée comme le wrapper de l'app)
+  // → viewBox exact, plus aucune déformation des cercles / étoiles
+  const [size, setSize] = useState(() => ({
+    w: Math.min(window.innerWidth, 430),
+    h: window.innerHeight,
+  }));
+  useEffect(() => {
+    const onResize = () =>
+      setSize({ w: Math.min(window.innerWidth, 430), h: window.innerHeight });
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const { w, h } = size;
 
   // Palette dérivée du halo : base, clair (mixé vers blanc), très clair
   const c   = (a: number) => `rgba(${r},${g},${b},${a})`;
@@ -118,10 +152,29 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
   const cL  = (a: number) => `rgba(${rl},${gl},${bl},${a})`;
   const cLL = (a: number) => `rgba(${rll},${gll},${bll},${a})`;
 
+  // Scintillements : positions fractionnaires + délais organiques (pas de motif répétitif)
+  const crosses = [
+    { x: w * 0.19, y: 8 },        { x: w * 0.83, y: 8 },
+    { x: w - 8,    y: h * 0.22 }, { x: w - 8,    y: h * 0.81 },
+    { x: w * 0.17, y: h - 8 },    { x: w * 0.81, y: h - 8 },
+    { x: 8,        y: h * 0.25 }, { x: 8,        y: h * 0.76 },
+  ];
+  const diamonds = [
+    { x: w * 0.32, y: 8 },        { x: w * 0.68, y: 8 },
+    { x: w - 8,    y: h * 0.44 }, { x: w - 8,    y: h * 0.62 },
+    { x: w * 0.35, y: h - 8 },    { x: w * 0.66, y: h - 8 },
+    { x: 8,        y: h * 0.39 }, { x: 8,        y: h * 0.62 },
+  ];
+  const bursts = [
+    { x: w * 0.5, y: 8 },     { x: w - 8, y: h * 0.5 },
+    { x: w * 0.5, y: h - 8 }, { x: 8,     y: h * 0.5 },
+  ];
+  const palette = [c, cL, cLL];
+
   return (
     <svg
-      viewBox="0 0 375 812"
-      preserveAspectRatio="none"
+      viewBox={`0 0 ${w} ${h}`}
+      preserveAspectRatio="xMidYMid meet"
       style={{
         position: "fixed",
         top: 0,
@@ -152,9 +205,9 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
           <feGaussianBlur stdDeviation="14"/>
         </filter>
 
-        {/* Circuit pour les comètes mobiles */}
+        {/* Circuit pour les comètes mobiles — suit les dimensions réelles */}
         <path id="lp-orbit"
-          d="M22,8 L353,8 L367,22 L367,790 L353,804 L22,804 L8,790 L8,22 Z"/>
+          d={`M22,8 L${w - 22},8 L${w - 8},22 L${w - 8},${h - 22} L${w - 22},${h - 8} L22,${h - 8} L8,${h - 22} L8,22 Z`}/>
 
         {/* Gradients de traîne — base, clair, très clair */}
         <linearGradient id="tail-base" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -197,170 +250,129 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
         </linearGradient>
       </defs>
 
-      {/* ── Glow halo adaptatif ── */}
-      <rect x="2" y="2" width="371" height="808"
-        fill="none"
-        stroke={c(0.45)}
-        strokeWidth="20"
-        filter="url(#og-halo)"
-      />
+      {/* ── Glow halo adaptatif — respire avec le halo central ── */}
+      <g style={{ animation: "ornamentBreath 5.5s ease-in-out infinite" }}>
+        <rect x="2" y="2" width={w - 4} height={h - 4}
+          fill="none"
+          stroke={c(0.45)}
+          strokeWidth="20"
+          filter="url(#og-halo)"
+        />
+      </g>
 
       {/* ── Bords ── */}
-      <line x1="22"  y1="8"   x2="353" y2="8"   stroke="url(#g-top)"    strokeWidth="1.5" filter="url(#og)"/>
-      <line x1="367" y1="22"  x2="367" y2="790" stroke="url(#g-right)"  strokeWidth="1.5" filter="url(#og)"/>
-      <line x1="353" y1="804" x2="22"  y2="804" stroke="url(#g-bottom)" strokeWidth="1.5" filter="url(#og)"/>
-      <line x1="8"   y1="790" x2="8"   y2="22"  stroke="url(#g-left)"   strokeWidth="1.5" filter="url(#og)"/>
+      <line x1={22}    y1={8}     x2={w - 22} y2={8}     stroke="url(#g-top)"    strokeWidth="1.5" filter="url(#og)"/>
+      <line x1={w - 8} y1={22}    x2={w - 8}  y2={h - 22} stroke="url(#g-right)"  strokeWidth="1.5" filter="url(#og)"/>
+      <line x1={w - 22} y1={h - 8} x2={22}    y2={h - 8}  stroke="url(#g-bottom)" strokeWidth="1.5" filter="url(#og)"/>
+      <line x1={8}     y1={h - 22} x2={8}     y2={22}     stroke="url(#g-left)"   strokeWidth="1.5" filter="url(#og)"/>
 
-      {/* ── Grande étoile top-center ── */}
-      <g transform="translate(187.5, 8)" filter="url(#og2)">
-        <path d={STAR8} fill={cL(0.95)}
-          style={{ animation: "ornamentStarSpin 12s linear infinite", transformOrigin: "0 0" }}/>
+      {/* ── Rosette "graine de vie" top-center (rotation lente) ── */}
+      <g transform={`translate(${w / 2}, 8)`} filter="url(#og2)">
+        <g style={{ animation: "ornamentStarSpin 12s linear infinite", transformOrigin: "0 0" }}>
+          <circle cx="0" cy="0" r="5.5" stroke={cL(0.9)} strokeWidth="0.8" fill="none"/>
+          {[0, 60, 120, 180, 240, 300].map((deg) => {
+            const rad = (deg * Math.PI) / 180;
+            return (
+              <circle
+                key={deg}
+                cx={5.5 * Math.cos(rad)}
+                cy={5.5 * Math.sin(rad)}
+                r="5.5"
+                stroke={cL(0.55)}
+                strokeWidth="0.6"
+                fill="none"
+              />
+            );
+          })}
+        </g>
       </g>
 
       {/* ── Étoiles de coins ── */}
-      <g transform="translate(14, 14)"   filter="url(#og2)"><path d={STAR5} fill={c(0.9)}/></g>
-      <g transform="translate(361, 14)"  filter="url(#og2)"><path d={STAR5} fill={cL(0.9)}/></g>
-      <g transform="translate(14, 798)"  filter="url(#og2)"><path d={STAR5} fill={cL(0.9)}/></g>
-      <g transform="translate(361, 798)" filter="url(#og2)"><path d={STAR5} fill={c(0.9)}/></g>
+      <g transform={`translate(14, 14)`}             filter="url(#og2)"><path d={STAR5} fill={c(0.9)}/></g>
+      <g transform={`translate(${w - 14}, 14)`}      filter="url(#og2)"><path d={STAR5} fill={cL(0.9)}/></g>
+      <g transform={`translate(14, ${h - 14})`}      filter="url(#og2)"><path d={STAR5} fill={cL(0.9)}/></g>
+      <g transform={`translate(${w - 14}, ${h - 14})`} filter="url(#og2)"><path d={STAR5} fill={c(0.9)}/></g>
 
-      {/* ── Vrilles de coins ── */}
-      <g filter="url(#og)">
-        <path d="M8,50 C13,28 28,13 50,8"   stroke={c(0.70)}  strokeWidth="1"   fill="none"/>
-        <path d="M8,78 C20,50 45,30 78,18"   stroke={cL(0.45)} strokeWidth="0.8" fill="none"/>
-        <path d="M22,8 C16,20 10,32 8,50"    stroke={c(0.35)}  strokeWidth="0.7" fill="none"/>
+      {/* ── Coins : graine de vie + spirale (géométrie sacrée) ── */}
+      <g filter="url(#og)" transform="translate(0, 0)">
+        <CornerSacred c={c} cL={cL}/>
       </g>
-      <g filter="url(#og)">
-        <path d="M367,50 C362,28 347,13 325,8"  stroke={cL(0.70)} strokeWidth="1"   fill="none"/>
-        <path d="M367,78 C355,50 330,30 297,18"  stroke={c(0.45)}  strokeWidth="0.8" fill="none"/>
-        <path d="M353,8 C359,20 365,32 367,50"   stroke={cL(0.35)} strokeWidth="0.7" fill="none"/>
+      <g filter="url(#og)" transform={`translate(${w}, 0) scale(-1, 1)`}>
+        <CornerSacred c={cL} cL={c}/>
       </g>
-      <g filter="url(#og)">
-        <path d="M8,762 C13,784 28,799 50,804"   stroke={cL(0.70)} strokeWidth="1"   fill="none"/>
-        <path d="M8,734 C20,762 45,782 78,794"   stroke={c(0.45)}  strokeWidth="0.8" fill="none"/>
-        <path d="M22,804 C16,792 10,780 8,762"   stroke={cL(0.35)} strokeWidth="0.7" fill="none"/>
+      <g filter="url(#og)" transform={`translate(0, ${h}) scale(1, -1)`}>
+        <CornerSacred c={cL} cL={c}/>
       </g>
-      <g filter="url(#og)">
-        <path d="M367,762 C362,784 347,799 325,804"  stroke={c(0.70)}  strokeWidth="1"   fill="none"/>
-        <path d="M367,734 C355,762 330,782 297,794"  stroke={cL(0.45)} strokeWidth="0.8" fill="none"/>
-        <path d="M353,804 C359,792 365,780 367,762"  stroke={c(0.35)}  strokeWidth="0.7" fill="none"/>
+      <g filter="url(#og)" transform={`translate(${w}, ${h}) scale(-1, -1)`}>
+        <CornerSacred c={c} cL={cL}/>
       </g>
 
-      {/* ════ SPARKLES ════ */}
+      {/* ════ SPARKLES — délais et durées organiques dérivés de l'index ════ */}
 
       {/* ── Croix ✦ (rotation lente) ── */}
-      <g transform="translate(70, 8)" filter="url(#og2)">
-        <path d={SP_CROSS} fill={cL(0.85)}
-          style={{ animation: "ornamentSparkleRotate 14s ease-in-out 0s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(310, 8)" filter="url(#og2)">
-        <path d={SP_CROSS} fill={c(0.85)}
-          style={{ animation: "ornamentSparkleRotate 16s ease-in-out 1.2s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(367, 180)" filter="url(#og2)">
-        <path d={SP_CROSS} fill={c(0.85)}
-          style={{ animation: "ornamentSparkleRotate 13s ease-in-out 2.1s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(367, 660)" filter="url(#og2)">
-        <path d={SP_CROSS} fill={cL(0.80)}
-          style={{ animation: "ornamentSparkleRotate 17s ease-in-out 0.5s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(65, 804)" filter="url(#og2)">
-        <path d={SP_CROSS} fill={cLL(0.80)}
-          style={{ animation: "ornamentSparkleRotate 14s ease-in-out 3.0s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(305, 804)" filter="url(#og2)">
-        <path d={SP_CROSS} fill={c(0.85)}
-          style={{ animation: "ornamentSparkleRotate 15s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(8, 200)" filter="url(#og2)">
-        <path d={SP_CROSS} fill={cL(0.85)}
-          style={{ animation: "ornamentSparkleRotate 12s ease-in-out 0.8s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(8, 620)" filter="url(#og2)">
-        <path d={SP_CROSS} fill={c(0.80)}
-          style={{ animation: "ornamentSparkleRotate 15s ease-in-out 2.5s infinite", transformOrigin: "0 0" }}/>
-      </g>
+      {crosses.map((p, i) => (
+        <g key={`cross-${i}`} transform={`translate(${p.x}, ${p.y})`} filter="url(#og2)">
+          <path d={SP_CROSS} fill={palette[i % 3](0.85 - (i % 4) * 0.02)}
+            style={{
+              animation: `ornamentSparkleRotate ${12 + ((i * 2.3) % 5.6)}s ease-in-out ${(i * 1.7) % 5.3}s infinite`,
+              transformOrigin: "0 0",
+            }}/>
+        </g>
+      ))}
 
       {/* ── Losanges ◇ (pulse doux) ── */}
-      <g transform="translate(120, 8)">
-        <path d={SP_DIAMOND} fill={c(0.75)}
-          style={{ animation: "ornamentSparkle 6.5s ease-in-out 0.6s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(255, 8)">
-        <path d={SP_DIAMOND} fill={cL(0.70)}
-          style={{ animation: "ornamentSparkle 8s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(367, 360)">
-        <path d={SP_DIAMOND} fill={cL(0.70)}
-          style={{ animation: "ornamentSparkle 7s ease-in-out 0.3s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(367, 500)">
-        <path d={SP_DIAMOND} fill={c(0.75)}
-          style={{ animation: "ornamentSparkle 9s ease-in-out 2.4s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(130, 804)">
-        <path d={SP_DIAMOND} fill={cLL(0.70)}
-          style={{ animation: "ornamentSparkle 7.5s ease-in-out 1.1s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(248, 804)">
-        <path d={SP_DIAMOND} fill={c(0.70)}
-          style={{ animation: "ornamentSparkle 6s ease-in-out 0.9s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(8, 320)">
-        <path d={SP_DIAMOND} fill={cL(0.70)}
-          style={{ animation: "ornamentSparkle 8.5s ease-in-out 3.2s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(8, 500)">
-        <path d={SP_DIAMOND} fill={cLL(0.65)}
-          style={{ animation: "ornamentSparkle 7s ease-in-out 1.5s infinite", transformOrigin: "0 0" }}/>
-      </g>
+      {diamonds.map((p, i) => (
+        <g key={`diamond-${i}`} transform={`translate(${p.x}, ${p.y})`}>
+          <path d={SP_DIAMOND} fill={palette[(i + 1) % 3](0.75 - (i % 3) * 0.03)}
+            style={{
+              animation: `ornamentSparkle ${6 + ((i * 1.9) % 3.4)}s ease-in-out ${(i * 2.1) % 4.7}s infinite`,
+              transformOrigin: "0 0",
+            }}/>
+        </g>
+      ))}
 
       {/* ── Bursts + (rayons radiants) ── */}
-      <g transform="translate(188, 8)" filter="url(#og)">
-        <path d={SP_BURST} stroke={cL(0.80)} strokeWidth="1.2" fill="none"
-          style={{ animation: "ornamentBurst 5s ease-in-out 1.2s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(367, 406)" filter="url(#og)">
-        <path d={SP_BURST} stroke={c(0.80)} strokeWidth="1.2" fill="none"
-          style={{ animation: "ornamentBurst 4.5s ease-in-out 0s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(188, 804)" filter="url(#og)">
-        <path d={SP_BURST} stroke={cLL(0.75)} strokeWidth="1.2" fill="none"
-          style={{ animation: "ornamentBurst 6s ease-in-out 2.5s infinite", transformOrigin: "0 0" }}/>
-      </g>
-      <g transform="translate(8, 406)" filter="url(#og)">
-        <path d={SP_BURST} stroke={cL(0.75)} strokeWidth="1.2" fill="none"
-          style={{ animation: "ornamentBurst 5.5s ease-in-out 1.8s infinite", transformOrigin: "0 0" }}/>
-      </g>
+      {bursts.map((p, i) => (
+        <g key={`burst-${i}`} transform={`translate(${p.x}, ${p.y})`} filter="url(#og)">
+          <path d={SP_BURST} stroke={palette[i % 3](0.78)} strokeWidth="1.2" fill="none"
+            style={{
+              animation: `ornamentBurst ${4.5 + ((i * 1.3) % 2.2)}s ease-in-out ${(i * 1.55) % 3.8}s infinite`,
+              transformOrigin: "0 0",
+            }}/>
+        </g>
+      ))}
 
-      {/* ════ COMÈTES MOBILES ════ */}
+      {/* ════ COMÈTES MOBILES — tête + 2 particules suiveuses chacune ════ */}
 
-      {/* Comète 1 — couleur base */}
-      <g filter="url(#og2)">
-        <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-base)" strokeWidth="1.8"/>
-        <path d={SP_MOBILE} fill={c(0.92)}/>
-        <animateMotion dur="50s" repeatCount="indefinite" rotate="auto">
-          <mpath href="#lp-orbit"/>
-        </animateMotion>
-      </g>
-
-      {/* Comète 2 — couleur claire */}
-      <g filter="url(#og2)">
-        <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-light)" strokeWidth="1.8"/>
-        <path d={SP_MOBILE} fill={cL(0.88)}/>
-        <animateMotion dur="50s" begin="-16.67s" repeatCount="indefinite" rotate="auto">
-          <mpath href="#lp-orbit"/>
-        </animateMotion>
-      </g>
-
-      {/* Comète 3 — très claire (presque blanc teinté) */}
-      <g filter="url(#og2)">
-        <line x1="-14" y1="0" x2="0" y2="0" stroke="url(#tail-vlight)" strokeWidth="1.8"/>
-        <path d={SP_MOBILE} fill={cLL(0.85)}/>
-        <animateMotion dur="50s" begin="-33.33s" repeatCount="indefinite" rotate="auto">
-          <mpath href="#lp-orbit"/>
-        </animateMotion>
-      </g>
+      {([
+        { tail: "url(#tail-base)",   fill: c,   base: 0 },
+        { tail: "url(#tail-light)",  fill: cL,  base: -16.67 },
+        { tail: "url(#tail-vlight)", fill: cLL, base: -33.33 },
+      ] as const).map((comet, i) => (
+        <g key={`comet-${i}`}>
+          {/* Tête */}
+          <g filter="url(#og2)">
+            <line x1="-14" y1="0" x2="0" y2="0" stroke={comet.tail} strokeWidth="1.8"/>
+            <path d={SP_MOBILE} fill={comet.fill(0.9)}/>
+            <animateMotion dur="50s" begin={`${comet.base}s`} repeatCount="indefinite" rotate="auto">
+              <mpath href="#lp-orbit"/>
+            </animateMotion>
+          </g>
+          {/* Particules suiveuses (traînée) */}
+          <g opacity="0.5">
+            <path d={SP_MOBILE} fill={comet.fill(0.7)} transform="scale(0.55)"/>
+            <animateMotion dur="50s" begin={`${comet.base + 0.5}s`} repeatCount="indefinite" rotate="auto">
+              <mpath href="#lp-orbit"/>
+            </animateMotion>
+          </g>
+          <g opacity="0.25">
+            <path d={SP_MOBILE} fill={comet.fill(0.6)} transform="scale(0.32)"/>
+            <animateMotion dur="50s" begin={`${comet.base + 1}s`} repeatCount="indefinite" rotate="auto">
+              <mpath href="#lp-orbit"/>
+            </animateMotion>
+          </g>
+        </g>
+      ))}
 
     </svg>
   );
