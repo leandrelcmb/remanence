@@ -189,7 +189,7 @@ export function FestivalPickerScreen({ festivals, activeFestivalId, onSwitch, on
 
       {/* Retour */}
       <RoundButton variant="secondary" onClick={onBack}>
-        {t('festivalPicker.backHome')}
+        {t('common.home')}
       </RoundButton>
 
     </div>

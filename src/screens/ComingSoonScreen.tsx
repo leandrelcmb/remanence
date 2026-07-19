@@ -44,7 +44,7 @@ export function ComingSoonScreen({ onBack }: Props) {
           letterSpacing: "0.03em",
         }}
       >
-        {t('comingSoon.back')}
+        {t('common.home')}
       </button>
     </div>
   );

@@ -712,7 +712,7 @@ export function SanteScreen({ onBack, onRisques, haloColor = "#00FFB7" }: Props)
     view === "reconnexion" ? t('sante.subReconnexionCount') :
     view === "nuit"        ? t('sante.subNuitCount', { count: _nuitPhrases.length }) : "";
 
-  const backLabel = (view === "checkin" || view === "hub") ? t('sante.backHome') : t('sante.backSection');
+  const backLabel = (view === "checkin" || view === "hub") ? t('common.home') : t('sante.backSection');
 
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>

@@ -84,7 +84,6 @@
     "fromGallery": "From my gallery",
     "changePhoto": "🔄 Change photo",
     "imgAlt": "Moment capture",
-    "back": "↪️ Back",
     "anchor": "Anchor 💌"
   },
   "done": {
@@ -135,7 +134,8 @@
     "legendCalm": "calm",
     "legendIntense": "intense",
     "previewOpen": "Open memory →",
-    "resetZoom": "Reset zoom"
+    "resetZoom": "Reset zoom",
+    "ephemeral": "Ephemeral"
   },
   "games": {
     "title": "Games 🎮",
@@ -157,7 +157,6 @@
     "deleteHunt": "Delete this hunt"
   },
   "chasse": {
-    "back": "← Games",
     "spinning": "The hunt is on…",
     "spinBtn": "Start the hunt 🎯",
     "feed": "Your feed",
@@ -181,34 +180,106 @@
     },
     "items": {
       "chromatic": {
-        "Rouge": { "label": "Red", "challenge": "Find & photograph 21 red moments around you" },
-        "Orange": { "label": "Orange", "challenge": "21 shades of orange captured before the timer stops" },
-        "Jaune": { "label": "Yellow", "challenge": "Capture 21 yellow flashes: lights, outfits, decor" },
-        "Vert": { "label": "Green", "challenge": "21 green tones in nature or the stage design" },
-        "Cyan": { "label": "Cyan", "challenge": "Photograph 21 cyan touches around you" },
-        "Bleu": { "label": "Blue", "challenge": "21 blues — sky, outfits, light shows — in 1 hour" },
-        "Indigo": { "label": "Indigo", "challenge": "Hunt down 21 indigo & violet shades in the camp" },
-        "Violet": { "label": "Purple", "challenge": "21 purple moments: magic, mystery, lights" }
+        "Rouge": {
+          "label": "Red",
+          "challenge": "Find & photograph 21 red moments around you"
+        },
+        "Orange": {
+          "label": "Orange",
+          "challenge": "21 shades of orange captured before the timer stops"
+        },
+        "Jaune": {
+          "label": "Yellow",
+          "challenge": "Capture 21 yellow flashes: lights, outfits, decor"
+        },
+        "Vert": {
+          "label": "Green",
+          "challenge": "21 green tones in nature or the stage design"
+        },
+        "Cyan": {
+          "label": "Cyan",
+          "challenge": "Photograph 21 cyan touches around you"
+        },
+        "Bleu": {
+          "label": "Blue",
+          "challenge": "21 blues — sky, outfits, light shows — in 1 hour"
+        },
+        "Indigo": {
+          "label": "Indigo",
+          "challenge": "Hunt down 21 indigo & violet shades in the camp"
+        },
+        "Violet": {
+          "label": "Purple",
+          "challenge": "21 purple moments: magic, mystery, lights"
+        }
       },
       "formes": {
-        "Cercle": { "label": "Circle", "challenge": "Photograph 21 perfect circles in the festival" },
-        "Triangle": { "label": "Triangle", "challenge": "Capture 21 triangles hidden in the structures" },
-        "Étoile": { "label": "Star", "challenge": "Find 21 star shapes around you" },
-        "Spirale": { "label": "Spiral", "challenge": "Photograph 21 spirals — natural or decorative" },
-        "Losange": { "label": "Diamond", "challenge": "Capture 21 diamonds in outfits and installations" },
-        "Nuage": { "label": "Cloud", "challenge": "21 round, soft shapes, like clouds" },
-        "Arc": { "label": "Arc", "challenge": "Find 21 curves and arcs in the environment" },
-        "Croix": { "label": "Cross", "challenge": "Photograph 21 cross or intersection shapes" }
+        "Cercle": {
+          "label": "Circle",
+          "challenge": "Photograph 21 perfect circles in the festival"
+        },
+        "Triangle": {
+          "label": "Triangle",
+          "challenge": "Capture 21 triangles hidden in the structures"
+        },
+        "Étoile": {
+          "label": "Star",
+          "challenge": "Find 21 star shapes around you"
+        },
+        "Spirale": {
+          "label": "Spiral",
+          "challenge": "Photograph 21 spirals — natural or decorative"
+        },
+        "Losange": {
+          "label": "Diamond",
+          "challenge": "Capture 21 diamonds in outfits and installations"
+        },
+        "Nuage": {
+          "label": "Cloud",
+          "challenge": "21 round, soft shapes, like clouds"
+        },
+        "Arc": {
+          "label": "Arc",
+          "challenge": "Find 21 curves and arcs in the environment"
+        },
+        "Croix": {
+          "label": "Cross",
+          "challenge": "Photograph 21 cross or intersection shapes"
+        }
       },
       "personnages": {
-        "Corps peint": { "label": "Body paint", "challenge": "Capture 21 festivalgoers with visible body paint or body art" },
-        "Ailes & plumes": { "label": "Wings & feathers", "challenge": "Photograph 21 wearers of wings, feathers or elaborate headpieces" },
-        "Tatouage": { "label": "Tattoo", "challenge": "Find 21 remarkable tattoos — large area, unique style, unexpected placement" },
-        "Déguisement": { "label": "Costume", "challenge": "21 complete costumes — animal, creature, character or universe" },
-        "Accessoire fou": { "label": "Crazy accessory", "challenge": "Photograph 21 impossible accessories — headpieces, glasses, jewelry, objects" },
-        "UV & néon": { "label": "UV & neon", "challenge": "21 outfits or elements that glow or would glow under UV night lights" },
-        "Masque & fard": { "label": "Mask & makeup", "challenge": "Capture 21 masked or painted faces with artistic intention" },
-        "Tribu & clan": { "label": "Tribe & clan", "challenge": "21 coordinated groups — same color, style, symbol or shared universe" }
+        "Corps peint": {
+          "label": "Body paint",
+          "challenge": "Capture 21 festivalgoers with visible body paint or body art"
+        },
+        "Ailes & plumes": {
+          "label": "Wings & feathers",
+          "challenge": "Photograph 21 wearers of wings, feathers or elaborate headpieces"
+        },
+        "Tatouage": {
+          "label": "Tattoo",
+          "challenge": "Find 21 remarkable tattoos — large area, unique style, unexpected placement"
+        },
+        "Déguisement": {
+          "label": "Costume",
+          "challenge": "21 complete costumes — animal, creature, character or universe"
+        },
+        "Accessoire fou": {
+          "label": "Crazy accessory",
+          "challenge": "Photograph 21 impossible accessories — headpieces, glasses, jewelry, objects"
+        },
+        "UV & néon": {
+          "label": "UV & neon",
+          "challenge": "21 outfits or elements that glow or would glow under UV night lights"
+        },
+        "Masque & fard": {
+          "label": "Mask & makeup",
+          "challenge": "Capture 21 masked or painted faces with artistic intention"
+        },
+        "Tribu & clan": {
+          "label": "Tribe & clan",
+          "challenge": "21 coordinated groups — same color, style, symbol or shared universe"
+        }
       }
     }
   },
@@ -330,9 +401,21 @@
     "catCamping": "Camping",
     "catAbsurde": "Absurd",
     "variants": [
-      { "emoji": "🎤", "label": "Defense", "desc": "Defend this theory for 30 seconds without being interrupted. Others listen, then judge." },
-      { "emoji": "🗳️", "label": "Group vote", "desc": "Each player says whether this theory could be true. The majority wins." },
-      { "emoji": "✨", "label": "Collective extension", "desc": "Each person adds an element to the theory, in order. The final version belongs to everyone." }
+      {
+        "emoji": "🎤",
+        "label": "Defense",
+        "desc": "Defend this theory for 30 seconds without being interrupted. Others listen, then judge."
+      },
+      {
+        "emoji": "🗳️",
+        "label": "Group vote",
+        "desc": "Each player says whether this theory could be true. The majority wins."
+      },
+      {
+        "emoji": "✨",
+        "label": "Collective extension",
+        "desc": "Each person adds an element to the theory, in order. The final version belongs to everyone."
+      }
     ],
     "theories": [
       "DJs don't really mix: they communicate with the crowd through telepathy.",
@@ -405,7 +488,6 @@
     "correct": "✓ Correct!",
     "wrong": "✗ Not quite…",
     "or": "or",
-    "back": "← Games",
     "nextCard": "Next card →"
   },
   "divers": {
@@ -425,7 +507,6 @@
     "favorite": "❤️ Favourite",
     "notFavorite": "🤍 Favourite",
     "next": "Next →",
-    "home": "Home ॐ",
     "reset": "Reshuffle 🔀",
     "favoritesCount": "❤️ Favorites ({{count}})",
     "cats": {
@@ -474,7 +555,6 @@
     "headerHub": "Wellness 🧠",
     "headerSub": "A space to pause",
     "headerHubSub": "Choose a space",
-    "backHome": "Home ॐ",
     "backSection": "← Back",
     "randomMantra": "Another mantra",
     "randomInspiration": "Another inspiration",
@@ -581,7 +661,11 @@
     "sectionAnalysis": "Analysis",
     "analysisHint": "Cross-references your pre-festival ratings with the sets you actually experienced. Open the .csv in Excel or Numbers.",
     "exportAnalysis": "📊 Export analysis",
-    "exportingAnalysis": "Generating file…"
+    "exportingAnalysis": "Generating file…",
+    "noPhotos": "No photos to export for this festival.",
+    "shareTitle": "My Rémanence memories",
+    "unknownArtist": "Unknown artist",
+    "journalOf": "{{name}}'s journal"
   },
   "festivalPicker": {
     "title": "Festivals 🪩",
@@ -593,14 +677,12 @@
     "from": "FROM",
     "to": "TO",
     "create": "Create →",
-    "addFestival": "+ Add a festival",
-    "backHome": "Back to home"
+    "addFestival": "+ Add a festival"
   },
   "programmation": {
     "title": "Programme 🎵",
     "allScenes": "✦ All",
     "comingSoon": "Full timetable coming soon",
-    "back": "← Back",
     "comingArtists": "Artists coming soon…",
     "noArtists": "No artists for this selection",
     "subtitleData": "{{artists}} artist(s) · {{scenes}} stage(s)",
@@ -638,13 +720,15 @@
     "importRatings": "Import my ratings",
     "exportDone": "💾 {{count}} rating(s) exported — keep this file safe",
     "importDone": "✓ {{count}} rating(s) imported",
-    "importError": "Invalid file — pick a Rémanence .json export"
+    "importError": "Invalid file — pick a Rémanence .json export",
+    "wikiAbout": "About",
+    "wikiReadMore": "Read more",
+    "wikiCollapse": "Collapse"
   },
   "comingSoon": {
     "title": "Under construction",
     "message": "This game is coming soon.",
-    "sub": "Stay connected to the moment 🌱",
-    "back": "Back to games"
+    "sub": "Stay connected to the moment 🌱"
   },
   "setInfo": {
     "question": "🎧 Which set did you just experience?",

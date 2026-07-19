@@ -84,7 +84,6 @@
     "fromGallery": "Depuis ma galerie",
     "changePhoto": "🔄 Changer la photo",
     "imgAlt": "Capture du moment",
-    "back": "↪️ Retour",
     "anchor": "Ancrer 💌"
   },
   "done": {
@@ -135,7 +134,8 @@
     "legendCalm": "calme",
     "legendIntense": "intense",
     "previewOpen": "Voir le souvenir →",
-    "resetZoom": "Réinitialiser le zoom"
+    "resetZoom": "Réinitialiser le zoom",
+    "ephemeral": "Éphémère"
   },
   "games": {
     "title": "Jeux 🎮",
@@ -157,7 +157,6 @@
     "deleteHunt": "Supprimer cette chasse"
   },
   "chasse": {
-    "back": "← Jeux",
     "spinning": "La chasse est lancée…",
     "spinBtn": "Lancer la chasse 🎯",
     "feed": "Ton feed",
@@ -181,34 +180,106 @@
     },
     "items": {
       "chromatic": {
-        "Rouge": { "label": "Rouge", "challenge": "Trouve & photographie 21 instants rouges autour de toi" },
-        "Orange": { "label": "Orange", "challenge": "21 nuances d'orange capturées avant que le timer s'arrête" },
-        "Jaune": { "label": "Jaune", "challenge": "Capture 21 éclats jaunes : lumières, tenues, décors" },
-        "Vert": { "label": "Vert", "challenge": "21 teintes vertes dans la nature ou la scénographie" },
-        "Cyan": { "label": "Cyan", "challenge": "Photographie 21 touches cyan autour de toi" },
-        "Bleu": { "label": "Bleu", "challenge": "21 bleus — ciel, tenues, light shows — en 1 heure" },
-        "Indigo": { "label": "Indigo", "challenge": "Traque 21 nuances indigo & violet dans le camp" },
-        "Violet": { "label": "Violet", "challenge": "21 instants violets : magie, mystère, lumières" }
+        "Rouge": {
+          "label": "Rouge",
+          "challenge": "Trouve & photographie 21 instants rouges autour de toi"
+        },
+        "Orange": {
+          "label": "Orange",
+          "challenge": "21 nuances d'orange capturées avant que le timer s'arrête"
+        },
+        "Jaune": {
+          "label": "Jaune",
+          "challenge": "Capture 21 éclats jaunes : lumières, tenues, décors"
+        },
+        "Vert": {
+          "label": "Vert",
+          "challenge": "21 teintes vertes dans la nature ou la scénographie"
+        },
+        "Cyan": {
+          "label": "Cyan",
+          "challenge": "Photographie 21 touches cyan autour de toi"
+        },
+        "Bleu": {
+          "label": "Bleu",
+          "challenge": "21 bleus — ciel, tenues, light shows — en 1 heure"
+        },
+        "Indigo": {
+          "label": "Indigo",
+          "challenge": "Traque 21 nuances indigo & violet dans le camp"
+        },
+        "Violet": {
+          "label": "Violet",
+          "challenge": "21 instants violets : magie, mystère, lumières"
+        }
       },
       "formes": {
-        "Cercle": { "label": "Cercle", "challenge": "Photographie 21 cercles parfaits dans le festival" },
-        "Triangle": { "label": "Triangle", "challenge": "Capture 21 triangles cachés dans les structures" },
-        "Étoile": { "label": "Étoile", "challenge": "Trouve 21 formes étoilées autour de toi" },
-        "Spirale": { "label": "Spirale", "challenge": "Photographie 21 spirales — naturelles ou décoratives" },
-        "Losange": { "label": "Losange", "challenge": "Capture 21 losanges dans les tenues et installations" },
-        "Nuage": { "label": "Nuage", "challenge": "21 formes rondes et douces, comme des nuages" },
-        "Arc": { "label": "Arc", "challenge": "Trouve 21 courbes et arcs dans l'environnement" },
-        "Croix": { "label": "Croix", "challenge": "Photographie 21 formes en croix ou intersection" }
+        "Cercle": {
+          "label": "Cercle",
+          "challenge": "Photographie 21 cercles parfaits dans le festival"
+        },
+        "Triangle": {
+          "label": "Triangle",
+          "challenge": "Capture 21 triangles cachés dans les structures"
+        },
+        "Étoile": {
+          "label": "Étoile",
+          "challenge": "Trouve 21 formes étoilées autour de toi"
+        },
+        "Spirale": {
+          "label": "Spirale",
+          "challenge": "Photographie 21 spirales — naturelles ou décoratives"
+        },
+        "Losange": {
+          "label": "Losange",
+          "challenge": "Capture 21 losanges dans les tenues et installations"
+        },
+        "Nuage": {
+          "label": "Nuage",
+          "challenge": "21 formes rondes et douces, comme des nuages"
+        },
+        "Arc": {
+          "label": "Arc",
+          "challenge": "Trouve 21 courbes et arcs dans l'environnement"
+        },
+        "Croix": {
+          "label": "Croix",
+          "challenge": "Photographie 21 formes en croix ou intersection"
+        }
       },
       "personnages": {
-        "Corps peint": { "label": "Corps peint", "challenge": "Capture 21 festivaliers avec peinture corporelle ou body art visible" },
-        "Ailes & plumes": { "label": "Ailes & plumes", "challenge": "Photographie 21 porteurs d'ailes, plumes ou ornements de tête élaborés" },
-        "Tatouage": { "label": "Tatouage", "challenge": "Trouve 21 tatouages remarquables — grande surface, style unique, emplacement inattendu" },
-        "Déguisement": { "label": "Déguisement", "challenge": "21 déguisements complets — animal, créature, personnage ou univers" },
-        "Accessoire fou": { "label": "Accessoire fou", "challenge": "Photographie 21 accessoires impossibles — coiffes, lunettes, bijoux, objets" },
-        "UV & néon": { "label": "UV & néon", "challenge": "21 tenues ou éléments qui brillent ou brilleraient sous les UV de la nuit" },
-        "Masque & fard": { "label": "Masque & fard", "challenge": "Capture 21 visages masqués ou fardés avec une intention artistique" },
-        "Tribu & clan": { "label": "Tribu & clan", "challenge": "21 groupes coordonnés — même couleur, style, symbole ou univers partagé" }
+        "Corps peint": {
+          "label": "Corps peint",
+          "challenge": "Capture 21 festivaliers avec peinture corporelle ou body art visible"
+        },
+        "Ailes & plumes": {
+          "label": "Ailes & plumes",
+          "challenge": "Photographie 21 porteurs d'ailes, plumes ou ornements de tête élaborés"
+        },
+        "Tatouage": {
+          "label": "Tatouage",
+          "challenge": "Trouve 21 tatouages remarquables — grande surface, style unique, emplacement inattendu"
+        },
+        "Déguisement": {
+          "label": "Déguisement",
+          "challenge": "21 déguisements complets — animal, créature, personnage ou univers"
+        },
+        "Accessoire fou": {
+          "label": "Accessoire fou",
+          "challenge": "Photographie 21 accessoires impossibles — coiffes, lunettes, bijoux, objets"
+        },
+        "UV & néon": {
+          "label": "UV & néon",
+          "challenge": "21 tenues ou éléments qui brillent ou brilleraient sous les UV de la nuit"
+        },
+        "Masque & fard": {
+          "label": "Masque & fard",
+          "challenge": "Capture 21 visages masqués ou fardés avec une intention artistique"
+        },
+        "Tribu & clan": {
+          "label": "Tribu & clan",
+          "challenge": "21 groupes coordonnés — même couleur, style, symbole ou univers partagé"
+        }
       }
     }
   },
@@ -330,9 +401,21 @@
     "catCamping": "Camping",
     "catAbsurde": "Absurde",
     "variants": [
-      { "emoji": "🎤", "label": "Défense", "desc": "Défends cette théorie pendant 30 secondes sans te laisser interrompre. Les autres écoutent, puis jugent." },
-      { "emoji": "🗳️", "label": "Vote du groupe", "desc": "Chaque joueur dit si cette théorie pourrait être vraie. La majorité l'emporte." },
-      { "emoji": "✨", "label": "Extension collective", "desc": "Chacun ajoute un élément à la théorie, dans l'ordre. La version finale appartient à tous." }
+      {
+        "emoji": "🎤",
+        "label": "Défense",
+        "desc": "Défends cette théorie pendant 30 secondes sans te laisser interrompre. Les autres écoutent, puis jugent."
+      },
+      {
+        "emoji": "🗳️",
+        "label": "Vote du groupe",
+        "desc": "Chaque joueur dit si cette théorie pourrait être vraie. La majorité l'emporte."
+      },
+      {
+        "emoji": "✨",
+        "label": "Extension collective",
+        "desc": "Chacun ajoute un élément à la théorie, dans l'ordre. La version finale appartient à tous."
+      }
     ],
     "theories": [
       "Les DJs ne mixent pas vraiment : ils communiquent avec la foule par télépathie.",
@@ -405,7 +488,6 @@
     "correct": "✓ Bonne réponse !",
     "wrong": "✗ Pas tout à fait…",
     "or": "ou",
-    "back": "← Jeux",
     "nextCard": "Carte suivante →"
   },
   "divers": {
@@ -425,7 +507,6 @@
     "favorite": "❤️ Coup de cœur",
     "notFavorite": "🤍 Coup de cœur",
     "next": "Suivante →",
-    "home": "Home ॐ",
     "reset": "Nouvelle donne 🔀",
     "favoritesCount": "❤️ Favoris ({{count}})",
     "cats": {
@@ -474,7 +555,6 @@
     "headerHub": "Santé 🧠",
     "headerSub": "Un espace pour te poser",
     "headerHubSub": "Choisir un espace",
-    "backHome": "Home ॐ",
     "backSection": "← Retour",
     "randomMantra": "Autre mantra",
     "randomInspiration": "Autre inspiration",
@@ -581,7 +661,11 @@
     "sectionAnalysis": "Analyse",
     "analysisHint": "Croise tes notations pré-festival avec les sets que tu as vécus. Ouvre le fichier .csv dans Excel ou Numbers.",
     "exportAnalysis": "📊 Exporter l'analyse",
-    "exportingAnalysis": "Génération du fichier…"
+    "exportingAnalysis": "Génération du fichier…",
+    "noPhotos": "Aucune photo à exporter dans ce festival.",
+    "shareTitle": "Mes souvenirs Rémanence",
+    "unknownArtist": "Artiste inconnu",
+    "journalOf": "Journal de {{name}}"
   },
   "festivalPicker": {
     "title": "Festivals 🪩",
@@ -593,14 +677,12 @@
     "from": "DU",
     "to": "AU",
     "create": "Créer →",
-    "addFestival": "+ Ajouter un festival",
-    "backHome": "Retour à l'accueil"
+    "addFestival": "+ Ajouter un festival"
   },
   "programmation": {
     "title": "Programmation 🎵",
     "allScenes": "✦ Toutes",
     "comingSoon": "Timetable complète à venir",
-    "back": "← Retour",
     "comingArtists": "Artistes à venir…",
     "noArtists": "Aucun artiste pour cette sélection",
     "subtitleData": "{{artists}} artiste(s) · {{scenes}} scène(s)",
@@ -646,8 +728,7 @@
   "comingSoon": {
     "title": "En construction",
     "message": "Ce jeu arrive bientôt.",
-    "sub": "Reste connecté à l'instant 🌱",
-    "back": "Retour aux jeux"
+    "sub": "Reste connecté à l'instant 🌱"
   },
   "setInfo": {
     "question": "🎧 Quel set viens-tu de vivre ?",

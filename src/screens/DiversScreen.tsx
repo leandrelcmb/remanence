@@ -201,7 +201,7 @@ export function DiversScreen({ onBack, haloColor = "#00FFB7" }: Props) {
             fontFamily: "inherit",
           }}
         >
-          {t('divers.home')}
+          {t('common.home')}
         </button>
       </div>
 

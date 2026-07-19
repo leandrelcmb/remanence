@@ -21,9 +21,9 @@ type Props = {
 // ── Constantes ───────────────────────────────────────────────────────────────
 
 const FOCUS_CONFIG = [
-  { key: "mental",  label: "Mental",  emoji: "🧠", color: "#8B5CF6" },
-  { key: "emotion", label: "Émotion", emoji: "❤️", color: "#EC4899" },
-  { key: "body",    label: "Corps",   emoji: "🕺", color: "#F59E0B" },
+  { key: "mental",  tKey: "common.mental",   emoji: "🧠", color: "#8B5CF6" },
+  { key: "emotion", tKey: "common.emotions", emoji: "❤️", color: "#EC4899" },
+  { key: "body",    tKey: "common.body",     emoji: "🕺", color: "#F59E0B" },
 ] as const;
 
 const CARD: React.CSSProperties = {
@@ -52,12 +52,12 @@ function csvEscape(s: string): string {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatFestivalDates(startDate?: string, endDate?: string): string | null {
+function formatFestivalDates(startDate?: string, endDate?: string, locale = "fr-FR"): string | null {
   if (!startDate || !endDate) return null;
   try {
     const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "long" };
-    const start = new Date(startDate).toLocaleDateString("fr-FR", opts);
-    const end   = new Date(endDate).toLocaleDateString("fr-FR", opts);
+    const start = new Date(startDate).toLocaleDateString(locale, opts);
+    const end   = new Date(endDate).toLocaleDateString(locale, opts);
     return `${start} — ${end}`;
   } catch {
     return null;
@@ -67,8 +67,12 @@ function formatFestivalDates(startDate?: string, endDate?: string): string | nul
 // ── Sous-composants ───────────────────────────────────────────────────────────
 
 function RecapHeader({ festival, onBack }: { festival: Festival | null; onBack: () => void }) {
-  const { t } = useTranslation();
-  const dates = formatFestivalDates(festival?.startDate, festival?.endDate);
+  const { t, i18n } = useTranslation();
+  const dates = formatFestivalDates(
+    festival?.startDate,
+    festival?.endDate,
+    i18n.language.startsWith("en") ? "en-GB" : "fr-FR"
+  );
   return (
     <div style={{
       flexShrink: 0,
@@ -131,7 +135,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
     try {
       const photos = await getEntriesWithPhotos(festivalId);
       if (photos.length === 0) {
-        alert("Aucune photo à exporter dans ce festival.");
+        alert(t('recap.noPhotos'));
         return;
       }
       const files: File[] = photos.map((p, i) => {
@@ -141,7 +145,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
         return new File([bytes], name, { type: "image/jpeg" });
       });
       if (navigator.canShare?.({ files })) {
-        await navigator.share({ files, title: "Mes souvenirs Rémanence" });
+        await navigator.share({ files, title: t('recap.shareTitle') });
       } else {
         for (const file of files) {
           const url = URL.createObjectURL(file);
@@ -156,7 +160,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
     } finally {
       setExporting(false);
     }
-  }, [festivalId]);
+  }, [festivalId, t]);
 
   const handleExportAnalysis = useCallback(async () => {
     setExportingAnalysis(true);
@@ -329,7 +333,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <StatCard value={`${s.count}`} label={t('recap.set', { count: s.count })} />
             <StatCard value={`${s.avgEnergy.toFixed(1)}/10`} label={t('recap.avgEnergy')} />
-            <StatCard value={`${s.domFocus.emoji} ${s.domFocus.label}`} label={t('recap.dominantFocus')} />
+            <StatCard value={`${s.domFocus.emoji} ${t(s.domFocus.tKey)}`} label={t('recap.dominantFocus')} />
             <StatCard value={s.favStage} label={t('recap.favStage')} />
             {contactCount !== null && contactCount > 0 && (
               <StatCard
@@ -368,7 +372,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
         <section>
           <p style={SECTION_TITLE}>{t('recap.whereVibed')}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, ...CARD }}>
-            {FOCUS_CONFIG.map(({ key, label, emoji, color }) => {
+            {FOCUS_CONFIG.map(({ key, tKey, emoji, color }) => {
               const cnt = s.focusCounts[key] ?? 0;
               const pct = s.count > 0 ? (cnt / s.count) * 100 : 0;
               return (
@@ -377,8 +381,8 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
                     display: "flex", justifyContent: "space-between",
                     marginBottom: 8, fontSize: 14,
                   }}>
-                    <span>{emoji} {label}</span>
-                    <span style={{ opacity: 0.5 }}>{cnt} set{cnt !== 1 ? "s" : ""}</span>
+                    <span>{emoji} {t(tKey)}</span>
+                    <span style={{ opacity: 0.5 }}>{cnt} {t('journal.set', { count: cnt })}</span>
                   </div>
                   <div style={{
                     height: 6, borderRadius: 999,
@@ -422,7 +426,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
                       fontSize: 16, fontWeight: 500,
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
-                      {item.artistName || "Artiste inconnu"}
+                      {item.artistName || t('recap.unknownArtist')}
                     </div>
                     <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>
                       {item.stageName} · {formatTime(item.startTime)}
@@ -512,7 +516,7 @@ export function RecapScreen({ journal, festival, user, festivalId, onBack }: Pro
         {/* Signature discrète */}
         {user && (
           <p style={{ textAlign: "center", fontSize: 13, opacity: 0.25, margin: 0, fontStyle: "italic" }}>
-            Journal de {user.displayName} · {festival?.name ?? "Festival"}
+            {t('recap.journalOf', { name: user.displayName })} · {festival?.name ?? "Festival"}
           </p>
         )}
 

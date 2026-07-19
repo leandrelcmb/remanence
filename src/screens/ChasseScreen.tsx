@@ -332,7 +332,7 @@ export function ChasseScreen({ chasseType, onBack, resumeSession, haloColor }: P
             fontFamily: "inherit",
           }}
         >
-          {t('chasse.back')}
+          {t('common.home')}
         </button>
       </div>
 

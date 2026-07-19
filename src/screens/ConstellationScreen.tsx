@@ -926,22 +926,19 @@ export function ConstellationScreen({
                       marginBottom: 12,
                       paddingLeft: "0.35em", // compense le letterSpacing du dernier caractère
                     }}>
-                      {page.stage}
+                      {page.stage === "Éphémère" ? t('constellation.ephemeral') : page.stage}
                     </div>
 
-                    {/* Lineup : énergie décroissante, chaque nom dans la couleur de SON souvenir */}
+                    {/* Lineup : énergie décroissante, chaque nom dans la couleur de SON souvenir.
+                        Volontairement non cliquable : ouvrir le détail ferait perdre
+                        l'onglet actif au retour (l'affiche est contemplative). */}
                     {page.artists.map((item, i) => {
                       const tinted = energyTint(item.colorHex, item.energy);
                       const headline = i < 2 && item.energy >= 7;
                       return (
-                        <button
+                        <div
                           key={item.id}
-                          onClick={() => onSelectStar(item)}
                           style={{
-                            background: "none",
-                            border: "none",
-                            padding: 0,
-                            cursor: "pointer",
                             fontFamily: "inherit",
                             fontSize: 13 + item.energy * 2.6,
                             fontWeight: item.energy >= 7 ? 800 : 400,
@@ -957,7 +954,7 @@ export function ConstellationScreen({
                           }}
                         >
                           {item.artistName}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>

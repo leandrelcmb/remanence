@@ -212,7 +212,7 @@ export function AnecdotesScreen({ onBack, haloColor }: Props) {
             flexShrink:   0,
           }}
         >
-          {t('anecdotes.back')}
+          {t('common.home')}
         </button>
       </div>
 

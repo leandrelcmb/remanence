@@ -171,6 +171,71 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
   ];
   const palette = [c, cL, cLL];
 
+  // ── Couche de vie : lucioles, étoiles filantes, poussière montante ─────────
+  // Trajets organiques à travers les espaces vides, keyframes calculés en px
+  // réels depuis w/h. Tout est derrière le contenu (zIndex 0, pointerEvents none).
+
+  const fireflies = [
+    { p: [[0.08, 0.18], [0.30, 0.10], [0.16, 0.32]], dur: 26, delay: 0,  r: 1.8 },
+    { p: [[0.88, 0.14], [0.68, 0.24], [0.90, 0.34]], dur: 32, delay: 4,  r: 1.4 },
+    { p: [[0.06, 0.55], [0.14, 0.42], [0.08, 0.68]], dur: 38, delay: 9,  r: 2.0 },
+    { p: [[0.93, 0.60], [0.84, 0.48], [0.94, 0.72]], dur: 29, delay: 13, r: 1.5 },
+    { p: [[0.25, 0.87], [0.44, 0.93], [0.32, 0.80]], dur: 24, delay: 6,  r: 1.6 },
+    { p: [[0.74, 0.89], [0.58, 0.82], [0.70, 0.94]], dur: 35, delay: 17, r: 1.3 },
+  ];
+
+  const shootingStars = [
+    { from: [0.05, 0.08], to: [0.75, 0.30], dur: 11, delay: 2 },
+    { from: [0.95, 0.12], to: [0.35, 0.34], dur: 17, delay: 8 },
+  ];
+
+  const dust = [
+    { x: 0.20, dur: 18, delay: 0,  s: 0.55, sway: 12 },
+    { x: 0.40, dur: 24, delay: 5,  s: 0.40, sway: -14 },
+    { x: 0.55, dur: 15, delay: 9,  s: 0.60, sway: 10 },
+    { x: 0.70, dur: 26, delay: 3,  s: 0.45, sway: -10 },
+    { x: 0.85, dur: 20, delay: 12, s: 0.50, sway: 15 },
+  ];
+
+  const px = (fx: number) => Math.round(fx * w);
+  const py = (fy: number) => Math.round(fy * h);
+
+  const lifeCSS = [
+    // Lucioles : boucle entre 3 waypoints, opacité qui respire
+    ...fireflies.map((f, i) => `
+@keyframes lfFly${i} {
+  0%   { transform: translate(${px(f.p[0][0])}px, ${py(f.p[0][1])}px); opacity: 0.15; }
+  20%  { opacity: 0.65; }
+  33%  { transform: translate(${px(f.p[1][0])}px, ${py(f.p[1][1])}px); opacity: 0.30; }
+  55%  { opacity: 0.60; }
+  66%  { transform: translate(${px(f.p[2][0])}px, ${py(f.p[2][1])}px); opacity: 0.25; }
+  85%  { opacity: 0.55; }
+  100% { transform: translate(${px(f.p[0][0])}px, ${py(f.p[0][1])}px); opacity: 0.15; }
+}`),
+    // Étoiles filantes : la traversée occupe 0→16% du cycle, invisible ensuite
+    ...shootingStars.map((s, i) => {
+      const angle = Math.round(
+        (Math.atan2(py(s.to[1]) - py(s.from[1]), px(s.to[0]) - px(s.from[0])) * 180) / Math.PI
+      );
+      return `
+@keyframes lfShoot${i} {
+  0%   { transform: translate(${px(s.from[0])}px, ${py(s.from[1])}px) rotate(${angle}deg); opacity: 0; }
+  2%   { opacity: 0.9; }
+  13%  { opacity: 0.9; }
+  16%  { transform: translate(${px(s.to[0])}px, ${py(s.to[1])}px) rotate(${angle}deg); opacity: 0; }
+  100% { transform: translate(${px(s.to[0])}px, ${py(s.to[1])}px) rotate(${angle}deg); opacity: 0; }
+}`;
+    }),
+    // Poussière : monte du bas vers le milieu avec balancement, puis s'efface
+    ...dust.map((d, i) => `
+@keyframes lfDust${i} {
+  0%   { transform: translate(${px(d.x)}px, ${h - 40}px) scale(${d.s}); opacity: 0; }
+  12%  { opacity: 0.50; }
+  50%  { transform: translate(${px(d.x) + d.sway}px, ${py(0.68)}px) scale(${d.s}); opacity: 0.35; }
+  100% { transform: translate(${px(d.x) - d.sway / 2}px, ${py(0.46)}px) scale(${d.s * 0.8}); opacity: 0; }
+}`),
+  ].join("\n");
+
   return (
     <svg
       viewBox={`0 0 ${w} ${h}`}
@@ -371,6 +436,31 @@ function OrnamentBorder({ haloColor }: { haloColor: string }) {
               <mpath href="#lp-orbit"/>
             </animateMotion>
           </g>
+        </g>
+      ))}
+
+      {/* ════ COUCHE DE VIE — parcourt les espaces vides ════ */}
+      <style>{lifeCSS}</style>
+
+      {/* ── Lucioles ── */}
+      {fireflies.map((f, i) => (
+        <g key={`fly-${i}`} style={{ animation: `lfFly${i} ${f.dur}s ease-in-out ${f.delay}s infinite` }}>
+          <circle cx="0" cy="0" r={f.r} fill={palette[i % 3](0.75)} filter="url(#og)"/>
+        </g>
+      ))}
+
+      {/* ── Étoiles filantes ── */}
+      {shootingStars.map((s, i) => (
+        <g key={`shoot-${i}`} style={{ animation: `lfShoot${i} ${s.dur}s linear ${s.delay}s infinite`, opacity: 0 }}>
+          <line x1="-26" y1="0" x2="0" y2="0" stroke={i === 0 ? "url(#tail-vlight)" : "url(#tail-light)"} strokeWidth="1.2"/>
+          <circle cx="0" cy="0" r="1.6" fill={cLL(0.95)} filter="url(#og)"/>
+        </g>
+      ))}
+
+      {/* ── Poussière montante ── */}
+      {dust.map((d, i) => (
+        <g key={`dust-${i}`} style={{ animation: `lfDust${i} ${d.dur}s ease-out ${d.delay}s infinite`, opacity: 0 }}>
+          <path d={SP_DIAMOND} fill={palette[(i + 2) % 3](0.6)}/>
         </g>
       ))}
 

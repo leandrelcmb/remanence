@@ -96,7 +96,7 @@ export function CaptureScreen({ photo, onCameraPhoto, onGalleryPhoto, onClearPho
       <div style={{ display: "flex", gap: 5 }}>
         <div style={{ flex: 1 }}>
           <RoundButton variant="secondary" onClick={onBack}>
-            {t('capture.back')}
+            {t('common.home')}
           </RoundButton>
         </div>
         <div

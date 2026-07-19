@@ -905,7 +905,7 @@ export function ProgrammationScreen({ onBack }: Props) {
               fontSize: 13, color: "white", cursor: "pointer", fontFamily: "inherit",
             }}
           >
-            {t("programmation.back")}
+            {t("common.home")}
           </button>
         </div>
       </div>
